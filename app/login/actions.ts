@@ -8,16 +8,16 @@ export type ActionState = { error?: string; success?: boolean };
 
 async function getRedirectUrl() {
   const headerStore = await headers();
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (configuredUrl) return configuredUrl;
-
+  if (configuredUrl && !configuredUrl.includes("localhost")) return configuredUrl;
   const forwardedProto = headerStore.get("x-forwarded-proto");
   const forwardedHost = headerStore.get("x-forwarded-host") || headerStore.get("host");
-  if (forwardedHost) {
-    const protocol = forwardedProto || (process.env.NODE_ENV === "development" ? "http" : "https");
-    return `${protocol}://${forwardedHost}`;
+  if (forwardedHost && !forwardedHost.includes("localhost")) {
+    return `${forwardedProto || "https"}://${forwardedHost}`;
   }
-
   return process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://calculadora-emprender.vercel.app";
 }
 
@@ -27,7 +27,6 @@ export async function requestCode(_prevState: ActionState, formData: FormData): 
   const termsAccepted = formData.get("terms_accepted") === "on";
   if (!email) return { error: "Ingresá tu email." };
   if (!termsAccepted) return { error: "Tenés que aceptar los términos para continuar." };
-
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
