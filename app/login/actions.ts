@@ -1,9 +1,24 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
+
+async function getRedirectUrl() {
+  const headerStore = await headers();
+  const forwardedProto = headerStore.get("x-forwarded-proto");
+  const forwardedHost = headerStore.get("x-forwarded-host");
+  const host = forwardedHost || headerStore.get("host");
+  const protocol = forwardedProto || (process.env.NODE_ENV === "development" ? "http" : "https");
+
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+}
 
 export async function requestCode(
   _prevState: ActionState,
@@ -21,11 +36,13 @@ export async function requestCode(
   }
 
   const supabase = await createClient();
+  const redirectTo = await getRedirectUrl();
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
+      emailRedirectTo: redirectTo,
       data: {
         full_name: fullName || null,
         terms_accepted: "true",
