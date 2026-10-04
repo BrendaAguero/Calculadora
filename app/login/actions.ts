@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
 
-// Use the stable Vercel preview alias for the Etapa 3 auth flow.
-// This avoids generating auth links with localhost or a short-lived deployment hostname.
-const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender-git-etapa-3-auth-brendaagueros-projects.vercel.app";
+// Stable public origin used by the production authentication flow.
+// Never expose a local or account-specific Vercel Preview hostname in auth emails.
+const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender.vercel.app";
 
 export async function requestCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim();
