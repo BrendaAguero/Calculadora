@@ -1,0 +1,5 @@
+import { AppShell } from "@/components/app-shell";
+
+export default function MisDatosPage() {
+  return <AppShell><h1 className="text-3xl font-bold">Mis datos</h1><p className="mt-2 text-sm text-neutral-500">Materiales, moldes y fórmulas estarán disponibles en sus respectivas etapas.</p><div className="mt-8 grid gap-3"><div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"><h2 className="font-semibold">Materiales</h2><p className="mt-1 text-sm text-neutral-500">Próximamente.</p></div><div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"><h2 className="font-semibold">Moldes</h2><p className="mt-1 text-sm text-neutral-500">Próximamente.</p></div><div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"><h2 className="font-semibold">Fórmulas</h2><p className="mt-1 text-sm text-neutral-500">Próximamente.</p></div></div></AppShell>;
+}
