@@ -8,10 +8,16 @@ export default async function MaterialsPage() {
 
   const { data: materials } = await supabase
     .from('materials')
-    .select('id,name,default_unit,status,current_price_id,material_prices!materials_current_price_id_fkey(unit_cost,currency)')
+    .select('id,name,default_unit,status,current_price_id')
     .eq('user_id', user.id)
     .order('status', { ascending: true })
     .order('name', { ascending: true });
+
+  const priceIds = (materials ?? []).map(m => m.current_price_id).filter(Boolean) as string[];
+  const { data: prices } = priceIds.length
+    ? await supabase.from('material_prices').select('id,unit_cost,currency').in('id', priceIds)
+    : { data: [] as any[] };
+  const priceMap = new Map((prices ?? []).map(price => [price.id, price]));
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-24">
@@ -25,8 +31,8 @@ export default async function MaterialsPage() {
       </header>
 
       <section className="grid gap-3">
-        {(materials ?? []).map((material: any) => {
-          const current = Array.isArray(material.material_prices) ? material.material_prices[0] : material.material_prices;
+        {(materials ?? []).map(material => {
+          const current = material.current_price_id ? priceMap.get(material.current_price_id) : null;
           return (
             <Link key={material.id} href={`/materials/${material.id}`} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900">
               <div className="flex items-start justify-between gap-4">
