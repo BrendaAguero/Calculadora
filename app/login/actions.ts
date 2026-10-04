@@ -1,36 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
 
-async function getRedirectUrl() {
-  const headerStore = await headers();
-  let origin: string;
-
-  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
-    origin = `https://${process.env.VERCEL_URL}`;
-  } else {
-    const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-    if (configuredUrl && !configuredUrl.includes("localhost")) {
-      origin = configuredUrl;
-    } else {
-      const forwardedProto = headerStore.get("x-forwarded-proto");
-      const forwardedHost = headerStore.get("x-forwarded-host") || headerStore.get("host");
-      if (forwardedHost && !forwardedHost.includes("localhost")) {
-        origin = `${forwardedProto || "https"}://${forwardedHost}`;
-      } else {
-        origin = process.env.NODE_ENV === "development"
-          ? "http://localhost:3000"
-          : "https://calculadora-emprender.vercel.app";
-      }
-    }
-  }
-
-  return `${origin}/auth/callback`;
-}
+// Use the stable Vercel preview alias for the Etapa 3 auth flow.
+// This avoids generating auth links with localhost or a short-lived deployment hostname.
+const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender-git-etapa-3-auth-brendaagueros-projects.vercel.app";
 
 export async function requestCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim();
@@ -45,7 +22,7 @@ export async function requestCode(_prevState: ActionState, formData: FormData): 
     email,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: await getRedirectUrl(),
+      emailRedirectTo: `${AUTH_CALLBACK_ORIGIN}/auth/callback`,
       data: { full_name: fullName || null, terms_accepted: "true" },
     },
   });
