@@ -6,7 +6,6 @@ import { signInWithPassword, type ActionState } from "./actions";
 import { createClient } from "@/lib/supabase/client";
 
 const initialState: ActionState = {};
-const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender.vercel.app";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -38,7 +37,7 @@ export default function LoginPage() {
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${AUTH_CALLBACK_ORIGIN}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: { full_name: fullName || null, terms_accepted: "true" },
         },
       });
