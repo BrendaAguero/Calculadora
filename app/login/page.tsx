@@ -1,15 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState, useTransition } from "react";
 import { useActionState } from "react";
 import { requestCode, signInWithPassword, type ActionState } from "./actions";
+import { createClient } from "@/lib/supabase/client";
 
 const initialState: ActionState = {};
+const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender.vercel.app";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [loginState, loginAction, loginPending] = useActionState(signInWithPassword, initialState);
-  const [requestState, requestAction, requestPending] = useActionState(requestCode, initialState);
+  const [requestState, setRequestState] = useState<ActionState>({});
+  const [registerPending, startRegisterTransition] = useTransition();
+
+  async function handleRegister(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRequestState({});
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") || "").trim();
+    const fullName = String(formData.get("full_name") || "").trim();
+    const termsAccepted = formData.get("terms_accepted") === "on";
+
+    if (!email) {
+      setRequestState({ error: "Ingresá tu email." });
+      return;
+    }
+    if (!termsAccepted) {
+      setRequestState({ error: "Tenés que aceptar los términos para continuar." });
+      return;
+    }
+
+    startRegisterTransition(async () => {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${AUTH_CALLBACK_ORIGIN}/auth/callback`,
+          data: { full_name: fullName || null, terms_accepted: "true" },
+        },
+      });
+
+      if (error) {
+        setRequestState({ error: error.message });
+        return;
+      }
+
+      setRequestState({ success: true });
+    });
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-neutral-50 px-6 dark:bg-neutral-950">
@@ -47,10 +88,10 @@ export default function LoginPage() {
           <div className="space-y-4 text-center">
             <h2 className="text-lg font-semibold">Revisá tu correo</h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">Te enviamos un enlace seguro. Al entrar por primera vez vas a poder crear tu contraseña.</p>
-            <button type="button" onClick={() => window.location.reload()} className="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm">Usar otro email</button>
+            <button type="button" onClick={() => setRequestState({})} className="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm">Usar otro email</button>
           </div>
         ) : (
-          <form action={requestAction} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-sm font-medium" htmlFor="full_name">Nombre</label>
               <input id="full_name" name="full_name" type="text" required className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2" placeholder="Tu nombre" />
@@ -64,8 +105,8 @@ export default function LoginPage() {
               <span>Acepto los términos y condiciones.</span>
             </label>
             {requestState.error && <p className="text-sm text-red-600">{requestState.error}</p>}
-            <button type="submit" disabled={requestPending} className="w-full rounded-md bg-orange-800 px-4 py-2 text-white disabled:opacity-50">
-              {requestPending ? "Enviando..." : "Crear cuenta"}
+            <button type="submit" disabled={registerPending} className="w-full rounded-md bg-orange-800 px-4 py-2 text-white disabled:opacity-50">
+              {registerPending ? "Enviando..." : "Crear cuenta"}
             </button>
           </form>
         )}
