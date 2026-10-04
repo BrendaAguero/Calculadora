@@ -12,15 +12,12 @@ export default async function Home() {
         Calculadora Emprender
       </h1>
       <p className="max-w-md text-neutral-600 dark:text-neutral-400">
-        Sesión iniciada como {user?.email}. Etapa 3 (autenticación) completada.
+        Sesión iniciada como {user?.email}. Etapa 4 (licencias y permisos) en validación.
       </p>
       <div className="flex gap-4 text-sm">
-        <a className="underline" href="/profile">
-          Mi perfil
-        </a>
-        <a className="underline" href="/preferences">
-          Preferencias
-        </a>
+        <a className="underline" href="/profile">Mi perfil</a>
+        <a className="underline" href="/preferences">Preferencias</a>
+        <a className="underline" href="/access">Licencia y acceso</a>
       </div>
     </main>
   );
