@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
 
-// Stable public origin used by the production authentication flow.
-// Never expose a local or account-specific Vercel Preview hostname in auth emails.
 const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender.vercel.app";
 
 export async function requestCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -29,6 +27,35 @@ export async function requestCode(_prevState: ActionState, formData: FormData): 
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+export async function signInWithPassword(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
+  if (!email || !password) return { error: "Ingresá tu email y contraseña." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: "Email o contraseña incorrectos." };
+  redirect("/");
+}
+
+export async function setPassword(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const password = String(formData.get("password") || "");
+  const confirmation = String(formData.get("password_confirmation") || "");
+  if (password.length < 8) return { error: "La contraseña debe tener al menos 8 caracteres." };
+  if (password !== confirmation) return { error: "Las contraseñas no coinciden." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.auth.updateUser({
+    password,
+    data: { ...user.user_metadata, password_set: true },
+  });
+  if (error) return { error: error.message };
+  redirect("/");
 }
 
 export async function signOut() {
