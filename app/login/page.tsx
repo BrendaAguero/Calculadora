@@ -1,28 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { requestCode, verifyCode, type ActionState } from "./actions";
+import { useActionState } from "react";
+import { requestCode, type ActionState } from "./actions";
 
 const initialState: ActionState = {};
 
 export default function LoginPage() {
-  const [step, setStep] = useState<"request" | "verify">("request");
-  const [email, setEmail] = useState("");
-
   const [requestState, requestAction, requestPending] = useActionState(
     requestCode,
     initialState
   );
-  const [verifyState, verifyAction, verifyPending] = useActionState(
-    verifyCode,
-    initialState
-  );
-
-  useEffect(() => {
-    if (requestState.success) {
-      setStep("verify");
-    }
-  }, [requestState.success]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-neutral-50 px-6 dark:bg-neutral-950">
@@ -31,14 +18,22 @@ export default function LoginPage() {
           Calculadora Emprender
         </h1>
 
-        {step === "request" ? (
-          <form
-            action={(formData) => {
-              setEmail(String(formData.get("email") || ""));
-              requestAction(formData);
-            }}
-            className="space-y-4"
-          >
+        {requestState.success ? (
+          <div className="space-y-4 text-center">
+            <h2 className="text-lg font-semibold">Revisá tu correo</h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Te enviamos un enlace seguro para ingresar a la Calculadora. Abrilo desde este dispositivo para iniciar sesión.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm"
+            >
+              Usar otro email
+            </button>
+          </div>
+        ) : (
+          <form action={requestAction} className="space-y-4">
             <div>
               <label className="block text-sm font-medium" htmlFor="full_name">
                 Nombre
@@ -76,46 +71,7 @@ export default function LoginPage() {
               disabled={requestPending}
               className="w-full rounded-md bg-orange-800 px-4 py-2 text-white disabled:opacity-50"
             >
-              {requestPending ? "Enviando..." : "Enviar código"}
-            </button>
-          </form>
-        ) : (
-          <form action={verifyAction} className="space-y-4">
-            <input type="hidden" name="email" value={email} />
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Te enviamos un código de 6 dígitos a <strong>{email}</strong>.
-            </p>
-            <div>
-              <label className="block text-sm font-medium" htmlFor="code">
-                Código
-              </label>
-              <input
-                id="code"
-                name="code"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                required
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest"
-                placeholder="123456"
-              />
-            </div>
-            {verifyState.error && (
-              <p className="text-sm text-red-600">{verifyState.error}</p>
-            )}
-            <button
-              type="submit"
-              disabled={verifyPending}
-              className="w-full rounded-md bg-orange-800 px-4 py-2 text-white disabled:opacity-50"
-            >
-              {verifyPending ? "Verificando..." : "Ingresar"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep("request")}
-              className="w-full text-sm text-neutral-500 underline"
-            >
-              Usar otro email
+              {requestPending ? "Enviando..." : "Enviar enlace de acceso"}
             </button>
           </form>
         )}
