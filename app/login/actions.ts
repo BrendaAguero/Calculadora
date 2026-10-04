@@ -1,11 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
-
-const AUTH_CALLBACK_ORIGIN = "https://calculadora-emprender.vercel.app";
 
 export async function requestCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim();
@@ -15,12 +14,17 @@ export async function requestCode(_prevState: ActionState, formData: FormData): 
   if (!email) return { error: "Ingresá tu email." };
   if (!termsAccepted) return { error: "Tenés que aceptar los términos para continuar." };
 
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") || "https";
+  if (!host) return { error: "No se pudo determinar la dirección de la aplicación." };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: `${AUTH_CALLBACK_ORIGIN}/auth/callback`,
+      emailRedirectTo: `${protocol}://${host}/auth/callback`,
       data: { full_name: fullName || null, terms_accepted: "true" },
     },
   });
