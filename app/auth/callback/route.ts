@@ -17,6 +17,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login?error=invalid_or_expired_link", requestUrl.origin));
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
   const safeNext = next.startsWith("/") ? next : "/";
+
+  if (!user?.user_metadata?.password_set) {
+    return NextResponse.redirect(new URL("/set-password", requestUrl.origin));
+  }
+
   return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
 }
