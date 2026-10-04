@@ -1,0 +1,42 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { archiveMold, updateMold } from '../actions';
+
+export default async function MoldDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return <main className="p-6">Iniciá sesión para continuar.</main>;
+
+  const { data: mold } = await supabase.from('molds').select('*').eq('id', id).eq('user_id', user.id).single();
+  if (!mold) notFound();
+
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 px-4 py-6 pb-24">
+      <header>
+        <Link href="/gestion/moldes" className="text-sm text-neutral-500">← Volver a moldes</Link>
+        <h1 className="mt-3 text-2xl font-semibold">Editar molde</h1>
+      </header>
+
+      <form action={updateMold} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <input type="hidden" name="mold_id" value={mold.id} />
+        <label className="grid gap-1"><span className="text-sm font-medium">Nombre *</span><input name="name" required defaultValue={mold.name} className="rounded-xl border px-3 py-3" /></label>
+        <label className="grid gap-1"><span className="text-sm font-medium">Foto (URL)</span><input name="photo_url" type="url" defaultValue={mold.photo_url ?? ''} className="rounded-xl border px-3 py-3" /></label>
+        <div className="grid grid-cols-[1fr_130px] gap-3">
+          <label className="grid gap-1"><span className="text-sm font-medium">Capacidad de agua *</span><input name="water_capacity" type="number" min="0.01" step="0.01" required defaultValue={mold.water_capacity} className="rounded-xl border px-3 py-3" /></label>
+          <label className="grid gap-1"><span className="text-sm font-medium">Unidad</span><select name="water_unit" defaultValue={mold.water_unit} className="rounded-xl border px-3 py-3"><option value="g">g</option><option value="ml">ml</option><option value="kg">kg</option><option value="l">l</option></select></label>
+        </div>
+        <label className="grid gap-1"><span className="text-sm font-medium">Yeso por pieza</span><input name="plaster_per_piece" type="number" min="0.01" step="0.01" defaultValue={mold.plaster_per_piece ?? ''} className="rounded-xl border px-3 py-3" /></label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="grid gap-1"><span className="text-sm font-medium">Costo</span><input name="cost" type="number" min="0" step="0.01" required defaultValue={mold.cost} className="rounded-xl border px-3 py-3" /></label>
+          <label className="grid gap-1"><span className="text-sm font-medium">Usos estimados</span><input name="estimated_uses" type="number" min="0" step="1" defaultValue={mold.estimated_uses ?? ''} className="rounded-xl border px-3 py-3" /></label>
+        </div>
+        <label className="grid gap-1"><span className="text-sm font-medium">Notas</span><textarea name="notes" rows={4} defaultValue={mold.notes ?? ''} className="rounded-xl border px-3 py-3" /></label>
+        <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-3 font-medium text-white">Guardar cambios</button>
+      </form>
+
+      {mold.status === 'active' && <form action={archiveMold}><input type="hidden" name="mold_id" value={mold.id} /><button type="submit" className="rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-700">Archivar molde</button></form>}
+    </main>
+  );
+}
