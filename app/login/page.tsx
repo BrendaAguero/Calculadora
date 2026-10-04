@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { useActionState } from "react";
-import { requestCode, signInWithPassword, type ActionState } from "./actions";
+import { signInWithPassword, type ActionState } from "./actions";
 import { createClient } from "@/lib/supabase/client";
 
 const initialState: ActionState = {};
