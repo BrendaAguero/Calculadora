@@ -18,8 +18,12 @@ async function auth() {
 
 async function yesoActivityId(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data, error } = await supabase.from('activities').select('id').eq('code', 'YESO').eq('active', true).single();
-  if (error || !data) throw new Error('No se encontró la actividad YESO.');
+  if (error || !data) throw new Error(error?.message ?? 'No se encontró la actividad YESO.');
   return data.id;
+}
+
+function moldError(message: string) {
+  return `/gestion/moldes/new?error=${encodeURIComponent(message.slice(0, 300))}`;
 }
 
 export async function createMold(formData: FormData) {
@@ -34,23 +38,28 @@ export async function createMold(formData: FormData) {
   const notes = String(formData.get('notes') ?? '').trim() || null;
 
   if (!name || referenceMeasurementValue <= 0 || cost < 0 || (estimatedUses !== null && estimatedUses < 0)) {
-    throw new Error('Completá los datos del molde correctamente.');
+    redirect(moldError('Completá los datos del molde correctamente.'));
   }
 
-  const activityId = await yesoActivityId(supabase);
-  const { error } = await supabase.from('molds').insert({
-    user_id: userId,
-    activity_id: activityId,
-    name,
-    photo_url: photoUrl,
-    reference_measurement_value: referenceMeasurementValue,
-    reference_measurement_unit: referenceMeasurementUnit,
-    cost,
-    estimated_uses: estimatedUses,
-    notes,
-    status: 'active',
-  });
-  if (error) throw new Error(error.message);
+  try {
+    const activityId = await yesoActivityId(supabase);
+    const { error } = await supabase.from('molds').insert({
+      user_id: userId,
+      activity_id: activityId,
+      name,
+      photo_url: photoUrl,
+      reference_measurement_value: referenceMeasurementValue,
+      reference_measurement_unit: referenceMeasurementUnit,
+      cost,
+      estimated_uses: estimatedUses,
+      notes,
+      status: 'active',
+    });
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'No se pudo guardar el molde.';
+    redirect(moldError(message));
+  }
 
   revalidatePath('/gestion/moldes');
   redirect('/gestion/moldes');
@@ -66,9 +75,8 @@ export async function updateMold(formData: FormData) {
   const cost = number(formData.get('cost'));
   const estimatedUsesRaw = String(formData.get('estimated_uses') ?? '').trim();
   const estimatedUses = estimatedUsesRaw ? Math.max(0, Math.floor(number(formData.get('estimated_uses')))) : null;
-  const notes = String(formData.get('notes') ?? '').trim() || null;
 
-  if (!moldId || !name || referenceMeasurementValue <= 0 || cost < 0) throw new Error('Datos de molde inválidos.');
+  if (!moldId || !name || referenceMeasurementValue <= 0 || cost < 0) redirect(`/gestion/moldes/${moldId}?error=${encodeURIComponent('Datos de molde inválidos.')}`);
   const { error } = await supabase.from('molds').update({
     name,
     photo_url: photoUrl,
@@ -76,9 +84,9 @@ export async function updateMold(formData: FormData) {
     reference_measurement_unit: referenceMeasurementUnit,
     cost,
     estimated_uses: estimatedUses,
-    notes,
+    notes: String(formData.get('notes') ?? '').trim() || null,
   }).eq('id', moldId).eq('user_id', userId);
-  if (error) throw new Error(error.message);
+  if (error) redirect(`/gestion/moldes/${moldId}?error=${encodeURIComponent(error.message.slice(0, 300))}`);
   revalidatePath('/gestion/moldes');
   redirect('/gestion/moldes');
 }
@@ -87,7 +95,7 @@ export async function archiveMold(formData: FormData) {
   const { supabase, userId } = await auth();
   const moldId = String(formData.get('mold_id') ?? '');
   const { error } = await supabase.from('molds').update({ status: 'archived' }).eq('id', moldId).eq('user_id', userId);
-  if (error) throw new Error(error.message);
+  if (error) redirect(`/gestion/moldes/${moldId}?error=${encodeURIComponent(error.message.slice(0, 300))}`);
   revalidatePath('/gestion/moldes');
   redirect('/gestion/moldes');
 }
