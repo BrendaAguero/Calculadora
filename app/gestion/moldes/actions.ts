@@ -43,19 +43,35 @@ export async function createMold(formData: FormData) {
 
   try {
     const activityId = await yesoActivityId(supabase);
-    const { error } = await supabase.from('molds').insert({
-      user_id: userId,
-      activity_id: activityId,
-      name,
-      photo_url: photoUrl,
-      reference_measurement_value: referenceMeasurementValue,
-      reference_measurement_unit: referenceMeasurementUnit,
-      cost,
-      estimated_uses: estimatedUses,
-      notes,
-      status: 'active',
-    });
-    if (error) throw new Error(error.message);
+    // Evita duplicados accidentales si el navegador reenvía el mismo formulario varias veces.
+    const cutoff = new Date(Date.now() - 15000).toISOString();
+    const { data: recent } = await supabase.from('molds')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('name', name)
+      .eq('activity_id', activityId)
+      .eq('reference_measurement_value', referenceMeasurementValue)
+      .eq('reference_measurement_unit', referenceMeasurementUnit)
+      .eq('cost', cost)
+      .gte('created_at', cutoff)
+      .limit(1)
+      .maybeSingle();
+
+    if (!recent) {
+      const { error } = await supabase.from('molds').insert({
+        user_id: userId,
+        activity_id: activityId,
+        name,
+        photo_url: photoUrl,
+        reference_measurement_value: referenceMeasurementValue,
+        reference_measurement_unit: referenceMeasurementUnit,
+        cost,
+        estimated_uses: estimatedUses,
+        notes,
+        status: 'active',
+      });
+      if (error) throw new Error(error.message);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No se pudo guardar el molde.';
     redirect(moldError(message));
