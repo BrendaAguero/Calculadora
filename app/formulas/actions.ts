@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ownsActivity } from '@/lib/access/activities';
 import { INGREDIENT_TYPES, INGREDIENT_UNITS } from './constants';
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -145,8 +146,7 @@ export async function createFormula(_prev: FormulaFormState, formData: FormData)
   const parsed = await parseVersion(supabase, userId, values);
   if ('error' in parsed) return { error: parsed.error, values };
 
-  const { data: activity } = await supabase.from('activities').select('id').eq('id', values.activity_id).eq('active', true).maybeSingle();
-  if (!activity) return { error: 'La actividad elegida no está disponible.', values };
+  if (!(await ownsActivity(supabase, userId, values.activity_id))) return { error: 'Elegí una de tus actividades.', values };
   const moldError = await checkMold(supabase, userId, values.mold_id);
   if (moldError) return { error: moldError, values };
 

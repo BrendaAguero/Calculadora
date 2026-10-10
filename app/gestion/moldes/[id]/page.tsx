@@ -16,7 +16,7 @@ export default async function MoldDetailPage({ params, searchParams }: { params:
 
   const { data: mold, error: loadError } = await supabase
     .from('molds')
-    .select('id,name,photo_url,reference_measurement_value,reference_measurement_unit,cost,estimated_uses,notes,status')
+    .select('id,name,photo_url,reference_measurement_value,reference_measurement_unit,cost,estimated_uses,notes,status,activities(name,code)')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -27,17 +27,20 @@ export default async function MoldDetailPage({ params, searchParams }: { params:
   if (!mold) notFound();
 
   const archived = mold.status === 'archived';
+  const activity = Array.isArray(mold.activities) ? mold.activities[0] : mold.activities;
 
   return (
     <main className={pageClass}>
       <header>
         <Link href="/gestion/moldes" className="text-sm text-neutral-500 dark:text-neutral-400">← Volver a moldes</Link>
         <h1 className="mt-3 text-2xl font-semibold">Editar molde</h1>
+        {activity && <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Actividad: {activity.name}</p>}
         {archived && <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Este molde está archivado. Sus datos se conservan.</p>}
       </header>
       {error && <div role="alert" className={errorClass}>{error}</div>}
       <MoldForm
         action={updateMold}
+        activityCode={activity?.code}
         moldId={mold.id}
         submitLabel="Guardar cambios"
         initialValues={{

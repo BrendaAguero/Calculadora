@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ownsActivity } from '@/lib/access/activities';
 
 const UNIT_FACTORS: Record<string, { group: string; factor: number }> = {
   g: { group: 'mass', factor: 1 },
@@ -38,6 +39,12 @@ async function userId() {
   return { supabase, id: user.id };
 }
 
+// Vacío = material compartido entre todas las actividades de la usuaria; si no, debe ser una actividad suya.
+async function activityError(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, activityId: string | null) {
+  if (!activityId) return null;
+  return (await ownsActivity(supabase, userId, activityId)) ? null : 'Elegí una de tus actividades o «Compartido».';
+}
+
 export async function createMaterial(formData: FormData) {
   const { supabase, id } = await userId();
   const name = String(formData.get('name') ?? '').trim();
@@ -48,6 +55,8 @@ export async function createMaterial(formData: FormData) {
   const purchaseUnit = String(formData.get('purchase_unit') ?? defaultUnit);
 
   if (!name || purchaseQuantity <= 0 || purchasePrice < 0) throw new Error('Datos de material inválidos.');
+  const invalidActivity = await activityError(supabase, id, activityId);
+  if (invalidActivity) redirect(`/materials/new?error=${encodeURIComponent(invalidActivity)}`);
 
   const { data: material, error } = await supabase
     .from('materials')
@@ -88,6 +97,10 @@ export async function updateMaterial(formData: FormData) {
   const activityId = String(formData.get('activity_id') ?? '').trim() || null;
 
   if (!materialId || !name) throw new Error('Datos de material inválidos.');
+  // Se acepta la actividad que el material ya tenía aunque la usuaria ya no la tenga, para no perderla al guardar.
+  const { data: existing } = await supabase.from('materials').select('activity_id').eq('id', materialId).eq('user_id', id).maybeSingle();
+  const invalidActivity = activityId === existing?.activity_id ? null : await activityError(supabase, id, activityId);
+  if (invalidActivity) redirect(`/materials/${materialId}?error=${encodeURIComponent(invalidActivity)}`);
 
   const { error } = await supabase.from('materials').update({ name, default_unit: defaultUnit, activity_id: activityId }).eq('id', materialId).eq('user_id', id);
   if (error) throw new Error(error.message);

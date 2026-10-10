@@ -74,7 +74,7 @@ function Ingredients({ items, setItems, materials }: { items: IngredientInput[];
 
 function FormulaFields({ mode, values, activities, activityCode, materials, molds }: { mode: Props['mode']; values: Partial<FormulaFormValues>; activities: Activity[]; activityCode?: string; materials: Material[]; molds: Option[] }) {
   const [items, setItems] = useState<IngredientInput[]>(values.items?.length ? values.items : mode === 'info' ? [] : [{ ...emptyItem }]);
-  const [activityId, setActivityId] = useState(values.activity_id ?? '');
+  const [activityId, setActivityId] = useState(values.activity_id || (activities.length === 1 ? activities[0].id : ''));
   const code = activityCode ?? activities.find(a => a.id === activityId)?.code;
   const showInfo = mode !== 'version';
   const showRecipe = mode !== 'info';
@@ -86,7 +86,11 @@ function FormulaFields({ mode, values, activities, activityCode, materials, mold
           <label className="grid gap-1 text-sm font-medium">Nombre *
             <input name="name" required defaultValue={values.name ?? ''} placeholder="Ej. Porta sahumerio" className={inputClass} />
           </label>
-          {mode === 'create' && (
+          {mode === 'create' && activities.length === 1 && (
+            // Con una sola actividad no hace falta preguntar.
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Actividad: {activities[0].name}<input type="hidden" name="activity_id" value={activities[0].id} /></p>
+          )}
+          {mode === 'create' && activities.length > 1 && (
             <label className="grid gap-1 text-sm font-medium">Actividad *
               <select name="activity_id" required value={activityId} onChange={e => setActivityId(e.target.value)} className={inputClass}>
                 <option value="">Elegí una actividad</option>
