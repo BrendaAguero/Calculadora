@@ -10,7 +10,7 @@ export default function GestionPage() {
     <Link href="/materials" className={card}><h2 className="font-semibold">Materiales</h2><p className={hint}>Costos y precios con historial.</p></Link>
     <Link href="/gestion/moldes" className={card}><h2 className="font-semibold">Moldes</h2><p className={hint}>Registrá fotos, capacidad, costo y usos de tus moldes.</p></Link>
     <Link href="/formulas" className={card}><h2 className="font-semibold">Fórmulas</h2><p className={hint}>Recetas, ingredientes y versiones.</p></Link>
-    <div className={soon}><h2 className="font-semibold">Productos</h2><p className={hint}>Se incorporará en la Etapa 10.</p></div>
+    <Link href="/gestion/productos" className={card}><h2 className="font-semibold">Productos</h2><p className={hint}>Fórmulas, moldes, precios con historial y rentabilidad.</p></Link>
     <div className={soon}><h2 className="font-semibold">Historial</h2><p className={hint}>Se incorporará en la Etapa 11.</p></div>
   </div></AppShell>;
 }

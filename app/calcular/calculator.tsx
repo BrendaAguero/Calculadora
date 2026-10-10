@@ -7,6 +7,7 @@ import { compute, num, type CalcInput, type Mode, type PriceMethod } from './com
 export type SavedMold = { id: string; name: string; measurement: number | null; unit: string | null; cost: number | null; estimatedUses: number | null };
 export type SavedFormula = { id: string; name: string; versionNumber: number | null; waterPercentage: number | null };
 export type SavedMaterial = { id: string; name: string; pricePerKg: number };
+export type SavedProduct = { id: string; name: string; defaultFormulaId: string | null; defaultMoldId: string | null };
 
 const WATER_REFERENCES = [70, 75, 80];
 // El agua del molde se mide en peso o volumen; 1 ml de agua pesa 1 g.
@@ -24,7 +25,7 @@ function grams(value: number) {
   return `${value.toLocaleString('es-AR', { maximumFractionDigits: 1 })} g`;
 }
 
-export function Calculator({ molds, formulas, materials }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[] }) {
+export function Calculator({ molds, formulas, materials, products }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[] }) {
   // Un solo estado para los tres modos: cambiar de modo no borra lo cargado.
   const [input, setInput] = useState<CalcInput>({
     mode: 'easy', quantity: '1', moldWater: '', plasterPerPiece: '', waterPercentage: '75', plasterPriceKg: '', waste: '0',
@@ -34,6 +35,7 @@ export function Calculator({ molds, formulas, materials }: { molds: SavedMold[];
   const [moldId, setMoldId] = useState('');
   const [formulaId, setFormulaId] = useState('');
   const [materialId, setMaterialId] = useState('');
+  const [productId, setProductId] = useState('');
   // Con un molde guardado, el costo del molde se reparte por uso: costo ÷ usos estimados × piezas, hasta que la usuaria lo edite.
   const [moldCostAuto, setMoldCostAuto] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
@@ -75,9 +77,18 @@ export function Calculator({ molds, formulas, materials }: { molds: SavedMold[];
     if (chosen?.waterPercentage != null) set({ waterPercentage: String(chosen.waterPercentage) });
   }
 
+  function chooseProduct(id: string) {
+    setProductId(id);
+    setStatus(null);
+    // Al elegir un producto se usan su fórmula y su molde predeterminados (si están disponibles).
+    const chosen = products.find(p => p.id === id);
+    if (chosen?.defaultMoldId && molds.some(m => m.id === chosen.defaultMoldId)) chooseMold(chosen.defaultMoldId);
+    if (chosen?.defaultFormulaId && formulas.some(f => f.id === chosen.defaultFormulaId)) chooseFormula(chosen.defaultFormulaId);
+  }
+
   function save() {
     startSaving(async () => {
-      const response = await saveCalculation({ ...effective, moldId, formulaId, materialId });
+      const response = await saveCalculation({ ...effective, moldId, formulaId, materialId, productId });
       setStatus(response.ok ? { ok: true, message: 'Cálculo guardado. Los precios de hoy quedan congelados en él.' } : { ok: false, message: response.error });
     });
   }
@@ -99,10 +110,19 @@ export function Calculator({ molds, formulas, materials }: { molds: SavedMold[];
         ))}
       </section>
 
-      {(molds.length > 0 || formulas.length > 0) && (
+      {(molds.length > 0 || formulas.length > 0 || products.length > 0) && (
         <section className={cardClass}>
           <h2 className="font-semibold">Usar mis datos guardados (opcional)</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {products.length > 0 && (
+              <label className="text-sm font-medium sm:col-span-2">Producto
+                <select value={productId} onChange={e => chooseProduct(e.target.value)} className={inputClass}>
+                  <option value="">Ninguno</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                {productId && <span className={hintClass}>Al guardar, este costo se usa para la rentabilidad del producto.</span>}
+              </label>
+            )}
             {molds.length > 0 && (
               <label className="text-sm font-medium">Molde
                 <select value={moldId} onChange={e => chooseMold(e.target.value)} className={inputClass}>

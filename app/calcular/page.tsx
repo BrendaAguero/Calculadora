@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
-import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold } from './calculator';
+import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold, type SavedProduct } from './calculator';
 
 const PER_KG: Record<string, number> = { mg: 1_000_000, g: 1000, kg: 1 };
 
@@ -26,10 +26,11 @@ export default async function CalcularPage() {
     );
   }
 
-  const [moldsResult, formulasResult, materialsResult] = await Promise.all([
+  const [moldsResult, formulasResult, materialsResult, productsResult] = await Promise.all([
     supabase.from('molds').select('id,name,reference_measurement_value,reference_measurement_unit,cost,estimated_uses').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
     supabase.from('formulas').select('id,name,current_version_id').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
     supabase.from('materials').select('id,name,default_unit,activity_id,current_price_id').eq('user_id', user.id).eq('status', 'active').order('name'),
+    supabase.from('products').select('id,name,product_formulas(formula_id,is_default),product_molds(mold_id,is_default)').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
   ]);
 
   const versionIds = (formulasResult.data ?? []).map(f => f.current_version_id).filter((v): v is string => Boolean(v));
@@ -38,7 +39,7 @@ export default async function CalcularPage() {
     versionIds.length ? supabase.from('formula_versions').select('id,version_number,water_percentage').in('id', versionIds) : Promise.resolve({ data: [], error: null }),
     priceIds.length ? supabase.from('material_prices').select('id,unit_cost').in('id', priceIds) : Promise.resolve({ data: [], error: null }),
   ]);
-  const loadError = [moldsResult.error, formulasResult.error, materialsResult.error, versionsResult.error, pricesResult.error].find(Boolean)?.message ?? null;
+  const loadError = [moldsResult.error, formulasResult.error, materialsResult.error, productsResult.error, versionsResult.error, pricesResult.error].find(Boolean)?.message ?? null;
 
   const versions = new Map((versionsResult.data ?? []).map(v => [v.id, v]));
   const prices = new Map((pricesResult.data ?? []).map(p => [p.id, Number(p.unit_cost)]));
@@ -56,10 +57,17 @@ export default async function CalcularPage() {
     return [{ id: m.id, name: m.name, pricePerKg: unitCost * factor }];
   });
 
+  const products: SavedProduct[] = (productsResult.data ?? []).map(p => ({
+    id: p.id,
+    name: p.name,
+    defaultFormulaId: (p.product_formulas ?? []).find(f => f.is_default)?.formula_id ?? null,
+    defaultMoldId: (p.product_molds ?? []).find(m => m.is_default)?.mold_id ?? null,
+  }));
+
   return (
     <AppShell>
       {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudieron cargar todos tus datos guardados: {loadError}</div>}
-      <Calculator molds={molds} formulas={formulas} materials={materials} />
+      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} />
     </AppShell>
   );
 }
