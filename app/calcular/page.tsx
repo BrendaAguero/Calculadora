@@ -1,5 +1,65 @@
-import { AppShell } from "@/components/app-shell";
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { AppShell } from '@/components/app-shell';
+import { createClient } from '@/lib/supabase/server';
+import { getOwnedActivities } from '@/lib/access/activities';
+import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold } from './calculator';
 
-export default function CalcularPage() {
-  return <AppShell><header><p className="text-sm text-orange-700 dark:text-orange-300">Calculadora</p><h1 className="mt-1 text-3xl font-bold">Calcular</h1><p className="mt-2 text-sm text-neutral-500">La calculadora de yeso se incorporará en la Etapa 9.</p></header><section className="mt-8 rounded-3xl border border-dashed border-neutral-300 p-6 dark:border-neutral-700"><h2 className="font-semibold">Empezá una cuenta</h2><p className="mt-2 text-sm text-neutral-500">La estructura de esta pantalla ya está lista para los modos Fácil, Estándar y Personalizado.</p></section></AppShell>;
+const PER_KG: Record<string, number> = { mg: 1_000_000, g: 1000, kg: 1 };
+
+export default async function CalcularPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { activities, error } = await getOwnedActivities(supabase, user.id);
+  const yeso = activities.find(activity => activity.code === 'YESO');
+  if (error || !yeso) {
+    return (
+      <AppShell>
+        <h1 className="text-3xl font-bold">Calcular</h1>
+        <div role="alert" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+          {error ? `No se pudieron cargar tus actividades: ${error}` : 'La calculadora de Yeso requiere tener la actividad Yeso.'}
+          <Link href="/access" className="mt-3 block underline">Ver mi licencia y actividades</Link>
+        </div>
+      </AppShell>
+    );
+  }
+
+  const [moldsResult, formulasResult, materialsResult] = await Promise.all([
+    supabase.from('molds').select('id,name,reference_measurement_value,reference_measurement_unit,cost,estimated_uses').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
+    supabase.from('formulas').select('id,name,current_version_id').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
+    supabase.from('materials').select('id,name,default_unit,activity_id,current_price_id').eq('user_id', user.id).eq('status', 'active').order('name'),
+  ]);
+
+  const versionIds = (formulasResult.data ?? []).map(f => f.current_version_id).filter((v): v is string => Boolean(v));
+  const priceIds = (materialsResult.data ?? []).map(m => m.current_price_id).filter((p): p is string => Boolean(p));
+  const [versionsResult, pricesResult] = await Promise.all([
+    versionIds.length ? supabase.from('formula_versions').select('id,version_number,water_percentage').in('id', versionIds) : Promise.resolve({ data: [], error: null }),
+    priceIds.length ? supabase.from('material_prices').select('id,unit_cost').in('id', priceIds) : Promise.resolve({ data: [], error: null }),
+  ]);
+  const loadError = [moldsResult.error, formulasResult.error, materialsResult.error, versionsResult.error, pricesResult.error].find(Boolean)?.message ?? null;
+
+  const versions = new Map((versionsResult.data ?? []).map(v => [v.id, v]));
+  const prices = new Map((pricesResult.data ?? []).map(p => [p.id, Number(p.unit_cost)]));
+
+  const molds: SavedMold[] = (moldsResult.data ?? []).map(m => ({ id: m.id, name: m.name, measurement: m.reference_measurement_value == null ? null : Number(m.reference_measurement_value), unit: m.reference_measurement_unit, cost: m.cost == null ? null : Number(m.cost), estimatedUses: m.estimated_uses }));
+  const formulas: SavedFormula[] = (formulasResult.data ?? []).map(f => {
+    const version = f.current_version_id ? versions.get(f.current_version_id) : undefined;
+    return { id: f.id, name: f.name, versionNumber: version?.version_number ?? null, waterPercentage: version?.water_percentage == null ? null : Number(version.water_percentage) };
+  });
+  // Para el yeso sirven los materiales que se miden en peso, compartidos o de Yeso, y que tienen precio.
+  const materials: SavedMaterial[] = (materialsResult.data ?? []).flatMap(m => {
+    const factor = PER_KG[m.default_unit];
+    const unitCost = m.current_price_id ? prices.get(m.current_price_id) : undefined;
+    if (!factor || unitCost == null || (m.activity_id && m.activity_id !== yeso.id)) return [];
+    return [{ id: m.id, name: m.name, pricePerKg: unitCost * factor }];
+  });
+
+  return (
+    <AppShell>
+      {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudieron cargar todos tus datos guardados: {loadError}</div>}
+      <Calculator molds={molds} formulas={formulas} materials={materials} />
+    </AppShell>
+  );
 }
