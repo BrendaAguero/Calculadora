@@ -1,15 +1,61 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { archiveMold, updateMold } from '../actions';
+import { archiveMold, restoreMold, updateMold } from '../actions';
+import { MoldForm } from '../mold-form';
 
-export default async function MoldDetailPage({ params }: { params: Promise<{ id: string }> }) {
+const pageClass = 'mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
+const errorClass = 'rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200';
+
+export default async function MoldDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return <main className="p-6">Iniciá sesión para continuar.</main>;
-  const { data: mold } = await supabase.from('molds').select('*').eq('id', id).eq('user_id', user.id).single();
+  if (!user) return <main className={pageClass}>Iniciá sesión para continuar.</main>;
+
+  const { data: mold, error: loadError } = await supabase
+    .from('molds')
+    .select('id,name,photo_url,reference_measurement_value,reference_measurement_unit,cost,estimated_uses,notes,status')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (loadError) {
+    return <main className={pageClass}><Link href="/gestion/moldes" className="text-sm text-neutral-500 dark:text-neutral-400">← Volver a moldes</Link><div className={errorClass}>No se pudo cargar el molde: {loadError.message}</div></main>;
+  }
   if (!mold) notFound();
 
-  return <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 px-4 py-6 pb-24"><header><Link href="/gestion/moldes" className="text-sm text-neutral-500">← Volver a moldes</Link><h1 className="mt-3 text-2xl font-semibold">Editar molde</h1></header><form action={updateMold} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"><input type="hidden" name="mold_id" value={mold.id} /><label className="grid gap-1"><span className="text-sm font-medium">Nombre *</span><input name="name" required defaultValue={mold.name} className="rounded-xl border px-3 py-3" /></label><label className="grid gap-1"><span className="text-sm font-medium">Foto (URL)</span><input name="photo_url" type="url" defaultValue={mold.photo_url ?? ''} className="rounded-xl border px-3 py-3" /></label><div className="grid grid-cols-[1fr_130px] gap-3"><label className="grid gap-1"><span className="text-sm font-medium">Capacidad de agua *</span><input name="water_capacity" type="number" min="0.01" step="0.01" required defaultValue={mold.water_capacity} className="rounded-xl border px-3 py-3" /></label><label className="grid gap-1"><span className="text-sm font-medium">Unidad</span><select name="water_unit" defaultValue={mold.water_unit} className="rounded-xl border px-3 py-3"><option value="g">g</option><option value="ml">ml</option><option value="kg">kg</option><option value="l">l</option></select></label></div><label className="grid gap-1"><span className="text-sm font-medium">Yeso por pieza</span><input name="plaster_per_piece" type="number" min="0.01" step="0.01" defaultValue={mold.plaster_per_piece ?? ''} className="rounded-xl border px-3 py-3" /></label><div className="grid grid-cols-2 gap-3"><label className="grid gap-1"><span className="text-sm font-medium">Costo</span><input name="cost" type="number" min="0" step="0.01" required defaultValue={mold.cost} className="rounded-xl border px-3 py-3" /></label><label className="grid gap-1"><span className="text-sm font-medium">Usos estimados</span><input name="estimated_uses" type="number" min="0" step="1" defaultValue={mold.estimated_uses ?? ''} className="rounded-xl border px-3 py-3" /></label></div><label className="grid gap-1"><span className="text-sm font-medium">Notas</span><textarea name="notes" rows={4} defaultValue={mold.notes ?? ''} className="rounded-xl border px-3 py-3" /></label><button type="submit" className="rounded-xl bg-neutral-900 px-4 py-3 font-medium text-white">Guardar cambios</button></form>{mold.status === 'active' && <form action={archiveMold}><input type="hidden" name="mold_id" value={mold.id} /><button type="submit" className="rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-700">Archivar molde</button></form>}</main>;
+  const archived = mold.status === 'archived';
+
+  return (
+    <main className={pageClass}>
+      <header>
+        <Link href="/gestion/moldes" className="text-sm text-neutral-500 dark:text-neutral-400">← Volver a moldes</Link>
+        <h1 className="mt-3 text-2xl font-semibold">Editar molde</h1>
+        {archived && <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Este molde está archivado. Sus datos se conservan.</p>}
+      </header>
+      {error && <div role="alert" className={errorClass}>{error}</div>}
+      <MoldForm
+        action={updateMold}
+        moldId={mold.id}
+        submitLabel="Guardar cambios"
+        initialValues={{
+          name: mold.name ?? '',
+          photo_url: mold.photo_url ?? '',
+          reference_measurement_value: mold.reference_measurement_value == null ? '' : String(mold.reference_measurement_value),
+          reference_measurement_unit: mold.reference_measurement_unit ?? 'g',
+          cost: mold.cost == null ? '' : String(mold.cost),
+          estimated_uses: mold.estimated_uses == null ? '' : String(mold.estimated_uses),
+          notes: mold.notes ?? '',
+        }}
+      />
+      <form action={archived ? restoreMold : archiveMold}>
+        <input type="hidden" name="mold_id" value={mold.id} />
+        {archived
+          ? <button type="submit" className="rounded-xl border border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-800 dark:border-neutral-700 dark:text-neutral-200">Reactivar molde</button>
+          : <button type="submit" className="rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:text-red-300">Archivar molde</button>}
+      </form>
+    </main>
+  );
 }

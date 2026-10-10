@@ -307,9 +307,8 @@ material, water, additive, pigment, hardener, other.
 - activity_id
 - name
 - photo_url
-- water_capacity
-- water_unit
-- plaster_per_piece nullable
+- reference_measurement_value nullable
+- reference_measurement_unit nullable (g, kg, ml, l)
 - cost
 - estimated_uses
 - notes
@@ -317,7 +316,9 @@ material, water, additive, pigment, hardener, other.
 - created_at
 - updated_at
 
-Para Yeso, si la medición del molde es 300 g de agua, se toma como 300 g de yeso por pieza salvo que el usuario indique otra cosa.
+La medición es genérica; su interpretación depende de la actividad. Para Yeso, si la medición del molde es 300 g de agua, se toma como 300 g de yeso por pieza salvo que el usuario indique otra cosa.
+
+(Verificado contra la base real el 2026-10-10: no existen las columnas water_capacity, water_unit ni plaster_per_piece.)
 
 ### mold_usage
 - id

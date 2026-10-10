@@ -16,7 +16,7 @@ export default async function MaterialsPage() {
   const priceIds = (materials ?? []).map(m => m.current_price_id).filter(Boolean) as string[];
   const { data: prices } = priceIds.length
     ? await supabase.from('material_prices').select('id,unit_cost,currency').in('id', priceIds)
-    : { data: [] as any[] };
+    : { data: [] as { id: string; unit_cost: number; currency: string }[] };
   const priceMap = new Map((prices ?? []).map(price => [price.id, price]));
 
   return (

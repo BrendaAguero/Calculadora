@@ -72,8 +72,8 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
       return activity?.code ? [activity.code] : [];
     }),
     modules: (modules ?? []).flatMap((item) => {
-      const module = Array.isArray(item.modules) ? item.modules[0] : item.modules;
-      return module?.code ? [module.code] : [];
+      const moduleRow = Array.isArray(item.modules) ? item.modules[0] : item.modules;
+      return moduleRow?.code ? [moduleRow.code] : [];
     }),
   };
 }

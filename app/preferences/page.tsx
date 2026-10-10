@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { updatePreferences } from "./actions";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function PreferencesPage() {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function PreferencesPage() {
 
   const { data: preferences } = await supabase
     .from("user_preferences")
-    .select("theme, currency, default_margin, default_markup")
+    .select("currency, default_margin, default_markup")
     .eq("user_id", user.id)
     .single();
 
@@ -20,21 +21,7 @@ export default async function PreferencesPage() {
     <main className="mx-auto max-w-md px-6 py-10">
       <h1 className="mb-6 text-xl font-semibold">Preferencias</h1>
       <form action={updatePreferences} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium" htmlFor="theme">
-            Tema
-          </label>
-          <select
-            id="theme"
-            name="theme"
-            defaultValue={preferences?.theme ?? "system"}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
-          >
-            <option value="light">Diurno</option>
-            <option value="dark">Nocturno</option>
-            <option value="system">Sistema</option>
-          </select>
-        </div>
+        <ThemeToggle />
         <div>
           <label className="block text-sm font-medium" htmlFor="currency">
             Moneda

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAccessSnapshot, getResourceLimit } from "@/lib/access/permissions";
 
@@ -24,7 +25,7 @@ export default async function AccessPage() {
     <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <a href="/" className="text-sm underline">← Volver</a>
+          <Link href="/" className="text-sm underline">← Volver</Link>
           <h1 className="mt-3 text-3xl font-semibold">Licencias y acceso</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
             Los permisos se comprueban en el servidor. Tener una pantalla o botón visible no otorga acceso por sí mismo.
