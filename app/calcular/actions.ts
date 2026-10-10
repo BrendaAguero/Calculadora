@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
 import { compute, num, type CalcInput } from './compute';
 
-export type SaveInput = CalcInput & { moldId: string; formulaId: string; materialId: string };
+export type SaveInput = CalcInput & { moldId: string; formulaId: string; materialId: string; productId: string };
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
 // Precio por kg a partir del costo unitario del material (que está expresado en su unidad de referencia).
@@ -43,6 +43,13 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
     moldId = mold.id;
   }
 
+  let productId: string | null = null;
+  if (input.productId) {
+    const { data: product } = await supabase.from('products').select('id').eq('id', input.productId).eq('user_id', user.id).eq('activity_id', yeso.id).maybeSingle();
+    if (!product) return { ok: false, error: 'El producto elegido no existe o no es tuyo.' };
+    productId = product.id;
+  }
+
   let formulaId: string | null = null;
   let formulaVersionId: string | null = null;
   if (input.formulaId) {
@@ -61,6 +68,7 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
     .insert({
       user_id: user.id,
       activity_id: yeso.id,
+      product_id: productId,
       mold_id: moldId,
       formula_id: formulaId,
       formula_version_id: formulaVersionId,
