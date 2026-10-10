@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Las clases dark: siguen la clase .dark del <html> (elegida en el selector de tema),
+   no la preferencia del sistema operativo. Sin esto, Tailwind v4 usa prefers-color-scheme
+   y el fondo (variables CSS) y los componentes (dark:) quedaban con temas distintos. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
