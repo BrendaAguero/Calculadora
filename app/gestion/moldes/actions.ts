@@ -3,8 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ownsActivity } from '@/lib/access/activities';
 
 export type MoldFormValues = {
+  activity_id: string;
   name: string;
   photo_url: string;
   reference_measurement_value: string;
@@ -26,6 +28,7 @@ function number(value: string) {
 function readValues(formData: FormData): MoldFormValues {
   const text = (key: string) => String(formData.get(key) ?? '').trim();
   return {
+    activity_id: text('activity_id'),
     name: text('name'),
     photo_url: text('photo_url'),
     reference_measurement_value: text('reference_measurement_value'),
@@ -92,19 +95,13 @@ export async function createMold(_prev: MoldFormState, formData: FormData): Prom
 
   const { supabase, userId } = await auth();
 
-  const { data: activity, error: activityError } = await supabase
-    .from('activities')
-    .select('id')
-    .eq('code', 'YESO')
-    .eq('active', true)
-    .maybeSingle();
-  if (activityError) return { error: `No se pudo verificar la actividad Yeso: ${activityError.message}`, values };
-  if (!activity) return { error: 'La actividad Yeso no está disponible.', values };
+  // La actividad debe ser una de las que tiene la usuaria (principal, secundaria o comprada después).
+  if (!values.activity_id || !(await ownsActivity(supabase, userId, values.activity_id))) return { error: 'Elegí una de tus actividades.', values };
 
   // user_id sale de la sesión, nunca del formulario. RLS vuelve a comprobarlo en la base.
   const { error } = await supabase
     .from('molds')
-    .insert({ ...parsed.row, user_id: userId, activity_id: activity.id, status: 'active' });
+    .insert({ ...parsed.row, user_id: userId, activity_id: values.activity_id, status: 'active' });
   if (error) return { error: `No se pudo guardar el molde: ${error.message}`, values };
 
   revalidatePath('/gestion/moldes');

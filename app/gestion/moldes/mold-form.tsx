@@ -1,10 +1,15 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import type { MoldFormState, MoldFormValues } from './actions';
 
+type Activity = { id: string; name: string; code: string };
+
 type Props = {
+  // Solo al crear: actividades de la usuaria. Al editar, la actividad no cambia y alcanza con su código.
+  activities?: Activity[];
+  activityCode?: string;
   action: (state: MoldFormState, formData: FormData) => Promise<MoldFormState>;
   initialValues?: Partial<MoldFormValues>;
   moldId?: string;
@@ -23,9 +28,11 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
-export function MoldForm({ action, initialValues, moldId, submitLabel }: Props) {
+export function MoldForm({ activities, activityCode, action, initialValues, moldId, submitLabel }: Props) {
   const [state, formAction] = useActionState(action, { error: null, values: null });
   const values = state.values ?? initialValues ?? {};
+  const [activityId, setActivityId] = useState(values.activity_id || activities?.[0]?.id || '');
+  const code = activityCode ?? activities?.find(a => a.id === activityId)?.code;
 
   return (
     <>
@@ -38,6 +45,18 @@ export function MoldForm({ action, initialValues, moldId, submitLabel }: Props) 
       {/* key: al volver con error, se remonta el formulario con los valores enviados para no perderlos. */}
       <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         {moldId && <input type="hidden" name="mold_id" value={moldId} />}
+        {activities && activities.length === 1 && (
+          // Con una sola actividad no hace falta preguntar.
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Actividad: {activities[0].name}<input type="hidden" name="activity_id" value={activities[0].id} /></p>
+        )}
+        {activities && activities.length > 1 && (
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Actividad *</span>
+            <select name="activity_id" required value={activityId} onChange={e => setActivityId(e.target.value)} className={inputClass}>
+              {activities.map(activity => <option key={activity.id} value={activity.id}>{activity.name}</option>)}
+            </select>
+          </label>
+        )}
         <label className="grid gap-1">
           <span className="text-sm font-medium">Nombre *</span>
           <input name="name" required defaultValue={values.name ?? ''} placeholder="Ej. Molde bandeja ovalada" className={inputClass} />
@@ -61,9 +80,11 @@ export function MoldForm({ action, initialValues, moldId, submitLabel }: Props) 
             </select>
           </label>
         </div>
-        <p className="-mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-          Para Yeso: llená el molde con agua y pesala. Ese peso en gramos se toma como los gramos de yeso por pieza. El porcentaje de agua se define en la fórmula, no en el molde.
-        </p>
+        {code === 'YESO' && (
+          <p className="-mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Para Yeso: llená el molde con agua y pesala. Ese peso en gramos se toma como los gramos de yeso por pieza. El porcentaje de agua se define en la fórmula, no en el molde.
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-1">
             <span className="text-sm font-medium">Costo del molde</span>
