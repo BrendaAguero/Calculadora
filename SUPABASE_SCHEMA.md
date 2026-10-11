@@ -447,6 +447,12 @@ material, finished_product.
 Tipos:
 purchase, production_consumption, production_output, sale, adjustment, return, other.
 
+Reglas (migración `20261011_stock.sql`):
+- un solo `stock_items` por material y por producto;
+- `stock_items.quantity` se crea en 0 y solo cambia con movimientos: un trigger suma `stock_movements.quantity` (positiva entra, negativa sale);
+- los movimientos no se editan ni se borran; los errores se corrigen con un `adjustment`;
+- la unidad del stock es la del material (`default_unit`) o `unidad` para productos; la app convierte kg↔g, l↔ml.
+
 ### suppliers
 - id
 - user_id

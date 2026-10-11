@@ -6,6 +6,8 @@ export type Resource = "materials" | "products" | "formulas" | "molds";
 export type AccessSnapshot = {
   accountStatus: "active" | "suspended" | "blocked";
   isAdmin: boolean;
+  // Cuenta de prueba: sin límites ni restricciones de plan (no es administradora).
+  isTester: boolean;
   basePlan: BasePlanCode | null;
   baseLicenseActive: boolean;
   entrepreneurActive: boolean;
@@ -42,7 +44,7 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
 
   const [{ data: profile }, { data: licenses }, { data: subscriptions }, { data: activities }, { data: modules }] =
     await Promise.all([
-      supabase.from("profiles").select("account_status, role").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("account_status, role, is_tester").eq("id", user.id).maybeSingle(),
       supabase
         .from("licenses")
         .select("status, plan_id, plans(code)")
@@ -95,6 +97,7 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
   return {
     accountStatus: (profile?.account_status ?? "active") as AccessSnapshot["accountStatus"],
     isAdmin: profile?.role === "admin" && profile?.account_status === "active",
+    isTester: Boolean(profile?.is_tester) && profile?.account_status === "active",
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),
     entrepreneurActive: Boolean(activeLicense) && entrepreneurExpiresAt !== null,
@@ -112,14 +115,14 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
 }
 
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
-  if (snapshot.isAdmin) return true;
+  if (snapshot.isAdmin || snapshot.isTester) return true;
   if (snapshot.accountStatus !== "active" || !snapshot.baseLicenseActive) return false;
   if (snapshot.entrepreneurActive) return true;
   return snapshot.modules.includes(feature);
 }
 
 export function getResourceLimit(snapshot: AccessSnapshot, resource: Resource): number {
-  if (snapshot.isAdmin) return Number.POSITIVE_INFINITY;
+  if (snapshot.isAdmin || snapshot.isTester) return Number.POSITIVE_INFINITY;
   if (snapshot.accountStatus !== "active" || !snapshot.basePlan) return 0;
   if (snapshot.entrepreneurActive) return Number.POSITIVE_INFINITY;
   return snapshot.limits[resource] ?? FALLBACK_LIMITS[snapshot.basePlan][resource];
