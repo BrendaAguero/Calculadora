@@ -206,7 +206,9 @@ export async function syncUserPreapprovals(userId: string) {
   const soon = Date.now() + 3 * 24 * 60 * 60 * 1000;
   for (const sub of subs ?? []) {
     const due = sub.status === "pending" || (sub.status === "active" && sub.auto_renew && new Date(sub.expires_at).getTime() < soon);
-    if (due) await syncPreapproval(sub.external_preapproval_id!).catch(() => null);
+    if (!due) continue;
+    const result = await syncPreapproval(sub.external_preapproval_id!).catch((error) => `error: ${error instanceof Error ? error.message : error}`);
+    console.info("Suscripción de Mercado Pago", sub.id, result);
   }
   await cancelStalePreapprovals({ userId });
 }

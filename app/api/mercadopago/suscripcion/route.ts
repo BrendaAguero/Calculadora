@@ -12,11 +12,13 @@ export async function GET(request: Request) {
   if (!preapprovalId) return go("error", "No se completó la suscripción. Podés intentar de nuevo cuando quieras.");
   try {
     const result = await syncPreapproval(preapprovalId);
+    console.info("Vuelta de suscripción", preapprovalId, result);
     if (result === "activated" || result === "renewed") return go("ok", "¡Suscripción activa! Mercado Pago te va a cobrar cada mes; podés cancelar la renovación cuando quieras.");
     if (result === "preapproval_authorized") return go("ok", "Autorizaste la suscripción. Emprendedor se activa solo apenas Mercado Pago acredite el primer cobro (suele tardar unos minutos).");
     if (result === "preapproval_cancelled") return go("error", "La suscripción quedó cancelada en Mercado Pago.");
     return go("error", "Todavía no se autorizó la suscripción. Si la completaste, se activa sola en unos minutos.");
-  } catch {
+  } catch (error) {
+    console.error("Vuelta de suscripción", preapprovalId, error instanceof Error ? error.message : error);
     return go("error", "No pudimos confirmar la suscripción todavía. Si la autorizaste, se activa sola en unos minutos.");
   }
 }
