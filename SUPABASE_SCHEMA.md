@@ -232,6 +232,11 @@ Mercado Pago procesa tarjetas/datos sensibles. No almacenarlos en Supabase.
 
 Los webhooks deben ser idempotentes.
 
+Mercado Pago (migración `20261011_mercadopago.sql`):
+- Índice único `(provider, external_payment_id)`: el mismo pago no se registra dos veces (idempotencia).
+- `mp_record_payment(p jsonb)`: solo `service_role`. Lo llama el servidor después de consultar el pago a la API de Mercado Pago (nunca con datos que lleguen por URL o webhook sin verificar). Aprobado + monto y moneda correctos → activa la suscripción; reembolso o contracargo → compra `refunded` y suscripción `refunded`; rechazado o pendiente → solo se registra.
+- `apply_subscription_activation(id)`: la lógica de activación (suma de plazos, actualizaciones), solo `service_role`; `admin_activate_subscription` la usa después de comprobar que es administradora.
+
 ### materials
 - id
 - user_id

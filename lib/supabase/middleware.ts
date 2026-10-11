@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Rutas que se pueden abrir sin sesión. /auth/* recibe los enlaces del correo: si se bloquea,
 // la persona vuelve a /login sin que se procese el enlace y nunca puede crear su contraseña.
-const PUBLIC_PATHS = ["/login", "/auth/"];
+const PUBLIC_PATHS = ["/login", "/auth/", "/api/mercadopago/"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
