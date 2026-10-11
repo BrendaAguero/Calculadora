@@ -4,6 +4,7 @@ import type { AccessSnapshot } from '@/lib/access/permissions';
 import { mercadoPagoReady } from '@/lib/mercadopago';
 import { createClient } from '@/lib/supabase/server';
 import { buyModule, cancelPurchase, payPurchase, releaseDevice } from './actions';
+import { signOutEverywhere } from '../seguridad/actions';
 
 const money = (value: number | string) => Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
@@ -26,7 +27,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   const [{ data: modules }, { data: pending }, { data: devices }, { data: allowed }] = await Promise.all([
     supabase.from('modules').select('id,code,name,price').eq('active', true).order('price'),
     supabase.from('purchases').select('id,product_type,product_id,total,created_at').eq('user_id', userId).eq('payment_status', 'pending').in('product_type', ['module']).order('created_at', { ascending: false }),
-    supabase.from('user_devices').select('id,label,created_at,last_seen_at').eq('user_id', userId).is('released_at', null).order('created_at'),
+    supabase.from('user_devices').select('id,label,created_at,last_seen_at,last_city').eq('user_id', userId).is('released_at', null).order('created_at'),
     supabase.rpc('allowed_devices', { p_user_id: userId }),
   ]);
   const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
@@ -91,12 +92,13 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(devices ?? []).map((device) => (
             <li key={device.id} className="flex items-center justify-between gap-2 py-2">
-              <span>{device.label ?? 'Aparato'}<span className="block text-xs text-neutral-500">Desde {dateTime(device.created_at)} · último uso {dateTime(device.last_seen_at)}</span></span>
+              <span>{device.label ?? 'Aparato'}<span className="block text-xs text-neutral-500">Desde {dateTime(device.created_at)} · último uso {dateTime(device.last_seen_at)}{device.last_city ? ` · cerca de ${device.last_city}` : ''}</span></span>
               <form action={releaseDevice}><input type="hidden" name="device_id" value={device.id} /><SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs dark:border-neutral-700">Liberar</SubmitButton></form>
             </li>
           ))}
           {!devices?.length && <li className="py-2 text-neutral-500">Todavía no hay aparatos registrados.</li>}
         </ul>
+        <form action={signOutEverywhere} className="mt-3"><SubmitButton className="text-xs text-red-700 underline dark:text-red-300">Cerrar sesión en todos mis aparatos</SubmitButton></form>
       </section>
     </>
   );

@@ -55,6 +55,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
           <li><strong>De tu negocio:</strong> lo que cargás (materiales, precios, fórmulas, moldes, productos, stock, producción, compras, proveedores, ventas y cálculos).</li>
           <li><strong>De tus compras:</strong> qué compraste, el monto, la fecha y el número de operación de Mercado Pago. <strong>No</strong> guardamos datos de tarjetas: el pago lo procesa Mercado Pago.</li>
           <li><strong>Si sos afiliada:</strong> tu código, las compras atribuidas, comisiones y los datos que nos des para pagarte.</li>
+          <li><strong>De tus aparatos:</strong> un identificador de cada aparato donde entrás, su tipo (por ejemplo, «Android · Chrome»), cuándo lo usaste por última vez y la <strong>ciudad aproximada</strong> según tu conexión a internet (nunca tu dirección ni tu ubicación exacta). Lo usamos para respetar el límite de aparatos y avisarte si tu cuenta se usa en dos lugares lejanos al mismo tiempo.</li>
           <li><strong>Técnicos:</strong> registros de errores y de seguridad necesarios para que la aplicación funcione y para detectar abusos.</li>
         </ul>
         <h2>3. Para qué los usamos</h2>
@@ -69,7 +70,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Podés pedir gratis acceder, corregir, actualizar o eliminar tus datos escribiendo a <Mail /> desde el email de tu cuenta. Respondemos el pedido de acceso dentro de los 10 días corridos y los de corrección o eliminación dentro de los 5 días hábiles, como indica la ley.</p>
         <p className="text-sm">La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales. Más información en <a href="https://www.argentina.gob.ar/aaip" target="_blank" rel="noreferrer">argentina.gob.ar/aaip</a>.</p>
         <h2>8. Cookies</h2>
-        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) se guarda solo en tu navegador. No usamos cookies de publicidad: el aviso de la versión gratis es una imagen fija, sin seguimiento.</p>
+        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) y el bloqueo opcional con PIN o huella se guardan solo en tu navegador (el PIN, cifrado; la huella o la cara nunca salen de tu aparato). También usamos una cookie que identifica tu aparato para el límite de aparatos. No usamos cookies de publicidad: el aviso de la versión gratis es una imagen fija, sin seguimiento.</p>
         <h2>9. Seguridad</h2>
         <p>La conexión es cifrada, cada cuenta solo puede leer sus propios datos y las claves de los servicios nunca se exponen en el navegador. Cuando creás tu contraseña, revisamos que no haya aparecido en filtraciones conocidas consultando el servicio Pwned Passwords: solo se envía un fragmento de una huella cifrada, nunca la contraseña. Si detectamos un incidente que afecte tus datos, te avisaremos.</p>
       </>
