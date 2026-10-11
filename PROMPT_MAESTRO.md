@@ -47,6 +47,19 @@ No construir toda la aplicación de una sola vez.
 
 ## Planes
 
+**Edición Personal (decisión del 11/10/2026, reemplaza a Gratis/Básico/Avanzado/Emprendedor).** Solo entran emails aprobados.
+- Edición Personal (pago único; internamente es el plan ADVANCED renombrado): funciones de gestión (stock, producción, compras, proveedores, ventas, resumen), límites de Avanzado (100/50/30/30), Yeso, banner, 2 aparatos. Precios configurables en /admin/precios: $44.900 online (Mercado Pago, se aprueba sola), $40.000 transferencia y $49.900 MercadoLibre (se aprueban a mano en /admin/emails).
+- Extras de pago único: «Aparato extra» ($4.900, se puede comprar varias veces). Las demás actividades y módulos, «Próximamente».
+- Mensualidad Plus (la suscripción mensual existente, sin 6/12 meses ni descuentos): $4.900/mes, requiere la Edición Personal; quita el banner, desbloquea todas las actividades y módulos, sin límites y modo sin conexión (pendiente).
+- Ingreso: email + código de 6 dígitos (las plantillas de correo de Supabase deben incluir {{ .Token }}); la contraseña queda como opción para cuentas existentes.
+- Afiliadas: ocultas. Pendiente: «modo revendedora» (paquetes de licencias, la administradora aprueba los accesos).
+- Pendiente: calculadoras de Resina, Jesmonite y Cemento (valores de referencia investigados: Jesmonite 1,75 g/ml y 1:2,5 líquido:polvo; resina ~1,1 g/ml con proporción de la marca; cemento ~2,1 g/ml, cemento:arena 1:1 a 1:4).
+
+---
+
+Lo que sigue es el modelo anterior (se mantiene como referencia).
+
+
 Versión gratis (decisión del 11/10/2026): sin licencia. Incluye Yeso, calculadora en modo Fácil y Estándar, 5 materiales, 2 productos, 1 fórmula y 1 molde; sin stock, ventas, producción ni proveedores; muestra un banner propio (sin anuncios de terceros) que la administradora edita en /admin/banner. Emprendedor sigue requiriendo Básico o Avanzado. No hay «Emprendedor PRO» por ahora.
 
 Compra online (Checkout Pro) de Básico, Avanzado, pase Básico → Avanzado (precio según días desde la compra de Básico) y de los módulos que ya funcionan (Stock básico y Proveedores básico). Resina, Jesmonite, Cemento decorativo, Cálculo inverso, Escalado avanzado y Moldes avanzados se muestran como «Próximamente» hasta programarlos.

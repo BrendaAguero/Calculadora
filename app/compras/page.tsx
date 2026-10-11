@@ -32,7 +32,7 @@ export default async function PurchasesPage() {
       <HelpTip guide="compras"><p>Al cargar una compra se suma el stock y se actualiza el precio del material.</p><p>Usá «Comparar» para ver qué proveedor te conviene.</p></HelpTip>
 
       {!allowed ? (
-        <FeatureLocked title="Compras es parte del módulo «Proveedores básico» o de Emprendedor.">Registrá compras a tus proveedores, con precios y stock al día.</FeatureLocked>
+        <FeatureLocked title="Compras es parte de la Edición Personal.">Registrá compras a tus proveedores, con precios y stock al día.</FeatureLocked>
       ) : (
         <>
           <div className="flex flex-wrap gap-2">

@@ -10,7 +10,7 @@ export default function LegalIndex() {
     <PublicPage>
       <h1 className="text-2xl font-bold">Legales</h1>
       <div className="mt-6 grid gap-3">
-        {Object.entries(LEGAL_DOCS).map(([slug, doc]) => (
+        {Object.entries(LEGAL_DOCS).filter(([slug]) => slug !== 'afiliadas').map(([slug, doc]) => (
           <Link key={slug} href={`/legal/${slug}`} className={cardClass}>
             <h2 className="font-semibold">{doc.title}</h2>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{doc.summary}</p>

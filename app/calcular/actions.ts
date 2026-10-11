@@ -32,7 +32,7 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
 
   const values: CalcInput = { ...input };
   // La versión gratis no tiene el modo Personalizado.
-  if (values.mode === 'personalized' && (await getAccessSnapshot())?.isFree) return { ok: false, error: 'El modo Personalizado es parte de Básico y Avanzado.' };
+  if (values.mode === 'personalized' && (await getAccessSnapshot())?.isFree) return { ok: false, error: 'El modo Personalizado es parte de la Edición Personal.' };
   let materialName: string | null = null;
 
   // Con un material elegido, se usa su precio actual de la base (no el que mande el navegador) y queda congelado en el cálculo.

@@ -31,7 +31,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
       </header>
 
       {!allowed ? (
-        <FeatureLocked title="Proveedores es parte del módulo «Proveedores básico» o de Emprendedor.">Guardá tus proveedores, registrá compras y compará precios.</FeatureLocked>
+        <FeatureLocked title="Proveedores es parte de la Edición Personal.">Guardá tus proveedores, registrá compras y compará precios.</FeatureLocked>
       ) : (
         <>
           {(error || loadError) && <div role="alert" className={errorBox}>{error ?? `No se pudieron cargar los proveedores: ${loadError!.message}`}</div>}

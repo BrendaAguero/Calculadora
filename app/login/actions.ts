@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { siteOrigin as authOrigin } from "@/lib/origin";
 import { redirect } from "next/navigation";
 import { isLeakedPassword, weakPasswordReason } from "@/lib/password";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { DEVICE_LIMIT_MESSAGE, registerCurrentDevice } from "@/lib/devices";
 
-export type ActionState = { error?: string; success?: boolean };
+export type ActionState = { error?: string; success?: boolean; email?: string };
 
 // Mensajes de Supabase traducidos para que la persona sepa qué hacer.
 function friendlyEmailError(message: string) {
@@ -18,26 +20,37 @@ function friendlyEmailError(message: string) {
   return `No se pudo enviar el correo: ${message}`;
 }
 
-export async function requestCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const email = String(formData.get("email") || "").trim();
-  const fullName = String(formData.get("full_name") || "").trim();
-  const termsAccepted = formData.get("terms_accepted") === "on";
+// Ingreso con código: solo para emails aprobados (compra online, transferencia, MercadoLibre…) o cuentas existentes.
+export async function requestLoginCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Revisá que el email esté bien escrito." };
+  if (formData.get("terms_accepted") !== "on") return { error: "Tenés que aceptar los términos para continuar." };
 
-  if (!email) return { error: "Ingresá tu email." };
-  if (!termsAccepted) return { error: "Tenés que aceptar los términos para continuar." };
+  const admin = createAdminClient();
+  if (admin) {
+    const { data: allowed } = await admin.rpc("login_allowed", { p_email: email });
+    if (!allowed) return { error: "Ese email todavía no tiene la Edición Personal. Podés comprarla o, si ya pagaste por transferencia o MercadoLibre, escribinos para que la aprobemos." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      shouldCreateUser: true,
-      emailRedirectTo: `${await authOrigin()}/auth/callback`,
-      data: { full_name: fullName || null, terms_accepted: "true" },
-    },
+    options: { shouldCreateUser: true, emailRedirectTo: `${await authOrigin()}/auth/callback`, data: { terms_accepted: "true" } },
   });
-
   if (error) return { error: friendlyEmailError(error.message) };
-  return { success: true };
+  return { success: true, email };
+}
+
+export async function verifyLoginCode(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const token = String(formData.get("code") || "").replace(/\D/g, "");
+  if (token.length < 6) return { error: "Escribí el código que te llegó por correo.", email };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  if (error) return { error: "El código no es correcto o venció. Pedí uno nuevo.", email };
+  if (!(await registerCurrentDevice())) return { error: DEVICE_LIMIT_MESSAGE, email };
+  redirect("/");
 }
 
 // «¿Olvidaste tu contraseña?»: manda un enlace que lleva a crear una contraseña nueva.
@@ -62,6 +75,7 @@ export async function signInWithPassword(_prevState: ActionState, formData: Form
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Email o contraseña incorrectos." };
+  if (!(await registerCurrentDevice())) return { error: DEVICE_LIMIT_MESSAGE };
   redirect("/");
 }
 

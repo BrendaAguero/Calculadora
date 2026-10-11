@@ -53,3 +53,20 @@ export async function saveBanner(formData: FormData) {
     p_button: text(formData, 'button'), p_image: text(formData, 'image'), p_active: formData.get('active') === 'on',
   }, 'Banner guardado.');
 }
+
+export async function approveEmail(formData: FormData) {
+  await rpc('/admin/emails', 'admin_approve_email', { p_email: text(formData, 'email'), p_source: text(formData, 'source'), p_note: text(formData, 'note') || null }, 'Email aprobado. Ya puede entrar con su email (le llega un código).');
+}
+
+export async function revokeEmail(formData: FormData) {
+  await rpc('/admin/emails', 'admin_revoke_email', { p_id: text(formData, 'id') }, 'Acceso revocado.');
+}
+
+export async function adminReleaseDevice(formData: FormData) {
+  await rpc('/admin/emails', 'release_device', { p_id: text(formData, 'device_id') }, 'Aparato liberado.');
+}
+
+export async function setPrices(formData: FormData) {
+  const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/precios', 'admin_set_prices', { p_online: n('online'), p_transfer: n('transfer'), p_mercadolibre: n('mercadolibre'), p_monthly: n('monthly'), p_extra_device: n('extra_device') }, 'Precios guardados.');
+}

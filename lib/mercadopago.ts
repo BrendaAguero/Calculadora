@@ -69,8 +69,11 @@ export async function processPayment(paymentId: string) {
     const { data: purchase } = await admin.from("purchases").select("id").eq("id", purchaseId).maybeSingle();
     if (!purchase) {
       const { data: sub } = await admin.from("subscriptions").select("id,external_preapproval_id").eq("id", purchaseId).eq("duration_months", 1).maybeSingle();
-      if (!sub) return "purchase_not_found";
-      return recordSubscriptionPayment(sub.id, sub.external_preapproval_id, payment);
+      if (sub) return recordSubscriptionPayment(sub.id, sub.external_preapproval_id, payment);
+      // Pedido online de la Edición Personal (se compra sin cuenta, con el email).
+      const { data: order } = await admin.from("personal_orders").select("id").eq("id", purchaseId).maybeSingle();
+      if (!order) return "purchase_not_found";
+      return recordPersonalOrder(order.id, payment);
     }
     purchaseId = purchase.id;
   }
@@ -89,6 +92,16 @@ export async function processPayment(paymentId: string) {
   if (error) throw new Error(error.message);
   await cancelStalePreapprovals(purchaseId);
   return data as string;
+}
+
+async function recordPersonalOrder(orderId: string, payment: Payment) {
+  const admin = createAdminClient();
+  if (!admin) return "not_configured";
+  const { data, error } = await admin.rpc("mp_record_personal_order", {
+    p: { order_id: orderId, payment_id: String(payment.id), status: payment.status, amount: payment.transaction_amount, currency: payment.currency_id },
+  });
+  if (error) throw new Error(error.message);
+  return `personal_${data as string}`;
 }
 
 // ---------------------------------------------------------------------------------------------

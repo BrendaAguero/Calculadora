@@ -21,14 +21,14 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Los resultados son estimaciones que dependen de los datos que cargás: son una ayuda para decidir, así que revisalos antes de usarlos. No reemplazan el asesoramiento contable, impositivo ni técnico de un profesional.</p>
         <h2>3. Cuenta</h2>
         <ul>
-          <li>Para usar la aplicación necesitás crear una cuenta con tu nombre y email. Tenés que ser mayor de 18 años o contar con autorización de tu madre, padre o tutor.</li>
+          <li>Para usar la aplicación entrás con tu email y un código que te llega por correo. Tenés que ser mayor de 18 años o contar con autorización de tu madre, padre o tutor.</li>
           <li>Sos responsable de mantener segura tu contraseña y de lo que se haga con tu cuenta.</li>
-          <li>Las licencias y compras quedan asociadas a tu cuenta, no a un dispositivo. No se pueden transferir ni compartir.</li>
+          <li>Solo pueden entrar los emails aprobados (por una compra o por la administración). La Edición Personal se usa en hasta 2 aparatos y no se puede transferir ni compartir.</li>
         </ul>
         <h2>4. Uso permitido</h2>
         <p>No está permitido: usar la aplicación para fines ilegales, intentar acceder a datos de otras personas, alterar su funcionamiento, automatizar accesos masivos, revender el servicio o crear cuentas falsas. Si esto ocurre, podemos suspender la cuenta; te avisaremos el motivo por email y podés escribirnos para revisarlo.</p>
         <h2>5. Planes y pagos</h2>
-        <p>Algunas funciones requieren una compra (licencia, actividad, módulo o plan Emprendedor). Las condiciones de cada compra están en las <Link href="/legal/compras">Condiciones de compra, suscripciones y reembolsos</Link>.</p>
+        <p>Para usar la aplicación necesitás la Edición Personal; algunas funciones requieren un extra o la Mensualidad Plus. Las condiciones de cada compra están en las <Link href="/legal/compras">Condiciones de compra, suscripciones y reembolsos</Link>.</p>
         <h2>6. Tus datos</h2>
         <p>Los datos que cargás son tuyos y son privados. Cómo los tratamos está explicado en la <Link href="/legal/privacidad">Política de privacidad</Link>. Si un plan vence, tus datos no se borran.</p>
         <h2>7. Disponibilidad y cambios</h2>
@@ -77,36 +77,35 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
   },
   compras: {
     title: 'Condiciones de compra, suscripciones y reembolsos',
-    summary: 'Precios, plan Emprendedor, botón de arrepentimiento y botón de baja.',
+    summary: 'Edición Personal, extras, Mensualidad Plus, arrepentimiento y baja.',
     body: (
       <>
         <h2>1. Qué se puede comprar</h2>
         <ul>
-          <li><strong>Versión gratis:</strong> sin costo, con límites (calculadora de Yeso en modo Fácil y Estándar, pocos materiales, productos, fórmulas y moldes) y con un aviso publicitario propio. No hace falta tarjeta.</li>
-          <li><strong>Licencia Básico o Avanzado:</strong> pago único. Es permanente: no vence. De Básico podés pasarte a Avanzado pagando la diferencia que se muestra en la app.</li>
-          <li><strong>Actividades y módulos:</strong> pago único y permanentes. Solo se venden los que ya están disponibles; los demás figuran como «Próximamente».</li>
-          <li><strong>Plan Emprendedor:</strong> habilita por un tiempo todas las funciones avanzadas y módulos. Requiere tener Básico o Avanzado. Se ofrece por 1 mes (suscripción mensual), 6 meses o 12 meses.</li>
+          <li><strong>Edición Personal:</strong> pago único y permanente (no vence). Incluye la calculadora de Yeso, las funciones de gestión (stock, producción, compras, proveedores, ventas y resumen) con hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes, el uso en 2 aparatos y un aviso publicitario propio. Funciona con internet.</li>
+          <li><strong>Extras:</strong> pago único y permanentes (por ejemplo, «Aparato extra» para usar la app en un aparato más). Solo se venden los que ya están disponibles; los demás figuran como «Próximamente».</li>
+          <li><strong>Mensualidad Plus:</strong> suscripción mensual que se suma a la Edición Personal. Quita la publicidad, desbloquea todas las actividades y módulos disponibles, elimina los límites de altas y, cuando esté disponible, permite usar la app sin conexión.</li>
         </ul>
-        <p>El precio final, con los descuentos que correspondan, se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan.</p>
-        <h2>2. Pago y activación</h2>
-        <p>Los pagos se hacen con Mercado Pago. La compra se activa cuando Mercado Pago confirma el pago aprobado. Si el pago queda pendiente (por ejemplo, en efectivo), se activa cuando se acredita. Si se rechaza, no se cobra nada.</p>
-        <h2>3. Plan Emprendedor</h2>
+        <p>El precio final se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan. Según el medio de pago el precio de la Edición Personal puede variar (online, transferencia o MercadoLibre).</p>
+        <h2>2. Pago, aprobación y acceso</h2>
+        <p>Si comprás online con Mercado Pago, tu email queda aprobado cuando Mercado Pago confirma el pago. Si pagás por transferencia o por MercadoLibre, aprobamos tu email después de verificar el pago. Con el email aprobado entrás a la app con un código que te llega por correo. Si el pago queda pendiente, el acceso se habilita cuando se acredita; si se rechaza, no se cobra nada.</p>
+        <h2>3. Aparatos</h2>
+        <p>La Edición Personal se usa en hasta 2 aparatos (por ejemplo, tu celular y tu computadora). Podés liberar un aparato que ya no uses desde «Mi acceso» o sumar aparatos con el extra «Aparato extra». La cuenta es personal: no se puede compartir ni revender.</p>
+        <h2>4. Mensualidad Plus</h2>
         <ul>
-          <li><strong>6 y 12 meses:</strong> si ya tenés Emprendedor vigente, el tiempo nuevo se suma al final del actual.</li>
-          <li><strong>1 mes:</strong> es una suscripción mensual con <strong>cobro automático</strong>: autorizás en Mercado Pago un cobro por mes, del mismo monto que el primero, hasta que la des de baja. Solo se contrata si no tenés Emprendedor vigente. Podés darla de baja cuando quieras desde el <Link href="/baja">Botón de baja</Link> o desde <Link href="/access">Mi acceso</Link>: no se te vuelve a cobrar y el plan sigue activo hasta el final del mes pagado.</li>
-          <li>Si con la suscripción mensual comprás 6 o 12 meses, el plan largo empieza cuando termina el mes pagado y la renovación mensual se cancela sola.</li>
-          <li><strong>Actualizar</strong> a un plan más largo: se descuenta como crédito la parte no usada del plan actual. Los planes de cortesía no generan crédito.</li>
-          <li>Cuando Emprendedor vence, volvés a tu plan base. <strong>Tus datos no se borran</strong>; solo se limitan las nuevas altas que superen el límite de tu plan.</li>
+          <li>Se paga con <strong>cobro automático</strong> de Mercado Pago: autorizás un cobro por mes, del mismo monto, hasta que la des de baja.</li>
+          <li>Podés darla de baja cuando quieras desde el <Link href="/baja">Botón de baja</Link> o desde <Link href="/access">Mi acceso</Link>: no se te vuelve a cobrar y sigue activa hasta el final del mes pagado.</li>
+          <li>Cuando termina, seguís usando tu Edición Personal con su publicidad y sus límites. <strong>Tus datos no se borran</strong>; solo se limitan las nuevas altas que superen el límite.</li>
         </ul>
-        <h2>4. Botón de arrepentimiento (10 días)</h2>
-        <p>Podés revocar cualquier compra dentro de los 10 días corridos desde que la hiciste, sin dar motivos y sin costo, como establece el artículo 34 de la Ley 24.240. Hacelo desde el <Link href="/arrepentimiento">Botón de arrepentimiento</Link> (no hace falta iniciar sesión) o escribiendo a <Mail />. Te damos un código de trámite en el momento. Devolvemos el total por el mismo medio de pago y se desactiva lo comprado.</p>
-        <h2 id="baja">5. Botón de baja</h2>
+        <h2>5. Botón de arrepentimiento (10 días)</h2>
+        <p>Podés revocar cualquier compra dentro de los 10 días corridos desde que la hiciste, sin dar motivos y sin costo, como establece el artículo 34 de la Ley 24.240. Hacelo desde el <Link href="/arrepentimiento">Botón de arrepentimiento</Link> (no hace falta iniciar sesión) o escribiendo a <Mail />. Te damos un código de trámite en el momento. Devolvemos el total por el mismo medio de pago y se desactiva lo comprado. Las compras hechas en MercadoLibre también pueden gestionarse por las herramientas de MercadoLibre.</p>
+        <h2 id="baja">6. Botón de baja</h2>
         <p>Podés dar de baja la suscripción mensual en cualquier momento, sin dar motivos, desde el <Link href="/baja">Botón de baja</Link>, como establece la Resolución 316/2018 de la Secretaría de Comercio. Con tu sesión iniciada la baja es inmediata (también se cancela en Mercado Pago) y te damos un código de baja en el momento. Si no podés entrar a tu cuenta, el mismo botón te deja pedirla con tu nombre y email.</p>
-        <h2>6. Después de los 10 días</h2>
-        <p>Las licencias, actividades y módulos son permanentes y no se reembolsan después de los 10 días, salvo falla del servicio que nos impida prestarlo. En el plan Emprendedor podés dar de baja la renovación en cualquier momento; el tiempo ya pagado no se reembolsa.</p>
-        <h2>7. Contracargos y fraude</h2>
+        <h2>7. Después de los 10 días</h2>
+        <p>La Edición Personal y los extras son permanentes y no se reembolsan después de los 10 días, salvo falla del servicio que nos impida prestarlo. La Mensualidad Plus se puede dar de baja en cualquier momento; el mes ya pagado no se reembolsa.</p>
+        <h2>8. Contracargos y fraude</h2>
         <p>Si un pago se anula, se devuelve o se desconoce ante Mercado Pago, lo que se activó con ese pago se desactiva.</p>
-        <h2>8. Factura y reclamos</h2>
+        <h2>9. Factura y reclamos</h2>
         <p>Por cada compra corresponde una factura. Si no la recibiste o tenés un problema con una compra, escribinos a <Mail /> con el número de operación de Mercado Pago.</p>
       </>
     ),

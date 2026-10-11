@@ -25,9 +25,9 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
         <h1 className="text-2xl font-semibold">Stock</h1>
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          <p className="font-medium">Stock es parte del módulo «Stock básico» o de Emprendedor.</p>
+          <p className="font-medium">Stock es parte de la Edición Personal.</p>
           <p className="mt-1">Te permite llevar la cantidad de materias primas y productos terminados, con mínimos, alertas y valor.</p>
-          <Link href="/access#emprendedor" className="mt-3 inline-block underline">Ver Emprendedor y módulos</Link>
+          <Link href="/access" className="mt-3 inline-block underline">Ver mi acceso</Link>
         </div>
       </main>
     );
