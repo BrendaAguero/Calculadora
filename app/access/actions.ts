@@ -18,7 +18,7 @@ export async function requestEntrepreneur(formData: FormData) {
   const { error } = await supabase.rpc('request_entrepreneur', { p_months: months });
   if (error) back('error', error.message);
   revalidatePath('/access');
-  back('ok', 'Pedido enviado. Te avisamos cuando quede activo.');
+  back('ok', 'Pedido enviado. Queda activo cuando la administradora confirme el pago.');
 }
 
 export async function cancelEntrepreneurRequest(formData: FormData) {
