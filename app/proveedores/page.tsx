@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -52,7 +53,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
             <label className={labelClass}>Teléfono<input name="phone" maxLength={40} className={inputClass} /></label>
             <label className={labelClass}>Email<input name="email" type="email" maxLength={120} className={inputClass} /></label>
             <label className={`${labelClass} sm:col-span-2`}>Notas<input name="notes" maxLength={300} placeholder="Dirección, horarios, condiciones…" className={inputClass} /></label>
-            <div className="sm:col-span-2"><button type="submit" className={primaryButton}>Guardar proveedor</button></div>
+            <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar proveedor</SubmitButton></div>
           </form>
         </>
       )}

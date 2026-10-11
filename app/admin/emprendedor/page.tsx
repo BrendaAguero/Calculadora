@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { activateSubscription } from './actions';
@@ -23,7 +24,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
     <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <Link href="/access" className="text-sm underline">← Licencia y acceso</Link>
+          <Link href="/admin" className="text-sm underline">← Administración</Link>
           <h1 className="mt-3 text-3xl font-semibold">Pedidos de Emprendedor</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, 6 y 12 meses se suman al final (y su suscripción mensual deja de renovarse). La suscripción mensual no se suma. Las actualizaciones empiezan el día que las activás y el plan anterior termina ese día.</p>
         </div>
@@ -46,7 +47,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
                 <p className="text-xs text-neutral-500">Pedido el {new Date(request.requested_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}</p>
                 <form action={activateSubscription} className="mt-3">
                   <input type="hidden" name="subscription_id" value={request.subscription_id} />
-                  <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Activar (pago recibido)</button>
+                  <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Activar (pago recibido)</SubmitButton>
                 </form>
               </div>
             ))}

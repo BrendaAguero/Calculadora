@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -50,13 +51,13 @@ export default async function SupplierPage({ params, searchParams }: { params: P
         <label className={labelClass}>Teléfono<input name="phone" defaultValue={supplier.phone ?? ''} maxLength={40} className={inputClass} /></label>
         <label className={labelClass}>Email<input name="email" type="email" defaultValue={supplier.email ?? ''} maxLength={120} className={inputClass} /></label>
         <label className={`${labelClass} sm:col-span-2`}>Notas<input name="notes" defaultValue={supplier.notes ?? ''} maxLength={300} className={inputClass} /></label>
-        <div className="sm:col-span-2"><button type="submit" className={primaryButton}>Guardar cambios</button></div>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar cambios</SubmitButton></div>
       </form>
 
       <form action={setSupplierStatus}>
         <input type="hidden" name="supplier_id" value={supplier.id} />
         <input type="hidden" name="status" value={archived ? 'active' : 'archived'} />
-        <button type="submit" className={secondaryButton}>{archived ? 'Restaurar proveedor' : 'Archivar proveedor'}</button>
+        <SubmitButton className={secondaryButton}>{archived ? 'Restaurar proveedor' : 'Archivar proveedor'}</SubmitButton>
         <p className="mt-1 text-xs text-neutral-500">Archivar no borra el proveedor ni sus compras.</p>
       </form>
     </main>

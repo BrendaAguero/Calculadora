@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -57,7 +58,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
             </select>
           </label>
           <label className={labelClass}>Piezas<input name="cantidad" inputMode="decimal" required defaultValue={params.cantidad ?? ''} placeholder="Ej.: 20" className={inputClass} /></label>
-          <div className="sm:col-span-3"><button type="submit" className={secondaryButton}>Calcular materiales</button></div>
+          <div className="sm:col-span-3"><SubmitButton className={secondaryButton}>Calcular materiales</SubmitButton></div>
         </form>
       )}
 
@@ -107,8 +108,8 @@ export default async function NewProductionPage({ searchParams }: { searchParams
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="add_output" defaultChecked /> Sumar {qty(plan.quantity)} {plan.quantity === 1 ? 'pieza' : 'piezas'} al stock de productos terminados</label>
             <label className={labelClass}>Nota (opcional)<input name="notes" maxLength={200} className={inputClass} /></label>
             <div className="flex flex-wrap gap-2">
-              <button type="submit" name="deduct" value="1" className={autoDeduct || !shortages.length ? primaryButton : secondaryButton}>{shortages.length ? 'Registrar y descontar igual' : 'Registrar y descontar del stock'}</button>
-              <button type="submit" name="deduct" value="0" className={autoDeduct || !shortages.length ? secondaryButton : primaryButton}>Registrar sin descontar</button>
+              <SubmitButton name="deduct" value="1" className={autoDeduct || !shortages.length ? primaryButton : secondaryButton}>{shortages.length ? 'Registrar y descontar igual' : 'Registrar y descontar del stock'}</SubmitButton>
+              <SubmitButton name="deduct" value="0" className={autoDeduct || !shortages.length ? secondaryButton : primaryButton}>Registrar sin descontar</SubmitButton>
               <Link href="/produccion" className="rounded-xl px-4 py-2 text-sm text-neutral-600 underline dark:text-neutral-400">Cancelar</Link>
             </div>
             <p className="text-xs text-neutral-500">Los materiales que no llevás en el stock se agregan solos al descontar. Podés cambiar cuál opción aparece primero en Preferencias.</p>

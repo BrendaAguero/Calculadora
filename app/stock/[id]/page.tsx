@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -67,7 +68,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
             </select>
           </label>
           <label className={labelClass}>Nota (opcional)<input name="notes" maxLength={200} className={inputClass} /></label>
-          <div className="sm:col-span-3"><button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Registrar</button></div>
+          <div className="sm:col-span-3"><SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Registrar</SubmitButton></div>
         </form>
         <p className="mt-2 text-xs text-neutral-500">En «Corregir con un conteo» escribí la cantidad que contaste: se registra la diferencia como ajuste. Los movimientos no se borran; si te equivocás, corregí con otro movimiento.</p>
       </section>
@@ -77,7 +78,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
         <form action={updateMinimum} className="mt-3 flex flex-wrap items-end gap-2">
           <input type="hidden" name="item_id" value={row.id} />
           <label className={labelClass}>Mínimo en {row.unit === 'unidad' ? 'unidades' : row.unit}<input name="minimum" inputMode="decimal" defaultValue={row.minimum ?? ''} placeholder="Sin mínimo" className={inputClass} /></label>
-          <button type="submit" className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700">Guardar</button>
+          <SubmitButton className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700">Guardar</SubmitButton>
         </form>
         <p className="mt-2 text-xs text-neutral-500">Dejalo vacío para no recibir avisos.</p>
       </section>

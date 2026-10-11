@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -84,7 +85,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                         <p className="mt-1">Costo {money(sale.total_cost_snapshot)} · descuento {money(sale.discount)} · comisión {money(sale.commission)}</p>
                         <form action={voidSale} className="mt-2">
                           <input type="hidden" name="sale_id" value={sale.id} />
-                          <button type="submit" className="rounded-lg border border-red-300 px-3 py-1 text-red-700 dark:border-red-900 dark:text-red-300">Anular esta venta</button>
+                          <SubmitButton className="rounded-lg border border-red-300 px-3 py-1 text-red-700 dark:border-red-900 dark:text-red-300">Anular esta venta</SubmitButton>
                           <span className="ml-2">No se borra: queda marcada como anulada y, si descontó stock, se devuelve.</span>
                         </form>
                       </details>

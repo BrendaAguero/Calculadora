@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -74,7 +75,7 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
             <label className="flex items-start gap-2"><input type="checkbox" name="update_stock" defaultChecked className="mt-1" /> Sumar estas cantidades al stock</label>
           </section>
 
-          <div><button type="submit" className={primaryButton}>Registrar compra</button></div>
+          <div><SubmitButton className={primaryButton}>Registrar compra</SubmitButton></div>
         </form>
       )}
     </main>
