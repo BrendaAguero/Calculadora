@@ -78,6 +78,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             <div><span className="text-neutral-500">Licencia base</span><p className="font-medium">{planLabel}</p></div>
             <div><span className="text-neutral-500">Emprendedor</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
+          {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
             <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
               Sos administradora: tenés acceso completo. <Link href="/admin/emprendedor" className="underline">Ver pedidos de Emprendedor</Link>
