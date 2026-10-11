@@ -150,6 +150,8 @@ Módulos comprados son permanentes. Emprendedor otorga acceso temporal sin crear
 - total_discount_percentage
 - final_price
 - currency
+- upgraded_from_subscription_id (si es una actualización: el plan que reemplaza)
+- upgrade_credit (crédito descontado por lo que quedaba del plan anterior)
 - created_at
 - updated_at
 
@@ -656,7 +658,8 @@ Funciones (migración `supabase/migrations/20261011_emprendedor.sql`, todas SECU
 - `request_entrepreneur(meses)`: crea la compra (`payment_provider = 'manual'`) y la suscripción, ambas pendientes. Un solo pedido pendiente por persona.
 - `cancel_entrepreneur_request(id)`: la persona cancela su pedido pendiente.
 - `admin_list_entrepreneur_requests()` y `admin_activate_subscription(id)`: solo administradoras. Al activar, el plazo empieza al terminar el Emprendedor vigente (si hay) y la compra pasa a `approved`.
-- 1 mes = suscripción mensual (`auto_renew = true`). `cancel_entrepreneur_auto_renew(id)`: la persona cancela la renovación (`auto_renew_canceled_at`). Una sola suscripción mensual con renovación a la vez (migración `20261011_emprendedor_suscripcion_mensual.sql`, que reemplaza la regla anterior de `20261011_emprendedor_mensual.sql`).
+- 1 mes = suscripción mensual (`auto_renew = true`). `cancel_entrepreneur_auto_renew(id)`: la persona cancela la renovación (`auto_renew_canceled_at`). La suscripción mensual no se suma: solo se pide y activa sin Emprendedor vigente. Al activar 6 o 12 meses se cancela la renovación de la mensual (migración vigente: `20261011_emprendedor_mensual_no_suma.sql`; reemplaza las reglas de `20261011_emprendedor_mensual.sql` y `20261011_emprendedor_suscripcion_mensual.sql`).
+- Actualizar a un plan más largo (migración `20261011_emprendedor_actualizar.sql`): `quote_entrepreneur_upgrade(meses)` calcula el crédito proporcional y el precio; `request_entrepreneur_upgrade(meses)` crea el pedido. `subscriptions.upgraded_from_subscription_id` y `subscriptions.upgrade_credit` registran de qué plan viene y cuánto se descontó. Al activarlo, el plan anterior pasa a `expired` ese día. La pantalla de administración usa `admin_list_entrepreneur_requests_v2()`, que agrega esos datos.
 
 Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo lo que tiene `expires_at` en el futuro.
 
