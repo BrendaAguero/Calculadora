@@ -65,16 +65,23 @@ export async function approveEmail(formData: FormData) {
   const email = text(formData, 'email').toLowerCase();
   const { data: id, error } = await supabase.rpc('admin_approve_email', { p_email: email, p_source: text(formData, 'source'), p_note: text(formData, 'note') || null });
   if (error || !id) back('/admin/emails', 'error', error?.message ?? 'No se pudo aprobar.');
-  // Clave de acceso: se crea y se manda por correo; además queda visible acá para copiarla.
+  // Clave de acceso: cada email tiene una sola. Si ya tenía, se reenvía la misma; si no, se crea.
+  // Además queda visible acá para copiarla.
   let sent = false;
+  let reused = false;
   try {
-    const key = await issueKey(supabase, id as string);
+    const admin = createAdminClient();
+    const { data: existing } = admin ? await admin.from('approved_emails').select('key_cipher').eq('id', id as string).maybeSingle() : { data: null };
+    const current = decryptKey(existing?.key_cipher);
+    reused = Boolean(current);
+    const key = current ?? await issueKey(supabase, id as string);
     sent = await sendKeyEmail(email, key, await siteOrigin());
   } catch (e) {
     back('/admin/emails', 'error', `Email aprobado, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
   }
   revalidatePath('/admin/emails');
-  back('/admin/emails', 'ok', sent ? 'Email aprobado. Le mandamos la clave por correo (también la ves abajo).' : 'Email aprobado. Copiá la clave de abajo y mandásela (el correo automático no está configurado o falló).');
+  const which = reused ? 'su clave de siempre' : 'la clave';
+  back('/admin/emails', 'ok', sent ? `Email aprobado. Le mandamos ${which} por correo (también la ves abajo).` : `Email aprobado. Copiá ${which} de abajo y mandásela (el correo automático no está configurado o falló).`);
 }
 
 export async function newAccessKey(formData: FormData) {

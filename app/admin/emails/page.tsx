@@ -69,7 +69,7 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                     {keyOf(row.id) ? <><span>Clave: <strong className="font-mono text-sm">{keyOf(row.id)}</strong></span><CopyButton text={keyOf(row.id)!} label="Copiar clave" /></> : <span className="text-neutral-500">Sin clave</span>}
                     {keyOf(row.id) && mailReady() && <form action={resendAccessKey}><input type="hidden" name="id" value={row.id} /><SubmitButton className="underline">Reenviar por correo</SubmitButton></form>}
-                    <form action={newAccessKey}><input type="hidden" name="id" value={row.id} /><input type="hidden" name="email" value={row.email} /><input type="hidden" name="send" value={mailReady() ? '1' : '0'} /><SubmitButton className="underline">{keyOf(row.id) ? 'Crear clave nueva' : 'Crear clave'}</SubmitButton></form>
+                    <form action={newAccessKey}><input type="hidden" name="id" value={row.id} /><input type="hidden" name="email" value={row.email} /><input type="hidden" name="send" value={mailReady() ? '1' : '0'} /><SubmitButton className="underline">{keyOf(row.id) ? 'Cambiar clave (solo si se filtró)' : 'Crear clave'}</SubmitButton></form>
                   </div>
                 )}
                 {own.length > 0 && (
