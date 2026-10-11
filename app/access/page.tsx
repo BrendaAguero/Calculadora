@@ -39,7 +39,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
     Promise.all(RESOURCES.map((resource) => countActive(supabase, user.id, resource))),
     supabase.from("subscriptions").select("id, duration_months, final_price, total_discount_percentage, created_at").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
     // Suscripción mensual vigente (la más nueva), con o sin renovación.
-    supabase.from("subscriptions").select("id, auto_renew, expires_at").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("subscriptions").select("id, auto_renew, auto_renew_canceled_at, expires_at").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     snapshot.baseLicenseActive
       ? Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null))
       : Promise.resolve([]),
@@ -82,7 +82,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             Mientras está activo habilita todas las funciones avanzadas y módulos, sin límite de altas. Al vencer volvés a tu plan {snapshot.basePlan ? planLabel : "base"} y no se borra nada.
           </p>
 
-          {monthly && (
+          {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
             <div className="mt-4 rounded-xl border border-violet-300 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
               {monthly.auto_renew ? (
                 <>
