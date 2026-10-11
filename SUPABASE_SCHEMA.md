@@ -510,6 +510,12 @@ Compras (misma migración): `register_supplier_purchase(p jsonb)` guarda la comp
 
 Las ventas conservan sus valores históricos.
 
+Ventas (migración `20261011_ventas.sql`):
+- `voided_at`: una venta anulada no se borra; queda marcada y deja de contar en totales y en el resumen.
+- `register_sale(p jsonb)` guarda la venta y, si se pide, descuenta del stock de productos terminados (`sale`).
+- `void_sale(id)` anula y devuelve al stock lo descontado con un movimiento `return`.
+- Ganancia (`net_income`) = total − comisión − costo; `total` = subtotal − descuento. El costo por pieza es el más reciente entre el último cálculo y la última producción del producto.
+
 ### affiliates
 - id
 - user_id

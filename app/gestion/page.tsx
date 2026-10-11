@@ -6,6 +6,8 @@ const hint = "mt-1 text-sm text-neutral-500 dark:text-neutral-400";
 
 export default function GestionPage() {
   return <AppShell><h1 className="text-3xl font-bold">Gestión</h1><p className={`mt-2 ${hint.replace("mt-1 ", "")}`}>Un espacio para organizar tu emprendimiento.</p><div className="mt-8 grid gap-3">
+    <Link href="/resumen" className={card}><h2 className="font-semibold">Resumen del negocio</h2><p className={hint}>Ventas, costos, ganancias, producción y stock por período.</p></Link>
+    <Link href="/ventas" className={card}><h2 className="font-semibold">Ventas</h2><p className={hint}>Precio, descuento, comisión, ganancia y margen de cada venta.</p></Link>
     <Link href="/materials" className={card}><h2 className="font-semibold">Materiales</h2><p className={hint}>Costos y precios con historial.</p></Link>
     <Link href="/gestion/moldes" className={card}><h2 className="font-semibold">Moldes</h2><p className={hint}>Registrá fotos, capacidad, costo y usos de tus moldes.</p></Link>
     <Link href="/formulas" className={card}><h2 className="font-semibold">Fórmulas</h2><p className={hint}>Recetas, ingredientes y versiones.</p></Link>

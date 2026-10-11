@@ -24,7 +24,7 @@ export default async function Home() {
       </section>
 
       <section className="mt-6 grid grid-cols-2 gap-3">
-        {[['/mis-datos','Mis datos','Materiales, moldes y fórmulas'], ['/gestion','Gestión','Productos y organización'], ['/access','Mi acceso','Plan, módulos y límites'], ['/mas','Más','Perfil, preferencias y ayuda']].map(([href,title,description]) => (
+        {[['/resumen','Resumen','Ventas y ganancias del mes'], ['/gestion','Gestión','Productos, stock, ventas y más'], ['/mis-datos','Mis datos','Materiales, moldes y fórmulas'], ['/access','Mi acceso','Plan, módulos y límites']].map(([href,title,description]) => (
           <a key={href} href={href} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="font-semibold">{title}</h2>
             <p className="mt-1 text-xs leading-5 text-neutral-500 dark:text-neutral-400">{description}</p>
