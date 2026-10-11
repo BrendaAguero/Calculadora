@@ -85,7 +85,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                 </div>
               </Link>
             ))}
-          {visible.length > 0 && <p className="text-sm text-neutral-600 dark:text-neutral-400">Valor total al costo: <strong>{money(totalValue)}</strong>{withoutValue ? ` (sin contar ${withoutValue} sin ${products ? 'cálculo guardado' : 'precio'})` : ''}</p>}
+          {visible.length > 0 && <p className="text-sm text-neutral-600 dark:text-neutral-400">Valor total al costo: <strong>{money(totalValue)}</strong>{withoutValue ? ` (sin contar ${withoutValue} sin ${products ? 'costo conocido' : 'precio'})` : ''}</p>}
         </section>
       )}
 
