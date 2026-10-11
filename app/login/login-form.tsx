@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { LegalLinks } from "@/components/legal-links";
 import { requestCode, requestPasswordReset, signInWithPassword, type ActionState } from "./actions";
 
 const initialState: ActionState = {};
@@ -43,6 +44,7 @@ export function LoginForm({ linkError }: { linkError: string | null }) {
         {mode === "login" && <LoginPanel key={`login-${round}`} onForgot={() => setMode("forgot")} />}
         {mode === "register" && <RegisterPanel key={`register-${round}`} onBack={back} />}
         {mode === "forgot" && <ForgotPanel key={`forgot-${round}`} onBack={back} />}
+        <LegalLinks className="justify-center pt-4" />
       </div>
     </main>
   );
@@ -69,7 +71,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
     <form action={action} className="space-y-4">
       <div><label className="block text-sm font-medium" htmlFor="full_name">Nombre</label><input id="full_name" name="full_name" type="text" autoComplete="name" required className={inputClass} placeholder="Tu nombre" /></div>
       <div><label className="block text-sm font-medium" htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" required className={inputClass} placeholder="tu@email.com" /></div>
-      <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms_accepted" className="mt-1" required /><span>Acepto los términos y condiciones.</span></label>
+      <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms_accepted" className="mt-1" required /><span>Acepto los <a href="/legal/terminos" target="_blank" className="underline">términos y condiciones</a> y la <a href="/legal/privacidad" target="_blank" className="underline">política de privacidad</a>.</span></label>
       {state.error && <p role="alert" className="text-sm text-red-600 dark:text-red-300">{state.error}</p>}
       <button type="submit" disabled={pending} className={primaryButton}>{pending ? "Enviando..." : "Crear cuenta"}</button>
     </form>

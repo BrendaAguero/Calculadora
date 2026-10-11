@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -52,6 +53,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         <h1 className="text-2xl font-semibold">Stock</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cantidades, mínimos y valor de tus materias primas y productos terminados. Cada cambio queda en el historial.</p>
       </header>
+      <HelpTip guide="stock"><p>El stock se mueve solo al registrar producción, compras y ventas. Para corregirlo, abrí el ítem y hacé un ajuste.</p><p>Si ponés un mínimo, te avisamos cuando quede poco.</p></HelpTip>
 
       {error && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">{error}</div>}
       {loadError && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudo cargar el stock: {loadError}</div>}

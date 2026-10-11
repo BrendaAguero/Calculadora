@@ -488,6 +488,8 @@ Incluir:
 
 El texto legal debe revisarse con normativa argentina vigente antes del lanzamiento.
 
+Etapa 21 (11/10/2026): titular Brenda Agüero, CUIT 27-41713100-6; contacto calculadoraemprender.app@gmail.com (`lib/legal.ts`). Reembolsos: devolución total dentro de los 10 días corridos (botón de arrepentimiento, sin cuenta); después no hay reembolso de licencias, actividades ni módulos, y en Emprendedor se puede cancelar la renovación. Páginas públicas: `/ayuda`, `/legal/*` (términos, privacidad, compras, afiliadas) y `/arrepentimiento`. Eliminación de cuenta: por pedido al email de contacto (5 días hábiles), conservando registros de compras.
+
 ## Regla fundamental de desarrollo
 
 No implementar todo de una vez.

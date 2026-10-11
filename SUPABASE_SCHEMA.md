@@ -690,6 +690,19 @@ Funciones (migración `supabase/migrations/20261011_emprendedor.sql`, todas SECU
 
 Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo lo que tiene `expires_at` en el futuro.
 
+## Botón de arrepentimiento (Etapa 21)
+
+`regret_requests`: pedidos para revocar una compra dentro de los 10 días (Res. 424/2020). Código de trámite `ARR-XXXXXXXX`, nombre, email, referencia y fecha de compra opcionales, estado `received` / `refunded` / `rejected`.
+- RLS: solo lectura para la dueña del pedido (si tenía sesión) y la administración. Nadie inserta ni modifica directo.
+- `submit_regret_request(...)`: SECURITY DEFINER, ejecutable por `anon` y `authenticated` (la ley pide que no haga falta cuenta). Valida datos y limita a 5 pedidos por email por día.
+- `admin_resolve_regret_request(id, status, note)`: solo administración; deja auditoría.
+
+## Revisión de seguridad (Etapa 22)
+
+- `bootstrap_calculadora_admin()` y `handle_new_user()` ya no se pueden ejecutar desde la API (anon/authenticated).
+- `sync_calculation_item_snapshot_name()` con `search_path` fijo.
+- Probado: sin sesión no se lee ninguna tabla privada; una cuenta no ve ni modifica datos de otra, no puede hacerse admin ni tester, no puede llamar funciones admin ni de pagos; un pago repetido no se activa dos veces y una devolución anula plan y comisión (prueba hecha dentro de una transacción deshecha).
+
 ## Regla para futuras actividades
 
 No asumir que todas las actividades usan yeso/agua/porcentaje de agua.
