@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Fingerprint, LockKeyhole } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { answerSessionAlert } from "@/app/seguridad/actions";
@@ -124,23 +125,23 @@ function LockScreen({ config, onUnlock }: { config: LockConfig; onUnlock: () => 
   };
 
   return (
-    <div id="app-lock" className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-50 p-6 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <div id="app-lock" className="terrazo-borde fixed inset-0 z-[100] flex flex-col items-center justify-center bg-orange-800 p-6 text-white dark:bg-orange-900">
       <div className="w-full max-w-xs text-center">
-        <p className="text-4xl" aria-hidden="true">🔒</p>
-        <h1 className="mt-2 text-lg font-semibold">Calculadora Emprender</h1>
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-resina text-resina-dark"><LockKeyhole size={30} aria-hidden="true" /></span>
+        <h1 className="mt-4 text-2xl text-white">Calculadora Emprender</h1>
+        <p className="mt-1 text-sm text-white/75">{config.type === "pin" ? "Escribí tu PIN para abrir la app" : "Usá tu huella o tu cara para abrir la app"}</p>
         {config.type === "pin" ? (
-          <form onSubmit={submitPin} className="mt-4 space-y-3">
-            <label className="block text-sm">Escribí tu PIN
-              <input autoFocus inputMode="numeric" type="password" autoComplete="off" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-3 text-center text-2xl tracking-[0.5em] dark:border-neutral-700 dark:bg-neutral-900" />
-            </label>
-            <button className="w-full rounded-xl bg-orange-700 py-3 font-semibold text-white" disabled={pin.length < 4}>Abrir</button>
+          <form onSubmit={submitPin} className="mt-6 space-y-4">
+            <label className="sr-only" htmlFor="app-lock-pin">PIN</label>
+            <input id="app-lock-pin" autoFocus inputMode="numeric" type="password" autoComplete="off" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full rounded-2xl border-0 bg-white/15 px-4 py-4 text-center text-3xl tracking-[0.6em] text-white placeholder:text-white/40 focus:bg-white/20" placeholder="••••" />
+            <button className="w-full rounded-2xl bg-resina py-3.5 text-base font-bold text-resina-dark disabled:opacity-60" disabled={pin.length < 4}>Abrir</button>
           </form>
         ) : (
-          <button onClick={() => void tryBiometric()} className="mt-4 w-full rounded-xl bg-orange-700 py-3 font-semibold text-white">Abrir con huella o cara</button>
+          <button onClick={() => void tryBiometric()} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-resina py-3.5 text-base font-bold text-resina-dark"><Fingerprint size={22} aria-hidden="true" />Abrir con huella o cara</button>
         )}
-        {message && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-300">{message}</p>}
-        <form ref={forgetForm} action={signOut} className="mt-6">
-          <button type="button" onClick={forget} className="text-xs text-neutral-500 underline">
+        {message && <p role="alert" className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm">{message}</p>}
+        <form ref={forgetForm} action={signOut} className="mt-8">
+          <button type="button" onClick={forget} className="text-sm text-white/75 underline underline-offset-4">
             {config.type === "pin" ? "Olvidé mi PIN" : "No puedo usar la huella"}: entrar de nuevo con mi clave
           </button>
         </form>

@@ -99,6 +99,15 @@ h1 { font-weight: 700; }
     radial-gradient(circle at 62% 28%, var(--color-terracota) 0 5px, transparent 6px),
     radial-gradient(circle at 79% 92%, var(--color-resina) 0 3px, transparent 4px);
 }
+/* Variante con los puntos en los bordes, para pantallas con texto largo (entrada y bloqueo). */
+.terrazo-borde {
+  background-image:
+    radial-gradient(circle at 88% 9%, var(--color-resina) 0 8px, transparent 9px),
+    radial-gradient(circle at 74% 5%, var(--color-terracota) 0 5px, transparent 6px),
+    radial-gradient(circle at 96% 88%, var(--color-salvia) 0 11px, transparent 12px),
+    radial-gradient(circle at 6% 96%, var(--color-resina) 0 4px, transparent 5px),
+    radial-gradient(circle at 16% 99%, var(--color-terracota) 0 3px, transparent 4px);
+}
 .terrazo-bottom {
   background-image:
     radial-gradient(circle at 20% 94%, var(--color-resina) 0 6px, transparent 7px),
@@ -111,3 +120,4 @@ h1 { font-weight: 700; }
 
 /* Bloqueo de la app: mientras está bloqueada, solo se ve la pantalla de desbloqueo. */
 html.app-locked body > *:not(#app-lock) { visibility: hidden; }
+html.app-locked body > nav, html.app-locked body > aside { display: none; }
