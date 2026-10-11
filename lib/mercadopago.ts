@@ -20,7 +20,7 @@ async function mp<T>(path: string, init?: RequestInit): Promise<T> {
 // se paga (por ejemplo, un comprador de prueba) deja el botón de pagar deshabilitado.
 export async function createPreference(input: { purchaseId: string; title: string; price: number; origin: string }) {
   const isLocal = input.origin.startsWith("http://");
-  const preference = await mp<{ id: string; init_point: string; sandbox_init_point?: string }>("/checkout/preferences", {
+  const preference = await mp<{ id: string; init_point: string }>("/checkout/preferences", {
     method: "POST",
     body: JSON.stringify({
       items: [{ id: input.purchaseId, title: input.title, quantity: 1, unit_price: Math.round(input.price * 100) / 100, currency_id: "ARS" }],
@@ -35,10 +35,9 @@ export async function createPreference(input: { purchaseId: string; title: strin
       statement_descriptor: "CALC EMPRENDER",
     }),
   });
-  // Fuera de producción se usa el checkout de pruebas (sandbox): con credenciales de prueba, el checkout
-  // normal muestra el formulario pero no deja pagar.
-  const sandbox = process.env.VERCEL_ENV !== "production" && preference.sandbox_init_point;
-  return { id: preference.id, url: sandbox || preference.init_point };
+  // Con las credenciales actuales (las de la pestaña «Prueba» pertenecen a un vendedor de prueba) se usa
+  // el checkout normal; para probar hay que pagar con OTRA cuenta de prueba, la compradora.
+  return { id: preference.id, url: preference.init_point };
 }
 
 type Payment = { id: number; status: string; status_detail: string; transaction_amount: number; currency_id: string; external_reference: string | null; order?: { id?: string } };
