@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -28,6 +29,7 @@ export default async function PurchasesPage() {
         </div>
         {allowed && <Link href="/compras/nueva" className={primaryButton}>Nueva</Link>}
       </header>
+      <HelpTip guide="compras"><p>Al cargar una compra se suma el stock y se actualiza el precio del material.</p><p>Usá «Comparar» para ver qué proveedor te conviene.</p></HelpTip>
 
       {!allowed ? (
         <FeatureLocked title="Compras es parte del módulo «Proveedores básico» o de Emprendedor.">Registrá compras a tus proveedores, con precios y stock al día.</FeatureLocked>

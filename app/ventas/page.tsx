@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -45,6 +46,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         </div>
         {allowed && <Link href="/ventas/nueva" className={primaryButton}>Nueva</Link>}
       </header>
+      <HelpTip guide="ventas"><p>Cada venta descuenta stock y calcula la ganancia con el costo de producción, los descuentos y las comisiones.</p><p>Si te equivocás, anulala: el stock vuelve.</p></HelpTip>
 
       {!allowed ? (
         <FeatureLocked title="Ventas es parte de Emprendedor.">Registrá cada venta con su precio, descuento y comisión, y conocé tu ganancia y margen reales.</FeatureLocked>

@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { updateProfile } from "./actions";
 import { signOut } from "../login/actions";
+import { CONTACT_EMAIL } from "@/lib/legal";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -45,6 +47,12 @@ export default async function ProfilePage() {
           Guardar
         </button>
       </form>
+
+      <section className="mt-8 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+        <h2 className="font-semibold">Eliminar mi cuenta</h2>
+        <p className="mt-1 text-neutral-600 dark:text-neutral-400">Mandanos el pedido desde el email de tu cuenta. Borramos tus datos en 5 días hábiles; los registros de compras se conservan por obligación legal. <Link href="/legal/privacidad" className="underline">Más información</Link>.</p>
+        <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Eliminar mi cuenta")}&body=${encodeURIComponent(`Hola, quiero eliminar mi cuenta de Calculadora Emprender (${user.email ?? ""}).`)}`} className="mt-3 inline-block rounded-md border border-red-300 px-3 py-1.5 text-red-700 dark:border-red-900 dark:text-red-300">Pedir la eliminación</a>
+      </section>
 
       <form action={signOut} className="mt-8">
         <button type="submit" className="text-sm text-neutral-500 underline">

@@ -1,0 +1,114 @@
+import Link from 'next/link';
+import { PublicPage, proseClass } from '@/components/public-page';
+import { CONTACT_EMAIL } from '@/lib/legal';
+
+export const metadata = { title: 'Ayuda · Calculadora Emprender' };
+
+// Guías paso a paso. El id de cada una se usa en las ayudas de cada pantalla (/ayuda#id).
+const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
+  {
+    id: 'empezar', title: 'Primeros pasos', steps: [
+      <>Cargá tus <Link href="/materials">materiales</Link> con lo que pagaste y la cantidad (por ejemplo, 25 kg de yeso a $20.000).</>,
+      <>Si usás siempre la misma mezcla, guardala como <Link href="/formulas">fórmula</Link>.</>,
+      <>Registrá tus <Link href="/gestion/moldes">moldes</Link> con los gramos que entran en cada uno.</>,
+      <>Usá <Link href="/calcular">Calcular</Link> para saber cuánto material necesitás, cuánto te cuesta y a qué precio vender.</>,
+      <>Cuando quieras ordenar tu negocio, sumá <Link href="/gestion/productos">productos</Link>, <Link href="/stock">stock</Link>, <Link href="/produccion">producción</Link> y <Link href="/ventas">ventas</Link>.</>,
+    ],
+  },
+  {
+    id: 'calcular', title: 'Calcular una tanda', steps: [
+      <>Elegí el modo: <strong>Fácil</strong> (lo mínimo), <strong>Estándar</strong> (suma packaging y otros costos) o <strong>Personalizado</strong> (control total). Podés cambiar sin perder lo cargado.</>,
+      <>Poné cuántas piezas vas a hacer y los gramos por pieza. ¿No sabés cuánto lleva el molde? Llenalo con agua y pesala: esos gramos son los de material por pieza.</>,
+      <>Revisá el porcentaje de agua: 70 %, 75 % y 80 % son referencias; si elegís una fórmula guardada, se usa la suya.</>,
+      <>Indicá la ganancia que querés. El precio sugerido es una referencia: vos decidís el precio final.</>,
+      <>Guardá el cálculo para verlo después en <Link href="/historial">Historial</Link>, duplicarlo o recalcularlo con precios nuevos.</>,
+    ],
+  },
+  {
+    id: 'stock', title: 'Stock', steps: [
+      <>En <Link href="/stock">Stock</Link> ves materias primas y productos terminados, con su cantidad, mínimo y valor.</>,
+      <>El stock se mueve solo cuando registrás producción, compras o ventas. Si necesitás corregirlo, usá un ajuste desde el detalle del ítem.</>,
+      <>Poné un mínimo para recibir el aviso de que te estás quedando sin algo.</>,
+      <>Puede quedar en negativo si producís o vendés más de lo cargado: es un aviso para que revises, no un error.</>,
+    ],
+  },
+  {
+    id: 'produccion', title: 'Producción', steps: [
+      <>Entrá a <Link href="/produccion/nueva">Nueva producción</Link>, elegí el producto y la cantidad que fabricaste.</>,
+      <>Se descuentan los materiales del stock y se suman las piezas terminadas.</>,
+      <>El costo de esa producción queda guardado y se usa para calcular la ganancia de tus ventas y el valor del stock.</>,
+    ],
+  },
+  {
+    id: 'compras', title: 'Compras y proveedores', steps: [
+      <>Cargá tus <Link href="/proveedores">proveedores</Link> una sola vez.</>,
+      <>En <Link href="/compras/nueva">Nueva compra</Link> anotá qué compraste, a quién y a qué precio. El stock y el precio del material se actualizan solos.</>,
+      <>Usá <Link href="/compras/comparar">Comparar</Link> para ver qué proveedor te vende más barato cada material.</>,
+    ],
+  },
+  {
+    id: 'ventas', title: 'Ventas y resumen', steps: [
+      <>En <Link href="/ventas/nueva">Nueva venta</Link> elegí los productos, el precio, descuentos y comisiones (por ejemplo, la de Mercado Pago o de una feria).</>,
+      <>La aplicación calcula la ganancia y el margen de cada venta con el costo de producción.</>,
+      <>Si te equivocaste, anulá la venta: el stock vuelve y queda registrado.</>,
+      <>En <Link href="/resumen">Resumen</Link> ves ventas, costos, ganancias, producción y stock por período.</>,
+    ],
+  },
+];
+
+const FAQ: [string, React.ReactNode][] = [
+  ['¿Mis datos los puede ver otra persona?', <>No. Cada cuenta solo puede ver sus propios datos. Más detalles en la <Link href="/legal/privacidad">Política de privacidad</Link>.</>],
+  ['¿Qué diferencia hay entre Básico, Avanzado y Emprendedor?', <>Básico y Avanzado son licencias de pago único que no vencen; cambian los límites de materiales, productos, fórmulas y moldes. Emprendedor habilita por un tiempo todas las funciones y módulos. Mirá tu plan en <Link href="/access">Mi acceso</Link>.</>],
+  ['¿Qué pasa cuando vence Emprendedor?', <>Volvés a tu plan base. <strong>No se borra nada.</strong> Si tenías más cosas que las que permite tu plan, las seguís viendo, pero no podés crear nuevas hasta liberar lugar o volver a Emprendedor.</>],
+  ['¿Cómo cancelo la renovación mensual?', <>En <Link href="/access">Mi acceso</Link>, en tu plan Emprendedor de 1 mes, tocá «Cancelar renovación». Seguís teniendo el plan hasta que termina el mes pagado.</>],
+  ['¿Puedo comprar 6 meses si ya tengo Emprendedor?', <>Sí. Los 6 y 12 meses se suman al final del plan que tenés. Antes de pagar te mostramos si te conviene más actualizar a un plan más largo.</>],
+  ['¿Cómo pago?', <>Con Mercado Pago (tarjeta, dinero en cuenta y otros medios). La compra se activa sola cuando el pago se aprueba.</>],
+  ['Pagué y no se activó', <>Si pagaste en efectivo, puede tardar hasta que se acredite. Si pasaron más de 2 horas, escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con el número de operación de Mercado Pago.</>],
+  ['Me arrepentí de una compra', <>Tenés 10 días corridos para revocarla sin costo desde el <Link href="/arrepentimiento">Botón de arrepentimiento</Link>.</>],
+  ['¿Cómo funciona el programa de afiliadas?', <>Recomendás la aplicación con tu enlace y ganás una comisión por cada compra. Todo está en <Link href="/afiliados">Programa de afiliadas</Link> y en sus <Link href="/legal/afiliadas">condiciones</Link>.</>],
+  ['No me llega el correo para entrar', <>Revisá spam y promociones. Abrí el enlace en el mismo navegador donde lo pediste. Si sigue sin llegar, escribinos.</>],
+  ['Veo un error con un código', <>Anotá el código o sacá una captura y mandanosla a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>: nos ayuda a encontrar el problema rápido.</>],
+  ['¿Cómo borro mi cuenta?', <>Escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> desde el email de tu cuenta. Te explicamos qué se borra y qué se conserva por obligación legal.</>],
+];
+
+export default function HelpPage() {
+  return (
+    <PublicPage>
+      <h1 className="text-2xl font-bold">Ayuda</h1>
+      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Guías cortas y respuestas a las preguntas más comunes.</p>
+
+      <nav aria-label="Guías" className="mt-6 flex flex-wrap gap-2">
+        {GUIDES.map((g) => <a key={g.id} href={`#${g.id}`} className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700">{g.title}</a>)}
+        <a href="#preguntas" className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700">Preguntas frecuentes</a>
+      </nav>
+
+      <div className={`mt-6 ${proseClass}`}>
+        {GUIDES.map((g) => (
+          <section key={g.id} id={g.id} className="scroll-mt-6">
+            <h2>{g.title}</h2>
+            <ol>{g.steps.map((step, i) => <li key={i}>{step}</li>)}</ol>
+          </section>
+        ))}
+
+        <section id="preguntas" className="scroll-mt-6">
+          <h2>Preguntas frecuentes</h2>
+          <div className="mt-2 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group px-4 py-3">
+                <summary className="cursor-pointer list-none font-medium text-neutral-900 marker:hidden dark:text-white">
+                  <span className="mr-2 inline-block transition group-open:rotate-90" aria-hidden="true">›</span>{q}
+                </summary>
+                <div className="mt-2 pl-4">{a}</div>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2>¿Necesitás más ayuda?</h2>
+          <p>Escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+        </section>
+      </div>
+    </PublicPage>
+  );
+}

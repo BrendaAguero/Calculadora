@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function MaterialsPage() {
@@ -29,6 +30,7 @@ export default async function MaterialsPage() {
         </div>
         <Link href="/materials/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white">Nuevo</Link>
       </header>
+      <HelpTip guide="empezar"><p>Cargá cada material con lo que pagaste y la cantidad: la aplicación calcula el costo por gramo, mililitro o unidad.</p><p>Si cambia el precio, actualizalo: el anterior queda en el historial.</p></HelpTip>
 
       <section className="grid gap-3">
         {(materials ?? []).map(material => {

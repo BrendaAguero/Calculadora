@@ -5,11 +5,12 @@ import { cardClass, pageClass } from '@/lib/ui';
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
   const count = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
-  const [users, entrepreneur, applications, withdrawals] = await Promise.all([
+  const [users, entrepreneur, applications, withdrawals, regrets] = await Promise.all([
     count(supabase.from('profiles').select('id', { count: 'exact', head: true })),
     count(supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
     count(supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
     count(supabase.from('withdrawals').select('id', { count: 'exact', head: true }).in('status', ['requested', 'reviewing', 'approved'])),
+    count(supabase.from('regret_requests').select('id', { count: 'exact', head: true }).eq('status', 'received')),
   ]);
 
   const sections: [string, string, string, number?][] = [
@@ -17,6 +18,7 @@ export default async function AdminHome() {
     ['/admin/emprendedor', 'Pedidos de Emprendedor', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
     ['/admin/ventas', 'Ventas de la plataforma', 'Compras, pagos de Mercado Pago y suscripciones.'],
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],
+    ['/admin/arrepentimiento', 'Botón de arrepentimiento', 'Pedidos para revocar una compra dentro de los 10 días.', regrets],
     ['/admin/auditoria', 'Auditoría', 'Todo lo que se hizo desde la administración.'],
   ];
 

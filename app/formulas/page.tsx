@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { createClient } from '@/lib/supabase/server';
 
 const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
@@ -25,6 +26,7 @@ export default async function FormulasPage() {
         </div>
         <Link href="/formulas/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nueva</Link>
       </header>
+      <HelpTip guide="empezar"><p>Una fórmula guarda tu mezcla (por ejemplo, yeso con 75 % de agua) para usarla en la calculadora y en tus productos.</p><p>Cada cambio crea una versión nueva.</p></HelpTip>
 
       {/* Un error de consulta nunca debe verse como "no tenés fórmulas". */}
       {error

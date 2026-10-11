@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CopyButton } from '@/components/copy-button';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -11,6 +12,16 @@ const COMMISSION_LABELS: Record<string, string> = {
   pending: 'Pendiente', held: 'Retenida', available: 'Disponible', withdrawal_requested: 'En retiro', paid: 'Pagada', reversed: 'Anulada', canceled: 'Cancelada',
 };
 const WITHDRAWAL_LABELS: Record<string, string> = { requested: 'Pedido', reviewing: 'En revisión', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
+
+// Textos sugeridos para que las afiliadas compartan su enlace.
+function promoTexts(link: string, code: string): [string, string][] {
+  return [
+    ['Post para redes', `¿Trabajás con yeso, resina o cemento? 🧮 Yo calculo materiales, costos y precios con la Calculadora Emprender: sé cuánto gasto en cada pieza y cuánto gano.\n\nProbala con mi enlace: ${link}`],
+    ['Mensaje de WhatsApp', `¡Hola! Te paso la app que uso para calcular cuánto material lleva cada pieza y a qué precio vender: ${link}\nSi comprás, usá mi código ${code}.`],
+    ['Para talleres y clases', `Para calcular las mezclas y los costos de lo que hagan, les recomiendo la Calculadora Emprender. Entren desde ${link} o usen el código ${code} al comprar.`],
+    ['Historia corta', `Dejé de calcular a ojo 🙌 Costos, mezclas y ganancia en un solo lugar → ${link}`],
+  ];
+}
 
 export default async function AffiliatesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
@@ -55,7 +66,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
             <li>No se permite usar el propio código ni crear cuentas falsas: esas ventas no generan comisión.</li>
           </ul>
           <label className={labelClass}>¿Cómo pensás recomendarla? (opcional)<textarea name="note" rows={3} maxLength={500} className={inputClass} placeholder="Redes, ferias, talleres…" /></label>
-          <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="accept" className="mt-1" required /> Acepto las condiciones del programa.</label>
+          <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="accept" className="mt-1" required /> Acepto las <Link href="/legal/afiliadas" target="_blank" className="underline">condiciones del programa</Link>.</label>
           <div><SubmitButton className={primaryButton}>Quiero ser afiliada</SubmitButton></div>
         </form>
       ) : affiliate.status === 'pending' ? (
@@ -70,7 +81,24 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
             <p className="mt-1 text-3xl font-bold tracking-wider">{code ?? '—'}</p>
             {link && <p className="mt-2 break-all text-sm">Enlace para compartir: <span className="font-medium">{link}</span></p>}
             <p className="mt-2 text-xs text-neutral-500">Comisión {Number(affiliate.commission_percentage)} %{affiliate.is_pro ? ' · PRO ⭐' : ''} · {affiliate.valid_sales_count} ventas válidas</p>
+            {link && <div className="mt-3 flex flex-wrap gap-2"><CopyButton text={link} label="Copiar enlace" />{code && <CopyButton text={code} label="Copiar código" />}</div>}
           </section>
+
+          {link && code && (
+            <section className={cardClass}>
+              <h2 className="font-semibold">Material para compartir</h2>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Textos listos para redes, WhatsApp o tus talleres. Copialos y adaptalos a tu forma de hablar.</p>
+              <ul className="mt-3 grid gap-3">
+                {promoTexts(link, code).map(([title, body]) => (
+                  <li key={title} className="rounded-xl border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+                    <div className="flex items-center justify-between gap-2"><p className="font-medium">{title}</p><CopyButton text={body} /></div>
+                    <p className="mt-2 whitespace-pre-line text-neutral-600 dark:text-neutral-300">{body}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-neutral-500">Recordá: no prometas funciones ni descuentos que no existen y no hagas spam. <Link href="/legal/afiliadas" className="underline">Ver condiciones</Link>.</p>
+            </section>
+          )}
 
           <section className="grid grid-cols-3 gap-3">
             {[['Retenidas', sum('held')], ['Disponibles', sum('available')], ['Pagadas', sum('paid')]].map(([label, value]) => (

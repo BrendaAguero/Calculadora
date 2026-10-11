@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HelpTip } from '@/components/help-tip';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -29,6 +30,7 @@ export default async function ProductionsPage() {
         </div>
         {allowed && <Link href="/produccion/nueva" className={primaryButton}>Nueva</Link>}
       </header>
+      <HelpTip guide="produccion"><p>Al registrar lo que fabricaste se descuentan los materiales del stock y se suman las piezas terminadas.</p><p>El costo queda guardado y se usa para la ganancia de tus ventas.</p></HelpTip>
 
       {!allowed ? (
         <FeatureLocked title="Producción es parte de Emprendedor.">Calcula los materiales de cada tanda, comprueba el stock y suma los productos terminados.</FeatureLocked>

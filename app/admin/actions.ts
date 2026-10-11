@@ -41,3 +41,8 @@ export async function updateWithdrawal(formData: FormData) {
   const status = text(formData, 'status');
   await rpc('/admin/afiliados', 'admin_update_withdrawal', { p_withdrawal_id: text(formData, 'withdrawal_id'), p_status: status, p_notes: text(formData, 'notes') }, status === 'paid' ? 'Retiro marcado como pagado.' : 'Retiro actualizado.');
 }
+
+export async function resolveRegret(formData: FormData) {
+  const status = text(formData, 'status');
+  await rpc('/admin/arrepentimiento', 'admin_resolve_regret_request', { p_id: text(formData, 'id'), p_status: status, p_note: text(formData, 'note') || null }, status === 'refunded' ? 'Marcado como devuelto.' : 'Marcado como rechazado.');
+}
