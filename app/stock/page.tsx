@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
@@ -103,7 +104,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
               </label>
               <label className={labelClass}>Cantidad que tenés hoy<input name="initial" inputMode="decimal" placeholder="0" className={inputClass} /></label>
               <label className={labelClass}>Mínimo (opcional)<input name="minimum" inputMode="decimal" placeholder="Avisar al llegar a…" className={inputClass} /></label>
-              <div className="flex items-end"><button type="submit" className="w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Agregar</button></div>
+              <div className="flex items-end"><SubmitButton className="w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Agregar</SubmitButton></div>
               <p className="text-xs text-neutral-500 sm:col-span-3">{products ? 'Los productos se cuentan en unidades.' : 'La cantidad va en la unidad del material (la que figura entre paréntesis).'}</p>
             </form>
           )}

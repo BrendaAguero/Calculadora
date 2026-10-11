@@ -549,3 +549,45 @@ revoke all on function public.request_withdrawal(text, text) from public, anon;
 grant execute on function public.request_withdrawal(text, text) to authenticated;
 revoke all on function public.check_affiliate_code(text) from public, anon;
 grant execute on function public.check_affiliate_code(text) to authenticated;
+
+-- Aprobar o rechazar solo actúa sobre solicitudes pendientes: tocar dos veces no duplica registros.
+create or replace function public.admin_review_affiliate(p_affiliate_id uuid, p_approve boolean, p_percentage numeric default 15)
+returns text
+language plpgsql volatile security definer
+set search_path = public
+as $$
+declare
+  v_aff affiliates%rowtype;
+  v_code text;
+begin
+  if not public.is_admin() then raise exception 'No autorizado.'; end if;
+  select * into v_aff from affiliates where id = p_affiliate_id for update;
+  if v_aff.id is null then raise exception 'No se encontró la solicitud.'; end if;
+  if v_aff.status <> 'pending' then
+    if p_approve and v_aff.status = 'approved' then
+      select code into v_code from affiliate_codes where affiliate_id = p_affiliate_id and active limit 1;
+      return v_code;
+    end if;
+    raise exception 'Esta solicitud ya fue revisada.';
+  end if;
+  if p_approve then
+    if p_percentage not in (15, 20, 25, 30) then raise exception 'La comisión tiene que ser 15, 20, 25 o 30 %%.'; end if;
+    update affiliates set status = 'approved', commission_percentage = p_percentage, approved_at = coalesce(approved_at, now()), updated_at = now()
+      where id = p_affiliate_id;
+    select code into v_code from affiliate_codes where affiliate_id = p_affiliate_id and active limit 1;
+    if v_code is null then
+      v_code := public.new_affiliate_code(v_aff.user_id);
+      insert into affiliate_codes (affiliate_id, code, active) values (p_affiliate_id, v_code, true);
+    end if;
+    perform public.log_audit('affiliate.approve', 'affiliate', p_affiliate_id, to_jsonb(v_aff), jsonb_build_object('percentage', p_percentage, 'code', v_code));
+    return v_code;
+  else
+    update affiliates set status = 'rejected', updated_at = now() where id = p_affiliate_id;
+    update affiliate_codes set active = false where affiliate_id = p_affiliate_id;
+    perform public.log_audit('affiliate.reject', 'affiliate', p_affiliate_id, to_jsonb(v_aff), null);
+    return null;
+  end if;
+end;
+$$;
+revoke all on function public.admin_review_affiliate(uuid, boolean, numeric) from public, anon;
+grant execute on function public.admin_review_affiliate(uuid, boolean, numeric) to authenticated;

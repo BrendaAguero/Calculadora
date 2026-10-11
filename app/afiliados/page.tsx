@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { siteOrigin } from '@/lib/origin';
@@ -55,7 +56,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
           </ul>
           <label className={labelClass}>¿Cómo pensás recomendarla? (opcional)<textarea name="note" rows={3} maxLength={500} className={inputClass} placeholder="Redes, ferias, talleres…" /></label>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="accept" className="mt-1" required /> Acepto las condiciones del programa.</label>
-          <div><button type="submit" className={primaryButton}>Quiero ser afiliada</button></div>
+          <div><SubmitButton className={primaryButton}>Quiero ser afiliada</SubmitButton></div>
         </form>
       ) : affiliate.status === 'pending' ? (
         <div className={`${cardClass} text-sm`}>Tu solicitud está en revisión. Cuando se apruebe vas a ver acá tu código y tu enlace.</div>

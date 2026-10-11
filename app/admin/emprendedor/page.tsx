@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { activateSubscription } from './actions';
@@ -46,7 +47,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
                 <p className="text-xs text-neutral-500">Pedido el {new Date(request.requested_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}</p>
                 <form action={activateSubscription} className="mt-3">
                   <input type="hidden" name="subscription_id" value={request.subscription_id} />
-                  <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Activar (pago recibido)</button>
+                  <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Activar (pago recibido)</SubmitButton>
                 </form>
               </div>
             ))}

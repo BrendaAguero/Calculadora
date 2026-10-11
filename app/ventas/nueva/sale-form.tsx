@@ -1,5 +1,6 @@
 'use client';
 
+import { SubmitButton } from '@/components/submit-button';
 import { useState } from 'react';
 import { registerSale } from '../actions';
 import { saleTotalsClient } from './totals';
@@ -57,7 +58,7 @@ export function SaleForm({ productId, quantity, suggestedPrice, priceLabel, unit
 
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="deduct" defaultChecked={inStock !== null} className="mt-1" />
         <span>Descontar del stock de productos terminados{inStock !== null ? ` (hay ${inStock.toLocaleString('es-AR')})` : ' (todavía no lo llevás en stock)'}</span></label>
-      <div><button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Registrar venta</button></div>
+      <div><SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Registrar venta</SubmitButton></div>
     </form>
   );
 }

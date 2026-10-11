@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { one, requireAdmin } from '@/lib/admin';
 import { money } from '@/app/stock/constants';
 import { cardClass, dateOnly, errorBox, okBox, pageClass } from '@/lib/ui';
@@ -47,9 +48,9 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
               <form action={reviewAffiliate} className="flex items-center gap-2">
                 <input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="decision" value="approve" />
                 <select name="percentage" defaultValue="15" className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950"><option value="15">15 %</option><option value="20">20 %</option></select>
-                <button className={btn}>Aprobar</button>
+                <SubmitButton className={btn}>Aprobar</SubmitButton>
               </form>
-              <form action={reviewAffiliate}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="decision" value="reject" /><button className={btn}>Rechazar</button></form>
+              <form action={reviewAffiliate}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="decision" value="reject" /><SubmitButton className={btn}>Rechazar</SubmitButton></form>
             </div>
           </div>
         ))}
@@ -64,9 +65,9 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
               <form action={updateWithdrawal} className="flex flex-wrap items-center gap-2">
                 <input type="hidden" name="withdrawal_id" value={w.id} /><input type="hidden" name="status" value="paid" />
                 <input name="notes" placeholder="N.º de operación (opcional)" className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950" />
-                <button className={btn}>Marcar como pagado</button>
+                <SubmitButton className={btn}>Marcar como pagado</SubmitButton>
               </form>
-              <form action={updateWithdrawal}><input type="hidden" name="withdrawal_id" value={w.id} /><input type="hidden" name="status" value="rejected" /><button className={btn}>Rechazar</button></form>
+              <form action={updateWithdrawal}><input type="hidden" name="withdrawal_id" value={w.id} /><input type="hidden" name="status" value="rejected" /><SubmitButton className={btn}>Rechazar</SubmitButton></form>
             </div>
             <p className="mt-1 text-xs text-neutral-500">Primero hacé la transferencia y después marcalo como pagado. Si lo rechazás, las comisiones vuelven a estar disponibles.</p>
           </div>
@@ -83,7 +84,7 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span><strong>{code ?? '—'}</strong> · {one(a.profiles)?.email} · {Number(a.commission_percentage)} %{a.is_pro ? ' · PRO' : ''} · {a.valid_sales_count} ventas · {AFF[a.status]}<br /><span className="text-xs text-neutral-500">retenido {money(t.held)} · disponible {money(t.available)} · pagado {money(t.paid)}</span></span>
                 {(a.status === 'approved' || a.status === 'suspended') && (
-                  <form action={setAffiliateStatus}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="status" value={a.status === 'approved' ? 'suspended' : 'approved'} /><button className={btn}>{a.status === 'approved' ? 'Suspender' : 'Reactivar'}</button></form>
+                  <form action={setAffiliateStatus}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="status" value={a.status === 'approved' ? 'suspended' : 'approved'} /><SubmitButton className={btn}>{a.status === 'approved' ? 'Suspender' : 'Reactivar'}</SubmitButton></form>
                 )}
               </li>
             );

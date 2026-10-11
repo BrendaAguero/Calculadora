@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SubmitButton } from '@/components/submit-button';
 import { one, requireAdmin } from '@/lib/admin';
 import { cardClass, dateOnly, errorBox, inputClass, okBox, pageClass } from '@/lib/ui';
 import { grantLicense, setAccountStatus } from '../actions';
@@ -32,7 +33,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       </header>
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {(error || loadError) && <div role="alert" className={errorBox}>{error ?? loadError!.message}</div>}
-      <form method="get" className="flex gap-2"><input name="q" defaultValue={q ?? ''} placeholder="Buscar por email" className={inputClass} /><button className="rounded-xl border border-neutral-300 px-4 text-sm dark:border-neutral-700">Buscar</button></form>
+      <form method="get" className="flex gap-2"><input name="q" defaultValue={q ?? ''} placeholder="Buscar por email" className={inputClass} /><SubmitButton className="rounded-xl border border-neutral-300 px-4 text-sm dark:border-neutral-700">Buscar</SubmitButton></form>
 
       <section className="grid gap-3">
         {(users ?? []).map((u) => (
@@ -52,14 +53,14 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                   <form action={setAccountStatus}>
                     <input type="hidden" name="user_id" value={u.id} />
                     <input type="hidden" name="status" value={u.account_status === 'active' ? 'suspended' : 'active'} />
-                    <button className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">{u.account_status === 'active' ? 'Suspender cuenta' : 'Reactivar cuenta'}</button>
+                    <SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">{u.account_status === 'active' ? 'Suspender cuenta' : 'Reactivar cuenta'}</SubmitButton>
                   </form>
                   {!plan.has(u.id) && (
                     <form action={grantLicense} className="flex flex-wrap items-end gap-2">
                       <input type="hidden" name="user_id" value={u.id} />
                       <select name="plan" className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950"><option value="BASIC">Básico</option><option value="ADVANCED">Avanzado</option></select>
                       <input name="reason" placeholder="Motivo" maxLength={120} className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950" />
-                      <button className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">Dar licencia de cortesía</button>
+                      <SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">Dar licencia de cortesía</SubmitButton>
                     </form>
                   )}
                 </div>

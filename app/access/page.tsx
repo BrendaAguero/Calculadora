@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from '@/components/submit-button';
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
@@ -103,7 +104,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                   <p className="mt-1 text-xs">Por ahora la renovación no se cobra sola: eso llega con el pago por Mercado Pago.</p>
                   <form action={cancelEntrepreneurAutoRenew} className="mt-3">
                     <input type="hidden" name="subscription_id" value={monthly.id} />
-                    <button type="submit" className="rounded-xl border border-violet-400 px-4 py-2 font-medium dark:border-violet-700">Cancelar renovación</button>
+                    <SubmitButton className="rounded-xl border border-violet-400 px-4 py-2 font-medium dark:border-violet-700">Cancelar renovación</SubmitButton>
                   </form>
                 </>
               ) : (
@@ -123,13 +124,13 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 {upgrades.filter((upgrade) => upgrade.months >= confirming).map((upgrade) => (
                   <form key={upgrade.months} action={requestEntrepreneurUpgrade}>
                     <input type="hidden" name="months" value={upgrade.months} />
-                    <button type="submit" className="rounded-xl bg-violet-700 px-4 py-2 font-medium text-white">Actualizar a {monthsLabel(upgrade.months)} por {money(upgrade.upgrade_price)}</button>
+                    <SubmitButton className="rounded-xl bg-violet-700 px-4 py-2 font-medium text-white">Actualizar a {monthsLabel(upgrade.months)} por {money(upgrade.upgrade_price)}</SubmitButton>
                   </form>
                 ))}
                 <form action={requestEntrepreneur}>
                   <input type="hidden" name="months" value={confirming} />
                   <input type="hidden" name="confirmed" value="1" />
-                  <button type="submit" className="rounded-xl border border-neutral-300 px-4 py-2 font-medium dark:border-neutral-700">Sí, sumar {monthsLabel(confirming)}</button>
+                  <SubmitButton className="rounded-xl border border-neutral-300 px-4 py-2 font-medium dark:border-neutral-700">Sí, sumar {monthsLabel(confirming)}</SubmitButton>
                 </form>
                 <Link href="/access#emprendedor" className="rounded-xl px-4 py-2 text-neutral-600 underline dark:text-neutral-400">Cancelar</Link>
               </div>
@@ -144,7 +145,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 {upgrades.map((upgrade) => (
                   <form key={upgrade.months} action={requestEntrepreneurUpgrade}>
                     <input type="hidden" name="months" value={upgrade.months} />
-                    <button type="submit" className="rounded-xl bg-violet-700 px-4 py-2 font-medium text-white">{monthsLabel(upgrade.months)} por {money(upgrade.upgrade_price)}</button>
+                    <SubmitButton className="rounded-xl bg-violet-700 px-4 py-2 font-medium text-white">{monthsLabel(upgrade.months)} por {money(upgrade.upgrade_price)}</SubmitButton>
                   </form>
                 ))}
               </div>
@@ -160,12 +161,12 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 {mercadoPagoReady() && (
                   <form action={payEntrepreneurRequest}>
                     <input type="hidden" name="subscription_id" value={pending.id} />
-                    <button type="submit" className="rounded-xl bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700">Pagar con Mercado Pago</button>
+                    <SubmitButton className="rounded-xl bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700">Pagar con Mercado Pago</SubmitButton>
                   </form>
                 )}
                 <form action={cancelEntrepreneurRequest}>
                   <input type="hidden" name="subscription_id" value={pending.id} />
-                  <button type="submit" className="rounded-xl border border-amber-400 px-4 py-2 font-medium dark:border-amber-700">Cancelar pedido</button>
+                  <SubmitButton className="rounded-xl border border-amber-400 px-4 py-2 font-medium dark:border-amber-700">Cancelar pedido</SubmitButton>
                 </form>
               </div>
             </div>
@@ -201,7 +202,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
                 <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
               </label>
-              <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</button>
+              <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</SubmitButton>
               {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo.</p>}
             </form>
           )}
