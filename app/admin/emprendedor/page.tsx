@@ -25,7 +25,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
         <div>
           <Link href="/access" className="text-sm underline">← Licencia y acceso</Link>
           <h1 className="mt-3 text-3xl font-semibold">Pedidos de Emprendedor</h1>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, 6 y 12 meses se suman al final; la mensualidad no se suma y se activa cuando vence el actual.</p>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, el tiempo nuevo se suma al final.</p>
         </div>
 
         {ok && <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{ok}</div>}
@@ -40,7 +40,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
                 <p className="font-medium">{request.user_name || request.user_email}</p>
                 {request.user_name && <p className="text-sm text-neutral-500">{request.user_email}</p>}
                 <p className="mt-2 text-sm">
-                  {request.months === 1 ? '1 mes' : `${request.months} meses`} · plan base {request.base_plan === 'ADVANCED' ? 'Avanzado' : 'Básico'} · <strong>{money(request.final_price)}</strong>
+                  {request.months === 1 ? 'Suscripción mensual' : `${request.months} meses`} · plan base {request.base_plan === 'ADVANCED' ? 'Avanzado' : 'Básico'} · <strong>{money(request.final_price)}</strong>
                   {Number(request.discount_pct) > 0 && <span className="text-neutral-500"> (precio {money(request.price)}, {Number(request.discount_pct)} % de descuento)</span>}
                 </p>
                 <p className="text-xs text-neutral-500">Pedido el {new Date(request.requested_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}</p>

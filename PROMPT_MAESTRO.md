@@ -58,7 +58,9 @@ Emprendedor requiere tener Básico o Avanzado y temporalmente habilita todas las
 
 Descuentos de Emprendedor (tabla `discount_rules`): por antigüedad de la licencia base y por compra/upgrade reciente de licencia. Si corresponden los dos, se aplica solo el mayor (no se suman). Decisión del 11/10/2026.
 
-Renovación: si ya hay Emprendedor vigente, 6 y 12 meses se suman al final del actual. La mensualidad (1 mes) no se suma: solo se puede pedir y activar cuando no hay Emprendedor vigente.
+Renovación: si ya hay Emprendedor vigente, el plazo nuevo (1, 6 o 12 meses) se suma al final del actual. Pagar mes a mes sale más caro que el plazo largo (6 mensualidades > 6 meses), y la pantalla lo muestra.
+
+1 mes es una suscripción mensual: se renueva cada mes y la persona puede cancelar la renovación (sigue activa hasta que vence). No puede tener dos suscripciones mensuales a la vez. El cobro automático de la renovación llega con Mercado Pago (Etapa 18).
 
 Hasta integrar Mercado Pago (Etapa 18), el pedido queda pendiente y una administradora lo activa a mano al recibir el pago.
 

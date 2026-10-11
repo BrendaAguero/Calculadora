@@ -32,3 +32,16 @@ export async function cancelEntrepreneurRequest(formData: FormData) {
   revalidatePath('/access');
   back('ok', 'Pedido cancelado.');
 }
+
+// Cancela la renovación de la suscripción mensual; Emprendedor sigue activo hasta que vence.
+export async function cancelEntrepreneurAutoRenew(formData: FormData) {
+  const subscriptionId = String(formData.get('subscription_id') ?? '');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { error } = await supabase.rpc('cancel_entrepreneur_auto_renew', { p_subscription_id: subscriptionId });
+  if (error) back('error', error.message);
+  revalidatePath('/access');
+  back('ok', 'Renovación cancelada. Emprendedor sigue activo hasta que vence.');
+}
