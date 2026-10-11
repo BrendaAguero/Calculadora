@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { LegalLinks } from "@/components/legal-links";
-import { requestLoginCode, requestPasswordReset, signInWithPassword, verifyLoginCode, type ActionState } from "./actions";
+import { redeemAccessKey, requestPasswordReset, signInWithPassword, type ActionState } from "./actions";
 
 const initialState: ActionState = {};
 type Mode = "code" | "password" | "forgot";
@@ -38,7 +38,7 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
         {okMessage && <p role="status" className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{okMessage}</p>}
         {linkError && <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">{linkError}</p>}
 
-        {mode === "code" && <CodePanel key={`code-${round}`} onPassword={() => setMode("password")} />}
+        {mode === "code" && <KeyPanel key={`code-${round}`} onPassword={() => setMode("password")} />}
         {mode === "password" && <PasswordPanel key={`password-${round}`} onForgot={() => setMode("forgot")} onBack={back} />}
         {mode === "forgot" && <ForgotPanel key={`forgot-${round}`} onBack={back} />}
         <p className="text-center text-sm">¿Todavía no la tenés? <a href="/comprar" className="font-medium text-orange-800 underline dark:text-orange-300">Comprá la Edición Personal</a></p>
@@ -48,32 +48,22 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
   );
 }
 
-// Ingreso sin contraseña: email → código de 6 dígitos por correo.
-function CodePanel({ onPassword }: { onPassword: () => void }) {
-  const [sent, sendAction, sending] = useActionState(requestLoginCode, initialState);
-  const [verified, verifyAction, verifying] = useActionState(verifyLoginCode, initialState);
-  const email = verified.email ?? sent.email;
-
-  if (sent.success || verified.error) {
-    return (
-      <form action={verifyAction} className="space-y-4">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">Te mandamos un código de 6 dígitos a <strong>{email}</strong>. Si no llega en unos minutos, revisá spam.</p>
-        <input type="hidden" name="email" value={email ?? ""} />
-        <div><label className="block text-sm font-medium" htmlFor="code">Código</label><input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]*" maxLength={10} required autoFocus className={`${inputClass} text-center text-2xl tracking-[0.4em]`} placeholder="••••••" /></div>
-        {verified.error && <p role="alert" className="text-sm text-red-600 dark:text-red-300">{verified.error}</p>}
-        <button type="submit" disabled={verifying} className={primaryButton}>{verifying ? "Entrando..." : "Entrar"}</button>
-        <button type="button" onClick={() => location.reload()} className="w-full text-center text-sm underline">Usar otro email o pedir otro código</button>
-      </form>
-    );
-  }
-
+// Ingreso con la clave de acceso que llega por correo al comprar (o que manda la administración).
+// Se pide una sola vez por aparato: después la sesión queda abierta.
+function KeyPanel({ onPassword }: { onPassword: () => void }) {
+  const [state, action, pending] = useActionState(redeemAccessKey, initialState);
   return (
-    <form action={sendAction} className="space-y-4">
-      <div><label className="block text-sm font-medium" htmlFor="login_email">Tu email</label><input id="login_email" name="email" type="email" autoComplete="email" required className={inputClass} placeholder="tu@email.com" /></div>
+    <form action={action} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium" htmlFor="access_key">Tu clave de acceso</label>
+        <input id="access_key" name="key" required autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} className={`${inputClass} text-center font-mono text-xl uppercase tracking-[0.2em]`} placeholder="XXXX-XXXX-XXXX" />
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Te llegó por correo cuando compraste. Solo la escribís la primera vez en cada aparato.</p>
+      </div>
       <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms_accepted" className="mt-1" required /><span>Acepto los <a href="/legal/terminos" target="_blank" className="underline">términos y condiciones</a> y la <a href="/legal/privacidad" target="_blank" className="underline">política de privacidad</a>.</span></label>
-      {sent.error && <p role="alert" className="text-sm text-red-600 dark:text-red-300">{sent.error}</p>}
-      <button type="submit" disabled={sending} className={primaryButton}>{sending ? "Enviando..." : "Recibir código"}</button>
-      <button type="button" onClick={onPassword} className="w-full text-center text-sm text-neutral-500 underline dark:text-neutral-400">Entrar con contraseña</button>
+      {state.error && <p role="alert" className="text-sm text-red-600 dark:text-red-300">{state.error}</p>}
+      <button type="submit" disabled={pending} className={primaryButton}>{pending ? "Entrando..." : "Entrar"}</button>
+      <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">¿Perdiste tu clave? Escribinos a calculadoraemprender.app@gmail.com</p>
+      <button type="button" onClick={onPassword} className="w-full text-center text-xs text-neutral-400 underline">Entrar con email y contraseña</button>
     </form>
   );
 }

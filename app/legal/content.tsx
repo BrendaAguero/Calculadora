@@ -21,7 +21,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Los resultados son estimaciones que dependen de los datos que cargás: son una ayuda para decidir, así que revisalos antes de usarlos. No reemplazan el asesoramiento contable, impositivo ni técnico de un profesional.</p>
         <h2>3. Cuenta</h2>
         <ul>
-          <li>Para usar la aplicación entrás con tu email y un código que te llega por correo. Tenés que ser mayor de 18 años o contar con autorización de tu madre, padre o tutor.</li>
+          <li>Para usar la aplicación entrás con una clave de acceso personal que te llega por correo. No la compartas: si alguien más la usa, ocupa uno de tus aparatos. Tenés que ser mayor de 18 años o contar con autorización de tu madre, padre o tutor.</li>
           <li>Sos responsable de mantener segura tu contraseña y de lo que se haga con tu cuenta.</li>
           <li>Solo pueden entrar los emails aprobados (por una compra o por la administración). La Edición Personal se usa en hasta 2 aparatos y no se puede transferir ni compartir.</li>
         </ul>
@@ -88,7 +88,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         </ul>
         <p>El precio final se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan. Según el medio de pago el precio de la Edición Personal puede variar (online, transferencia o MercadoLibre).</p>
         <h2>2. Pago, aprobación y acceso</h2>
-        <p>Si comprás online con Mercado Pago, tu email queda aprobado cuando Mercado Pago confirma el pago. Si pagás por transferencia o por MercadoLibre, aprobamos tu email después de verificar el pago. Con el email aprobado entrás a la app con un código que te llega por correo. Si el pago queda pendiente, el acceso se habilita cuando se acredita; si se rechaza, no se cobra nada.</p>
+        <p>Si comprás online con Mercado Pago, tu email queda aprobado cuando Mercado Pago confirma el pago. Si pagás por transferencia o por MercadoLibre, aprobamos tu email después de verificar el pago. Al aprobarse, te mandamos por correo tu clave de acceso para entrar a la app. Si el pago queda pendiente, el acceso se habilita cuando se acredita; si se rechaza, no se cobra nada.</p>
         <h2>3. Aparatos</h2>
         <p>La Edición Personal se usa en hasta 2 aparatos (por ejemplo, tu celular y tu computadora). Podés liberar un aparato que ya no uses desde «Mi acceso» o sumar aparatos con el extra «Aparato extra». La cuenta es personal: no se puede compartir ni revender.</p>
         <h2>4. Mensualidad Plus</h2>

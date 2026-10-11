@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { isLeakedPassword, weakPasswordReason } from "@/lib/password";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEVICE_LIMIT_MESSAGE, registerCurrentDevice } from "@/lib/devices";
+import { hashKey, normalizeKey } from "@/lib/access-key";
 
 export type ActionState = { error?: string; success?: boolean; email?: string };
 
@@ -50,6 +51,38 @@ export async function verifyLoginCode(_prevState: ActionState, formData: FormDat
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) return { error: "El código no es correcto o venció. Pedí uno nuevo.", email };
   if (!(await registerCurrentDevice())) return { error: DEVICE_LIMIT_MESSAGE, email };
+  redirect("/");
+}
+
+// Ingreso con clave de acceso (Edición Personal): la persona solo escribe la clave que le llegó por correo.
+// El servidor busca el email de esa clave, crea la cuenta si hace falta y abre la sesión en este aparato.
+export async function redeemAccessKey(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const raw = String(formData.get("key") || "");
+  if (normalizeKey(raw).length !== 12) return { error: "La clave tiene 12 letras y números (por ejemplo, K7MP-Q2XD-9HTR). Revisala." };
+  if (formData.get("terms_accepted") !== "on") return { error: "Tenés que aceptar los términos para continuar." };
+
+  const admin = createAdminClient();
+  if (!admin) return { error: "El ingreso no está disponible en este momento. Escribinos." };
+  const { data: rows } = await admin.rpc("key_lookup", { p_hash: hashKey(raw) });
+  const row = (rows as { id: string; email: string; status: string }[] | null)?.[0];
+  if (!row || row.status !== "approved") {
+    await new Promise((resolve) => setTimeout(resolve, 800)); // freno para quien prueba claves al azar
+    return { error: "Esa clave no es válida. Revisala o escribinos si no la encontrás." };
+  }
+
+  // Crea la cuenta la primera vez (si ya existe, sigue). Al crearse recibe la Edición Personal.
+  const created = await admin.auth.admin.createUser({ email: row.email, email_confirm: true, user_metadata: { terms_accepted: "true" } });
+  if (created.error && !/already|registered|exists/i.test(created.error.message)) return { error: `No se pudo crear la cuenta: ${created.error.message}` };
+
+  // Abre la sesión sin mandar correos: enlace generado en el servidor y verificado en el momento.
+  const link = await admin.auth.admin.generateLink({ type: "magiclink", email: row.email });
+  const tokenHash = link.data?.properties?.hashed_token;
+  if (link.error || !tokenHash) return { error: "No se pudo abrir la sesión. Probá de nuevo." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" });
+  if (error) return { error: "No se pudo abrir la sesión. Probá de nuevo." };
+
+  if (!(await registerCurrentDevice())) return { error: DEVICE_LIMIT_MESSAGE };
   redirect("/");
 }
 

@@ -62,11 +62,11 @@ const FAQ: [string, React.ReactNode][] = [
   ['¿Qué pasa si doy de baja Plus?', <>Seguís con tu Edición Personal. <strong>No se borra nada.</strong> Si tenías más cosas que los límites de la Edición Personal, las seguís viendo, pero no podés crear nuevas hasta liberar lugar o volver a Plus.</>],
   ['¿Cómo doy de baja la Mensualidad Plus?', <>Desde el <Link href="/baja">Botón de baja</Link> o en <Link href="/access">Mi acceso</Link> → «Cancelar renovación». No se te vuelve a cobrar y seguís teniendo el plan hasta que termina el mes pagado.</>],
   ['¿En cuántos aparatos la puedo usar?', <>En 2 (por ejemplo, tu celular y tu computadora). Si cambiás de aparato, liberá el viejo en <Link href="/access#aparatos">Mi acceso</Link>. Si necesitás más, comprá un «Aparato extra».</>],
-  ['¿Cómo entro?', <>Con tu email: te mandamos un código de 6 dígitos y lo escribís en la app. Solo entran los emails que compraron la Edición Personal (o que aprobamos después de una transferencia o una compra en MercadoLibre).</>],
+  ['¿Cómo entro?', <>Con tu <strong>clave de acceso</strong>: te la mandamos por correo cuando se aprueba tu compra (online, por transferencia o por MercadoLibre). La escribís una vez en cada aparato y después la app queda abierta.</>],
   ['¿Cómo pago?', <>Con Mercado Pago (tarjeta, dinero en cuenta y otros medios). La compra se activa sola cuando el pago se aprueba. La suscripción mensual se cobra sola cada mes: para eso Mercado Pago te pide el email de tu cuenta de Mercado Pago.</>],
   ['Pagué y no se activó', <>Si pagaste en efectivo, puede tardar hasta que se acredite. Si pasaron más de 2 horas, escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con el número de operación de Mercado Pago.</>],
   ['Me arrepentí de una compra', <>Tenés 10 días corridos para revocarla sin costo desde el <Link href="/arrepentimiento">Botón de arrepentimiento</Link>.</>],
-  ['No me llega el correo para entrar', <>Revisá spam y promociones. Abrí el enlace en el mismo navegador donde lo pediste. Si sigue sin llegar, escribinos.</>],
+  ['No me llegó la clave', <>Revisá spam y promociones (buscá «Tu clave de acceso»). Si sigue sin llegar, escribinos desde el email con el que compraste y te la reenviamos.</>],
   ['Veo un error con un código', <>Anotá el código o sacá una captura y mandanosla a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>: nos ayuda a encontrar el problema rápido.</>],
   ['¿Cómo borro mi cuenta?', <>Escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> desde el email de tu cuenta. Te explicamos qué se borra y qué se conserva por obligación legal.</>],
 ];

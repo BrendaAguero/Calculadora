@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/admin';
+import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
+import { siteOrigin } from '@/lib/origin';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
@@ -55,7 +59,45 @@ export async function saveBanner(formData: FormData) {
 }
 
 export async function approveEmail(formData: FormData) {
-  await rpc('/admin/emails', 'admin_approve_email', { p_email: text(formData, 'email'), p_source: text(formData, 'source'), p_note: text(formData, 'note') || null }, 'Email aprobado. Ya puede entrar con su email (le llega un código).');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const email = text(formData, 'email').toLowerCase();
+  const { data: id, error } = await supabase.rpc('admin_approve_email', { p_email: email, p_source: text(formData, 'source'), p_note: text(formData, 'note') || null });
+  if (error || !id) back('/admin/emails', 'error', error?.message ?? 'No se pudo aprobar.');
+  // Clave de acceso: se crea y se manda por correo; además queda visible acá para copiarla.
+  let sent = false;
+  try {
+    const key = await issueKey(supabase, id as string);
+    sent = await sendKeyEmail(email, key, await siteOrigin());
+  } catch (e) {
+    back('/admin/emails', 'error', `Email aprobado, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
+  }
+  revalidatePath('/admin/emails');
+  back('/admin/emails', 'ok', sent ? 'Email aprobado. Le mandamos la clave por correo (también la ves abajo).' : 'Email aprobado. Copiá la clave de abajo y mandásela (el correo automático no está configurado o falló).');
+}
+
+export async function newAccessKey(formData: FormData) {
+  const supabase = await createClient();
+  try {
+    const key = await issueKey(supabase, text(formData, 'id'));
+    const sent = text(formData, 'send') === '1' ? await sendKeyEmail(text(formData, 'email'), key, await siteOrigin()) : false;
+    revalidatePath('/admin/emails');
+    back('/admin/emails', 'ok', sent ? 'Clave nueva creada y enviada por correo. La anterior ya no sirve.' : 'Clave nueva creada. La anterior ya no sirve.');
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e;
+    back('/admin/emails', 'error', e instanceof Error ? e.message : 'No se pudo crear la clave.');
+  }
+}
+
+export async function resendAccessKey(formData: FormData) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { data } = admin ? await admin.from('approved_emails').select('email,key_cipher').eq('id', text(formData, 'id')).maybeSingle() : { data: null };
+  const key = decryptKey(data?.key_cipher);
+  if (!data || !key) back('/admin/emails', 'error', 'Esta persona no tiene clave guardada. Creá una nueva.');
+  const sent = await sendKeyEmail(data!.email, key!, await siteOrigin());
+  back('/admin/emails', sent ? 'ok' : 'error', sent ? 'Clave reenviada por correo.' : 'No se pudo mandar el correo. Copiá la clave y mandásela por mensaje.');
 }
 
 export async function revokeEmail(formData: FormData) {

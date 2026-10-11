@@ -40,7 +40,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
         {error && <div role="alert" className={`mt-4 ${errorBox}`}>{error}</div>}
         <form action={buyPersonal} className="mt-4 grid gap-3">
           <label className={labelClass}>Tu nombre<input name="full_name" maxLength={120} autoComplete="name" className={inputClass} /></label>
-          <label className={labelClass}>Tu email (con este vas a entrar a la app)<input name="email" type="email" required maxLength={200} autoComplete="email" className={inputClass} /></label>
+          <label className={labelClass}>Tu email (ahí te mandamos tu clave de acceso)<input name="email" type="email" required maxLength={200} autoComplete="email" className={inputClass} /></label>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms" className="mt-1" required /><span>Acepto los <Link href="/legal/terminos" className="underline">términos</Link>, la <Link href="/legal/privacidad" className="underline">privacidad</Link> y las <Link href="/legal/compras" className="underline">condiciones de compra</Link>.</span></label>
           <div><SubmitButton className="rounded-xl bg-orange-700 px-5 py-2.5 font-semibold text-white hover:bg-orange-800" pendingText="Yendo a Mercado Pago…">Comprar con Mercado Pago</SubmitButton></div>
         </form>
@@ -52,10 +52,10 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
           <li><strong>Transferencia:</strong> {money(price('personal_price_transfer', 40000))}. Escribinos a <a className="underline" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Quiero la Edición Personal por transferencia')}`}>{CONTACT_EMAIL}</a> y te pasamos los datos.</li>
           <li><strong>MercadoLibre:</strong> {money(price('personal_price_mercadolibre', 49900))}. Después de comprar, mandanos tu email por mensaje.</li>
         </ul>
-        <p className="mt-2 text-xs text-neutral-500">En esos casos aprobamos tu email a mano y te avisamos para que entres.</p>
+        <p className="mt-2 text-xs text-neutral-500">En esos casos verificamos el pago a mano y te mandamos tu clave de acceso por correo.</p>
       </section>
 
-      <p className="mt-4 text-sm">¿Ya la tenés? <Link href="/login" className="underline">Entrá con tu email</Link>.</p>
+      <p className="mt-4 text-sm">¿Ya la tenés? <Link href="/login" className="underline">Entrá con tu clave</Link>.</p>
     </PublicPage>
   );
 }

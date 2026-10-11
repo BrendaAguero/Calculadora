@@ -25,8 +25,8 @@ export async function GET(request: Request) {
     // Compra online de la Edición Personal (sin cuenta todavía): se manda a entrar con el email.
     if (result.startsWith("personal_")) {
       const login = (key: "ok" | "error", message: string) => Response.redirect(`${origin}/login?${key}=${encodeURIComponent(message)}`, 303);
-      if (result === "personal_activated" || result === "personal_already_approved") return login("ok", "¡Gracias por tu compra! Ya podés entrar con tu email: te mandamos un código.");
-      if (result === "personal_recorded_pending" || result === "personal_recorded_in_process") return login("ok", "Tu pago quedó pendiente en Mercado Pago. Cuando se acredite, vas a poder entrar con tu email.");
+      if (result === "personal_activated" || result === "personal_already_approved") return login("ok", "¡Gracias por tu compra! Te mandamos tu clave de acceso por correo: escribila acá para entrar.");
+      if (result === "personal_recorded_pending" || result === "personal_recorded_in_process") return login("ok", "Tu pago quedó pendiente en Mercado Pago. Cuando se acredite, te mandamos tu clave de acceso por correo.");
       return login("error", "No pudimos confirmar el pago todavía. Si se cobró, en unos minutos vas a poder entrar con tu email.");
     }
     if (result === "activated" || result === "already_approved") return go("ok", "¡Pago aprobado! Tu compra ya está activa.");

@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 const back = (message: string): never => redirect(`/comprar?error=${encodeURIComponent(message.slice(0, 300))}`);
 
 // Compra online de la Edición Personal: se crea el pedido con el email y se va a pagar a Mercado Pago.
-// Al aprobarse el pago, el email queda aprobado y la persona entra con un código que le llega por correo.
+// Al aprobarse el pago, el email queda aprobado y se le manda por correo su clave de acceso.
 export async function buyPersonal(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const fullName = String(formData.get('full_name') ?? '').trim();

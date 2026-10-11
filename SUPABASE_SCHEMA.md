@@ -764,3 +764,8 @@ Después de aprobación:
 8. funciones necesarias;
 9. triggers solo cuando sean necesarios;
 10. pruebas.
+
+### Clave de acceso (20261012_clave_de_acceso)
+- `approved_emails.key_hash` (sha256, único), `key_hint`, `key_cipher` (AES-256-GCM con secreto del servidor), `key_created_at`. Las columnas `key_hash` y `key_cipher` no son legibles por `authenticated`.
+- `set_email_key` (admin o service_role), `key_lookup(hash)` y `approved_email_for(email)` (solo service_role).
+- Se entra en `/login` con la clave (`redeemAccessKey`); la sesión queda abierta en el aparato. La clave se crea y se manda por correo (SMTP propio, `SMTP_USER`/`SMTP_PASS`) al aprobar un email o al aprobarse un pago online.

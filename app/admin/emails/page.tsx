@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
 import { requireAdmin } from '@/lib/admin';
 import { cardClass, dateTime, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { adminReleaseDevice, approveEmail, revokeEmail } from '../actions';
+import { CopyButton } from '@/components/copy-button';
+import { decryptKey } from '@/lib/access-key';
+import { mailReady } from '@/lib/mail';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { adminReleaseDevice, approveEmail, newAccessKey, resendAccessKey, revokeEmail } from '../actions';
 
 const SOURCES: Record<string, string> = { transferencia: 'Transferencia', mercadolibre: 'MercadoLibre', online: 'Online (Mercado Pago)', revendedora: 'Revendedora', cortesia: 'Cortesía' };
 const btn = 'rounded-lg border border-neutral-300 px-3 py-1.5 text-xs dark:border-neutral-700';
@@ -12,11 +16,15 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
   const { supabase } = await requireAdmin();
   let query = supabase.from('approved_emails').select('id,email,source,status,note,user_id,created_at').order('created_at', { ascending: false }).limit(200);
   if (q) query = query.ilike('email', `%${q.replace(/[%_]/g, '')}%`);
-  const [{ data: emails }, { data: devices }, { data: orders }] = await Promise.all([
+  // Las claves se leen con el cliente del servidor (la columna cifrada no es visible para nadie más).
+  const admin = createAdminClient();
+  const [{ data: emails }, { data: devices }, { data: orders }, { data: keys }] = await Promise.all([
     query,
     supabase.from('user_devices').select('id,user_id,label,last_seen_at').is('released_at', null),
     supabase.from('personal_orders').select('id,email,total,status,created_at').order('created_at', { ascending: false }).limit(20),
+    admin ? admin.from('approved_emails').select('id,key_cipher') : Promise.resolve({ data: [] as { id: string; key_cipher: string | null }[] }),
   ]);
+  const keyOf = (id: string) => decryptKey(keys?.find((k) => k.id === id)?.key_cipher);
 
   return (
     <main className={pageClass}>
@@ -38,7 +46,8 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
         </label>
         <label className={labelClass}>Nota (opcional)<input name="note" maxLength={500} placeholder="Ej.: venta ML #123, transferencia 12/10" className={inputClass} /></label>
         <div className="sm:col-span-3"><SubmitButton className={primaryButton}>Aprobar</SubmitButton></div>
-        <p className="text-xs text-neutral-500 sm:col-span-3">Después avisale que entre en la app con su email: le llega un código de 6 dígitos.</p>
+        <p className="text-xs text-neutral-500 sm:col-span-3">Al aprobar se crea su <strong>clave de acceso</strong>{mailReady() ? ' y se la mandamos por correo' : ''}. También la ves abajo para copiarla y mandarla por mensaje (por ejemplo, en MercadoLibre).</p>
+        {!mailReady() && <p className="text-xs text-amber-700 dark:text-amber-300 sm:col-span-3">El envío automático por correo todavía no está configurado: mandá la clave a mano.</p>}
       </form>
 
       <section className={cardClass}>
@@ -56,6 +65,13 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
                   {row.status === 'approved' && <form action={revokeEmail}><input type="hidden" name="id" value={row.id} /><SubmitButton className={btn}>Revocar</SubmitButton></form>}
                 </div>
                 {row.note && <p className="text-xs text-neutral-500">{row.note}</p>}
+                {row.status === 'approved' && (
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                    {keyOf(row.id) ? <><span>Clave: <strong className="font-mono text-sm">{keyOf(row.id)}</strong></span><CopyButton text={keyOf(row.id)!} label="Copiar clave" /></> : <span className="text-neutral-500">Sin clave</span>}
+                    {keyOf(row.id) && mailReady() && <form action={resendAccessKey}><input type="hidden" name="id" value={row.id} /><SubmitButton className="underline">Reenviar por correo</SubmitButton></form>}
+                    <form action={newAccessKey}><input type="hidden" name="id" value={row.id} /><input type="hidden" name="email" value={row.email} /><input type="hidden" name="send" value={mailReady() ? '1' : '0'} /><SubmitButton className="underline">{keyOf(row.id) ? 'Crear clave nueva' : 'Crear clave'}</SubmitButton></form>
+                  </div>
+                )}
                 {own.length > 0 && (
                   <ul className="mt-1 space-y-1 text-xs">
                     {own.map((d) => (

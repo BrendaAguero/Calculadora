@@ -1,5 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { issueKey, sendKeyEmail } from "@/lib/access-key";
+import { PRODUCTION_ORIGIN, siteOrigin } from "@/lib/origin";
 
 const API = "https://api.mercadopago.com";
 
@@ -101,7 +103,26 @@ async function recordPersonalOrder(orderId: string, payment: Payment) {
     p: { order_id: orderId, payment_id: String(payment.id), status: payment.status, amount: payment.transaction_amount, currency: payment.currency_id },
   });
   if (error) throw new Error(error.message);
+  // Recién aprobado: se crea la clave de acceso y se manda por correo (una sola vez, porque solo un aviso lo activa).
+  if (data === "activated") await sendPersonalKey(admin, orderId);
   return `personal_${data as string}`;
+}
+
+async function sendPersonalKey(admin: NonNullable<ReturnType<typeof createAdminClient>>, orderId: string) {
+  try {
+    const { data: order } = await admin.from("personal_orders").select("email").eq("id", orderId).maybeSingle();
+    if (!order) return;
+    const { data: rows } = await admin.rpc("approved_email_for", { p_email: order.email });
+    const approved = (rows as { id: string; key_hash: string | null }[] | null)?.[0];
+    if (!approved || approved.key_hash) return;
+    const key = await issueKey(admin, approved.id);
+    let origin = PRODUCTION_ORIGIN;
+    try { origin = await siteOrigin(); } catch { /* fuera de una petición: se usa producción */ }
+    await sendKeyEmail(order.email, key, origin);
+  } catch (error) {
+    // El pago ya quedó aprobado; si falla el correo, la administración puede reenviar la clave.
+    console.error("No se pudo mandar la clave de acceso", error instanceof Error ? error.message : error);
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
