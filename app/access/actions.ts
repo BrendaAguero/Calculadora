@@ -31,7 +31,6 @@ async function checkout(subscriptionId: string): Promise<never> {
       purchaseId: purchase!.id,
       title: sub!.upgraded_from_subscription_id ? `Actualización a ${plan}` : plan,
       price: Number(purchase!.total),
-      email: user.email,
       origin: await siteOrigin(),
     });
     initPoint = preference.init_point;

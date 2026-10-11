@@ -16,15 +16,15 @@ async function mp<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // Crea el pago en Mercado Pago (Checkout Pro). external_reference = id de la compra en nuestra base.
-export async function createPreference(input: { purchaseId: string; title: string; price: number; email?: string | null; origin: string }) {
+// No se envía el email de la persona: Mercado Pago lo pide en su página, y si no coincide con la cuenta con la que
+// se paga (por ejemplo, un comprador de prueba) deja el botón de pagar deshabilitado.
+export async function createPreference(input: { purchaseId: string; title: string; price: number; origin: string }) {
   const isLocal = input.origin.startsWith("http://");
   const preference = await mp<{ id: string; init_point: string }>("/checkout/preferences", {
     method: "POST",
-    headers: { "X-Idempotency-Key": `pref-${input.purchaseId}` },
     body: JSON.stringify({
       items: [{ id: input.purchaseId, title: input.title, quantity: 1, unit_price: Math.round(input.price * 100) / 100, currency_id: "ARS" }],
       external_reference: input.purchaseId,
-      payer: input.email ? { email: input.email } : undefined,
       back_urls: {
         success: `${input.origin}/api/mercadopago/return`,
         pending: `${input.origin}/api/mercadopago/return`,
