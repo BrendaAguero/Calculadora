@@ -5,17 +5,32 @@ export type Resource = "materials" | "products" | "formulas" | "molds";
 
 export type AccessSnapshot = {
   accountStatus: "active" | "suspended" | "blocked";
+  isAdmin: boolean;
   basePlan: BasePlanCode | null;
   baseLicenseActive: boolean;
   entrepreneurActive: boolean;
+  entrepreneurExpiresAt: string | null;
   activities: string[];
   modules: string[];
+  limits: Partial<Record<Resource, number>>;
 };
 
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+// Respaldo por si la tabla plan_limits no responde (mismos valores que la base).
 const FALLBACK_LIMITS: Record<BasePlanCode, Record<Resource, number>> = {
   BASIC: { materials: 30, products: 10, formulas: 5, molds: 5 },
   ADVANCED: { materials: 100, products: 50, formulas: 30, molds: 30 },
 };
+
+export const RESOURCE_LABELS: Record<Resource, string> = {
+  materials: "materiales",
+  products: "productos",
+  formulas: "fórmulas",
+  molds: "moldes",
+};
+
+const one = <T,>(value: T | T[] | null | undefined) => (Array.isArray(value) ? value[0] : value);
 
 export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
   const supabase = await createClient();
@@ -27,17 +42,17 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
 
   const [{ data: profile }, { data: licenses }, { data: subscriptions }, { data: activities }, { data: modules }] =
     await Promise.all([
-      supabase.from("profiles").select("account_status").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("account_status, role").eq("id", user.id).maybeSingle(),
       supabase
         .from("licenses")
-        .select("status, plans(code)")
+        .select("status, plan_id, plans(code)")
         .eq("user_id", user.id)
         .eq("status", "active"),
       supabase
         .from("subscriptions")
         .select("status, expires_at")
         .eq("user_id", user.id)
-        .in("status", ["active", "suspended"]),
+        .eq("status", "active"),
       supabase
         .from("user_activities")
         .select("status, activities(code)")
@@ -50,44 +65,93 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
         .eq("status", "active"),
     ]);
 
-  const activeLicense = (licenses ?? []).find((license) => {
-    const plan = Array.isArray(license.plans) ? license.plans[0] : license.plans;
-    return plan?.code === "BASIC" || plan?.code === "ADVANCED";
-  });
-  const plan = activeLicense
-    ? (Array.isArray(activeLicense.plans) ? activeLicense.plans[0] : activeLicense.plans)?.code
-    : null;
+  // Si hubiera más de una licencia base, vale la de mayor nivel.
+  const baseLicenses = (licenses ?? []).filter((license) => ["BASIC", "ADVANCED"].includes(one(license.plans)?.code ?? ""));
+  const activeLicense = baseLicenses.find((license) => one(license.plans)?.code === "ADVANCED") ?? baseLicenses[0];
+  const plan = one(activeLicense?.plans)?.code;
 
-  const entrepreneurActive = (subscriptions ?? []).some(
-    (subscription) => subscription.status === "active" && new Date(subscription.expires_at) > new Date()
-  );
+  // Emprendedor vale mientras no venza; al vencer, la persona vuelve sola a su plan base.
+  const now = new Date();
+  const entrepreneurExpiresAt =
+    (subscriptions ?? [])
+      .map((subscription) => subscription.expires_at as string)
+      .filter((expiresAt) => new Date(expiresAt) > now)
+      .sort()
+      .at(-1) ?? null;
+
+  const limits: AccessSnapshot["limits"] = {};
+  if (activeLicense) {
+    const { data: rows } = await supabase
+      .from("plan_limits")
+      .select("resource, limit_value, unlimited")
+      .eq("plan_id", activeLicense.plan_id);
+    for (const row of rows ?? []) {
+      if (row.resource in RESOURCE_LABELS) {
+        limits[row.resource as Resource] = row.unlimited ? Number.POSITIVE_INFINITY : Number(row.limit_value);
+      }
+    }
+  }
 
   return {
     accountStatus: (profile?.account_status ?? "active") as AccessSnapshot["accountStatus"],
+    isAdmin: profile?.role === "admin" && profile?.account_status === "active",
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),
-    entrepreneurActive,
+    entrepreneurActive: Boolean(activeLicense) && entrepreneurExpiresAt !== null,
+    entrepreneurExpiresAt,
     activities: (activities ?? []).flatMap((item) => {
-      const activity = Array.isArray(item.activities) ? item.activities[0] : item.activities;
+      const activity = one(item.activities);
       return activity?.code ? [activity.code] : [];
     }),
     modules: (modules ?? []).flatMap((item) => {
-      const moduleRow = Array.isArray(item.modules) ? item.modules[0] : item.modules;
+      const moduleRow = one(item.modules);
       return moduleRow?.code ? [moduleRow.code] : [];
     }),
+    limits,
   };
 }
 
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
+  if (snapshot.isAdmin) return true;
   if (snapshot.accountStatus !== "active" || !snapshot.baseLicenseActive) return false;
   if (snapshot.entrepreneurActive) return true;
   return snapshot.modules.includes(feature);
 }
 
 export function getResourceLimit(snapshot: AccessSnapshot, resource: Resource): number {
+  if (snapshot.isAdmin) return Number.POSITIVE_INFINITY;
+  if (snapshot.accountStatus !== "active" || !snapshot.basePlan) return 0;
   if (snapshot.entrepreneurActive) return Number.POSITIVE_INFINITY;
-  if (!snapshot.basePlan) return 0;
-  return FALLBACK_LIMITS[snapshot.basePlan][resource];
+  return snapshot.limits[resource] ?? FALLBACK_LIMITS[snapshot.basePlan][resource];
+}
+
+// Cuántos registros en uso tiene la persona (los archivados no cuentan para el límite).
+export async function countActive(supabase: Supabase, userId: string, resource: Resource) {
+  const { count, error } = await supabase
+    .from(resource)
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .neq("status", "archived");
+  return { count: count ?? 0, error: error?.message ?? null };
+}
+
+// Devuelve un mensaje si la persona no puede sumar otro registro activo; null si puede.
+// Al vencer Emprendedor no se borra nada: solo se frenan las altas nuevas que superen el límite.
+export async function createLimitError(supabase: Supabase, userId: string, resource: Resource): Promise<string | null> {
+  const snapshot = await getAccessSnapshot();
+  if (!snapshot) return "Iniciá sesión de nuevo.";
+  const limit = getResourceLimit(snapshot, resource);
+  if (!Number.isFinite(limit)) return null;
+
+  const label = RESOURCE_LABELS[resource];
+  if (snapshot.accountStatus !== "active") return "Tu cuenta no está activa.";
+  if (!snapshot.basePlan) return `Necesitás una licencia (Básico o Avanzado) para guardar ${label}.`;
+
+  const { count, error } = await countActive(supabase, userId, resource);
+  if (error) return `No se pudo comprobar el límite de tu plan: ${error}`;
+  if (count < limit) return null;
+  const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : "Básico";
+  return `Llegaste al límite de tu plan ${planLabel}: ${limit} ${label} activos. Podés archivar alguno que no uses o activar Emprendedor para tener altas sin límite.`;
 }
 
 export async function canCreateResource(resource: Resource, currentCount: number): Promise<boolean> {

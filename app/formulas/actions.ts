@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ownsActivity } from '@/lib/access/activities';
+import { createLimitError } from '@/lib/access/permissions';
 import { INGREDIENT_TYPES, INGREDIENT_UNITS } from './constants';
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -149,6 +150,8 @@ export async function createFormula(_prev: FormulaFormState, formData: FormData)
   if (!(await ownsActivity(supabase, userId, values.activity_id))) return { error: 'Elegí una de tus actividades.', values };
   const moldError = await checkMold(supabase, userId, values.mold_id);
   if (moldError) return { error: moldError, values };
+  const limitError = await createLimitError(supabase, userId, 'formulas');
+  if (limitError) return { error: limitError, values };
 
   const { data: formula, error } = await supabase
     .from('formulas')
@@ -219,6 +222,9 @@ export async function updateFormulaInfo(_prev: FormulaFormState, formData: FormD
 async function setFormulaStatus(formData: FormData, status: 'active' | 'archived') {
   const formulaId = String(formData.get('formula_id') ?? '');
   const { supabase, userId } = await auth();
+  // Restaurar vuelve a sumar una fórmula en uso, así que respeta el límite del plan.
+  const limitError = status === 'active' ? await createLimitError(supabase, userId, 'formulas') : null;
+  if (limitError) redirect(`/formulas/${formulaId}?error=${encodeURIComponent(limitError)}`);
   // Archivar no borra la fórmula ni sus versiones.
   const { data, error } = await supabase.from('formulas').update({ status }).eq('id', formulaId).eq('user_id', userId).select('id');
   const failure = error?.message ?? (!data?.length ? 'No se encontró la fórmula.' : null);
@@ -244,6 +250,8 @@ export async function duplicateFormula(formData: FormData) {
 
   const { data: source } = await supabase.from('formulas').select('activity_id,mold_id,name,category,photo_url,notes,current_version_id').eq('id', formulaId).eq('user_id', userId).maybeSingle();
   if (!source) return fail('No se encontró la fórmula.');
+  const limitError = await createLimitError(supabase, userId, 'formulas');
+  if (limitError) return fail(limitError);
 
   let version: VersionData = { yield_quantity: 1, water_percentage: null, notes: null, items: [] };
   if (source.current_version_id) {
