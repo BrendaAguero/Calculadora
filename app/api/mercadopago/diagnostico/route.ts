@@ -1,10 +1,17 @@
 import { getAccessSnapshot } from "@/lib/access/permissions";
+import { isLeakedPassword } from "@/lib/password";
 
 // Diagnóstico interno (solo administradoras y cuentas de prueba): a qué cuenta de Mercado Pago pertenecen
 // las credenciales configuradas. No muestra ninguna clave.
 export async function GET(request: Request) {
   const snapshot = await getAccessSnapshot();
   if (!snapshot || !(snapshot.isAdmin || snapshot.isTester)) return Response.json({ error: "No autorizado." }, { status: 403 });
+  // ?claves=1: prueba el control de contraseñas filtradas con una contraseña conocida («password123»).
+  if (new URL(request.url).searchParams.get("claves")) {
+    const res = await fetch("https://api.pwnedpasswords.com/range/CBFDA", { headers: { "Add-Padding": "true", "User-Agent": "calculadora-emprender" }, cache: "no-store" }).catch((error) => error as Error);
+    if (res instanceof Error) return Response.json({ pwned: "error", message: res.message });
+    return Response.json({ pwned: res.status, leakedPassword123: await isLeakedPassword("password123") });
+  }
   if (!process.env.MP_ACCESS_TOKEN) return Response.json({ configured: false });
 
   // ?pago=ID: quién pagó ese pago (sirve para saber el email del comprador de prueba).
