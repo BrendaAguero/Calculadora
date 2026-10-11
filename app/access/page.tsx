@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
 import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
+import { PlanStore } from "./store";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -72,7 +73,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
   const hasMonthly = Boolean(monthly?.auto_renew);
   const referral = (await cookies()).get("ref")?.value ?? "";
-  const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : snapshot.basePlan === "BASIC" ? "Básico" : "Sin licencia";
+  const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : snapshot.basePlan === "BASIC" ? "Básico" : "Gratis";
 
   return (
     <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
@@ -101,6 +102,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             </p>
           )}
         </section>
+
+        <PlanStore snapshot={snapshot} userId={user.id} referral={referral} />
 
         <section id="emprendedor" className={cardClass}>
           <h2 className="font-semibold">Emprendedor</h2>
@@ -187,7 +190,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               </div>
             </div>
           ) : !snapshot.baseLicenseActive ? (
-            <p className="mt-4 text-sm text-neutral-500">Para pedir Emprendedor primero necesitás una licencia Básico o Avanzado.</p>
+            <p className="mt-4 text-sm text-neutral-500">Para sumar Emprendedor primero necesitás Básico o Avanzado. <a href="#planes" className="underline">Ver planes</a></p>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
               {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
@@ -232,13 +235,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           ) : <p className="mt-3 text-sm text-neutral-500">Todavía no hay actividades adquiridas.</p>}
         </section>
 
-        <section className={cardClass}>
-          <h2 className="font-semibold">Módulos</h2>
-          {snapshot.modules.length ? (
-            <ul className="mt-3 space-y-2 text-sm">{snapshot.modules.map((code) => <li key={code}>✓ {labels[code] ?? code}</li>)}</ul>
-          ) : <p className="mt-3 text-sm text-neutral-500">No hay módulos permanentes adquiridos.</p>}
-          {snapshot.entrepreneurActive && <p className="mt-3 text-sm text-violet-700 dark:text-violet-300">Emprendedor habilita temporalmente los módulos funcionales.</p>}
-        </section>
+
 
         <section className={cardClass}>
           <h2 className="font-semibold">Límites del plan</h2>

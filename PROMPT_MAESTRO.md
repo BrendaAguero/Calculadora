@@ -47,6 +47,10 @@ No construir toda la aplicación de una sola vez.
 
 ## Planes
 
+Versión gratis (decisión del 11/10/2026): sin licencia. Incluye Yeso, calculadora en modo Fácil y Estándar, 5 materiales, 2 productos, 1 fórmula y 1 molde; sin stock, ventas, producción ni proveedores; muestra un banner propio (sin anuncios de terceros) que la administradora edita en /admin/banner. Emprendedor sigue requiriendo Básico o Avanzado. No hay «Emprendedor PRO» por ahora.
+
+Compra online (Checkout Pro) de Básico, Avanzado, pase Básico → Avanzado (precio según días desde la compra de Básico) y de los módulos que ya funcionan (Stock básico y Proveedores básico). Resina, Jesmonite, Cemento decorativo, Cálculo inverso, Escalado avanzado y Moldes avanzados se muestran como «Próximamente» hasta programarlos.
+
 Licencia permanente:
 - Básico: ARS 12.900, pago único.
 - Avanzado: ARS 24.900, pago único.

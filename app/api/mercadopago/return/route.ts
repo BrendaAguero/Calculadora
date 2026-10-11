@@ -13,7 +13,8 @@ export async function GET(request: Request) {
   if (!paymentId || paymentId === "null") return go("error", "No se completó el pago. Podés intentar de nuevo cuando quieras.");
   try {
     const result = await processPayment(paymentId);
-    if (result === "activated" || result === "already_approved") return go("ok", "¡Pago aprobado! Emprendedor ya está activo.");
+    if (result === "activated" || result === "already_approved") return go("ok", "¡Pago aprobado! Tu compra ya está activa.");
+    if (result === "already_has_license") return go("error", "Ya tenías una licencia activa, así que este pago no se aplicó. Escribinos y te devolvemos el dinero.");
     if (result === "recorded_pending") return go("ok", "Tu pago quedó pendiente en Mercado Pago. Se activa solo cuando se acredite.");
     if (result === "recorded_rejected" || status === "rejected") return go("error", "Mercado Pago rechazó el pago. Podés probar con otro medio.");
     if (result === "amount_mismatch") return go("error", "El monto pagado no coincide con el pedido. Escribinos para revisarlo.");

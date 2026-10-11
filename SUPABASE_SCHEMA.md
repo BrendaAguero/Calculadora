@@ -717,6 +717,15 @@ Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo 
 - `cancel_my_subscriptions()`: con sesión; cancela la renovación de todas las suscripciones de la persona, deja auditoría `subscription.cancel_button` y devuelve el código `BAJA-…`. La app además cancela la suscripción en Mercado Pago.
 - `submit_cancellation_request(nombre, email, detalle)`: sin sesión (anon); crea el pedido con código `BAJA-…` para que lo resuelva la administración.
 
+## Versión gratis, compras online y banner
+
+- Plan `FREE` en `plans` + `plan_limits` (5 materiales, 2 productos, 1 fórmula, 1 molde). Toda cuenta sin licencia lo usa.
+- `grant_free_activity(user)`: da Yeso como actividad principal (otorgamiento automático); lo llama `handle_new_user`.
+- Compras de pago único con Checkout Pro: `request_license_purchase(plan)`, `quote_license_upgrade()` / `request_license_upgrade()` (precio según `upgrade_price_rules`), `request_module_purchase(code)` (solo `sellable_module`: STOCK_BASICO, PROVEEDORES_BASICO), `cancel_purchase_request(id)`.
+- `apply_purchase_activation(purchase)` (interna): crea la licencia (o reemplaza Básico por Avanzado, `status = replaced`) o el módulo, aprueba la compra y genera la comisión. `mp_record_payment` la llama al aprobarse el pago.
+- `revoke_purchase_items(purchase)` (interna): al devolverse el pago, la licencia o el módulo pasan a `refunded` (y vuelve la Básico anterior si era un pase).
+- Banner: `content_entries` (`banner` / `free`), editado con `admin_save_banner(...)` (solo admin; enlaces https o internos).
+
 ## Regla para futuras actividades
 
 No asumir que todas las actividades usan yeso/agua/porcentaje de agua.

@@ -10,6 +10,8 @@ export type AccessSnapshot = {
   isTester: boolean;
   basePlan: BasePlanCode | null;
   baseLicenseActive: boolean;
+  // Versión gratis: sin licencia (y sin ser administradora ni cuenta de prueba). Tiene límites chicos y banner.
+  isFree: boolean;
   entrepreneurActive: boolean;
   entrepreneurExpiresAt: string | null;
   activities: string[];
@@ -20,7 +22,8 @@ export type AccessSnapshot = {
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 // Respaldo por si la tabla plan_limits no responde (mismos valores que la base).
-const FALLBACK_LIMITS: Record<BasePlanCode, Record<Resource, number>> = {
+const FALLBACK_LIMITS: Record<BasePlanCode | "FREE", Record<Resource, number>> = {
+  FREE: { materials: 5, products: 2, formulas: 1, molds: 1 },
   BASIC: { materials: 30, products: 10, formulas: 5, molds: 5 },
   ADVANCED: { materials: 100, products: 50, formulas: 30, molds: 30 },
 };
@@ -81,12 +84,12 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
       .sort()
       .at(-1) ?? null;
 
+  // Sin licencia rigen los límites del plan gratis (FREE).
   const limits: AccessSnapshot["limits"] = {};
-  if (activeLicense) {
-    const { data: rows } = await supabase
-      .from("plan_limits")
-      .select("resource, limit_value, unlimited")
-      .eq("plan_id", activeLicense.plan_id);
+  {
+    const { data: rows } = activeLicense
+      ? await supabase.from("plan_limits").select("resource, limit_value, unlimited").eq("plan_id", activeLicense.plan_id)
+      : await supabase.from("plan_limits").select("resource, limit_value, unlimited, plans!inner(code)").eq("plans.code", "FREE");
     for (const row of rows ?? []) {
       if (row.resource in RESOURCE_LABELS) {
         limits[row.resource as Resource] = row.unlimited ? Number.POSITIVE_INFINITY : Number(row.limit_value);
@@ -94,12 +97,15 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
     }
   }
 
+  const isAdmin = profile?.role === "admin" && profile?.account_status === "active";
+  const isTester = Boolean(profile?.is_tester) && profile?.account_status === "active";
   return {
     accountStatus: (profile?.account_status ?? "active") as AccessSnapshot["accountStatus"],
-    isAdmin: profile?.role === "admin" && profile?.account_status === "active",
-    isTester: Boolean(profile?.is_tester) && profile?.account_status === "active",
+    isAdmin,
+    isTester,
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),
+    isFree: !activeLicense && !isAdmin && !isTester,
     entrepreneurActive: Boolean(activeLicense) && entrepreneurExpiresAt !== null,
     entrepreneurExpiresAt,
     activities: (activities ?? []).flatMap((item) => {
@@ -123,9 +129,9 @@ export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
 
 export function getResourceLimit(snapshot: AccessSnapshot, resource: Resource): number {
   if (snapshot.isAdmin || snapshot.isTester) return Number.POSITIVE_INFINITY;
-  if (snapshot.accountStatus !== "active" || !snapshot.basePlan) return 0;
+  if (snapshot.accountStatus !== "active") return 0;
   if (snapshot.entrepreneurActive) return Number.POSITIVE_INFINITY;
-  return snapshot.limits[resource] ?? FALLBACK_LIMITS[snapshot.basePlan][resource];
+  return snapshot.limits[resource] ?? FALLBACK_LIMITS[snapshot.basePlan ?? "FREE"][resource];
 }
 
 // Cuántos registros en uso tiene la persona (los archivados no cuentan para el límite).
@@ -148,11 +154,11 @@ export async function createLimitError(supabase: Supabase, userId: string, resou
 
   const label = RESOURCE_LABELS[resource];
   if (snapshot.accountStatus !== "active") return "Tu cuenta no está activa.";
-  if (!snapshot.basePlan) return `Necesitás una licencia (Básico o Avanzado) para guardar ${label}.`;
 
   const { count, error } = await countActive(supabase, userId, resource);
   if (error) return `No se pudo comprobar el límite de tu plan: ${error}`;
   if (count < limit) return null;
+  if (!snapshot.basePlan) return `Llegaste al límite de la versión gratis: ${limit} ${label}. Con Básico o Avanzado podés guardar muchos más.`;
   const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : "Básico";
   return `Llegaste al límite de tu plan ${planLabel}: ${limit} ${label} activos. Podés archivar alguno que no uses o activar Emprendedor para tener altas sin límite.`;
 }
