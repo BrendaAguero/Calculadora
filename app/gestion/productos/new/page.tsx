@@ -19,7 +19,7 @@ export default async function NewProductPage() {
   const loadError = error ?? formulas.error?.message ?? molds.error?.message;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white">
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10">
       <header>
         <Link href="/gestion/productos" className="text-sm text-neutral-500 dark:text-neutral-400">← Volver a productos</Link>
         <h1 className="mt-3 text-2xl font-semibold">Nuevo producto</h1>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <main className="flex min-h-screen items-center justify-center px-4 text-neutral-900 dark:text-neutral-100">
       <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <p className="font-mono text-sm text-neutral-500">Código: 404</p>
         <h1 className="mt-1 text-lg font-semibold">No encontramos esta página</h1>

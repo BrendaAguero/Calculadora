@@ -16,7 +16,7 @@ export function Scaler({ yieldQuantity, items }: { yieldQuantity: number; items:
 
   if (!items.length) return null;
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="rounded-3xl bg-white p-5 dark:bg-neutral-900">
       <h2 className="font-semibold">Escalar receta</h2>
       <label className="mt-3 grid gap-1 text-sm">¿Cuántas piezas querés hacer?
         <input type="number" min="0" step="any" value={pieces} onChange={e => setPieces(e.target.value)} className="w-40 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />

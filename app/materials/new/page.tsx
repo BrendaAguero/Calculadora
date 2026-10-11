@@ -23,7 +23,7 @@ export default async function NewMaterialPage({ searchParams }: { searchParams: 
       </header>
 
       {params.error && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">{params.error}</div>}
-      <form action={createMaterial} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <form action={createMaterial} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
         <label className="grid gap-1 text-sm font-medium">Nombre<input name="name" required placeholder="Ej.: Yeso" className="rounded-xl border p-3 font-normal" /></label>
         <label className="grid gap-1 text-sm font-medium">Unidad de referencia<select name="default_unit" defaultValue="g" className="rounded-xl border p-3 font-normal">{units.map(unit => <option key={unit}>{unit}</option>)}</select></label>
         <label className="grid gap-1 text-sm font-medium">Precio de compra<input name="purchase_price" inputMode="decimal" required placeholder="0" className="rounded-xl border p-3 font-normal" /></label>

@@ -156,7 +156,7 @@ export function FormulaForm({ mode, action, formulaId, activities = [], activity
         </div>
       )}
       {/* key: al volver con error, se remonta con los valores enviados para no perder lo escrito. */}
-      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
         {formulaId && <input type="hidden" name="formula_id" value={formulaId} />}
         <FormulaFields mode={mode} values={values} activities={activities} activityCode={activityCode} materials={materials} molds={molds} />
         <SubmitButton label={submitLabel} />

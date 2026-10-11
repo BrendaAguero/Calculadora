@@ -25,7 +25,7 @@ export function ProductForm({ action, activities, formulas, molds }: { action: (
   return (
     <>
       {state.error && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"><strong>No se guardó.</strong><div className="mt-1">{state.error}</div></div>}
-      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
         <label className="grid gap-1 text-sm font-medium">Nombre *<input name="name" required defaultValue={values?.name ?? ''} placeholder="Ej. Porta sahumerio Luna" className={inputClass} /></label>
         {activities.length === 1
           ? <p className="text-sm text-neutral-500 dark:text-neutral-400">Actividad: {activities[0].name}<input type="hidden" name="activity_id" value={activities[0].id} /></p>

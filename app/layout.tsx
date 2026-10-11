@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Figtree, Geist_Mono } from "next/font/google";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { LOCK_INIT_SCRIPT } from "@/lib/app-lock";
 import { DeviceGuard } from "@/components/device-guard";
@@ -7,7 +7,8 @@ import { AppFrame } from "@/components/app-nav";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], weight: ["600", "700"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#E9ECEA" },
+    { media: "(prefers-color-scheme: dark)", color: "#121A19" },
   ],
   viewportFit: "cover",
 };
@@ -29,12 +30,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // suppressHydrationWarning: el script de tema agrega la clase "dark" antes de que React hidrate.
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="es" className={`${figtree.variable} ${bricolage.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full bg-neutral-50 dark:bg-neutral-950"><AppFrame>{children}</AppFrame><DeviceGuard /><ServiceWorkerRegister /></body>
+      <body className="min-h-full"><AppFrame>{children}</AppFrame><DeviceGuard /><ServiceWorkerRegister /></body>
     </html>
   );
 }

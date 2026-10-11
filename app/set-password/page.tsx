@@ -9,7 +9,7 @@ export default function SetPasswordPage() {
   const [state, action, pending] = useActionState(setPassword, initialState);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 px-6 text-neutral-900 dark:bg-neutral-950 dark:text-white">
+    <main className="flex min-h-screen items-center justify-center px-6 text-neutral-900 dark:text-white">
       <div className="w-full max-w-sm space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Creá tu contraseña</h1>

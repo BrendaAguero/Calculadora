@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { recalculate } from '../actions';
 import { inputsFromCalculation, loadCalculation, MODE_LABELS } from '../data';
 
-const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
-const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
+const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
+const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const hint = 'text-sm text-neutral-500 dark:text-neutral-400';
 
 function money(value: number | string | null) {
