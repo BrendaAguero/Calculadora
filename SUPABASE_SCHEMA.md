@@ -703,6 +703,14 @@ Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo 
 - `sync_calculation_item_snapshot_name()` con `search_path` fijo.
 - Probado: sin sesión no se lee ninguna tabla privada; una cuenta no ve ni modifica datos de otra, no puede hacerse admin ni tester, no puede llamar funciones admin ni de pagos; un pago repetido no se activa dos veces y una devolución anula plan y comisión (prueba hecha dentro de una transacción deshecha).
 
+## Suscripción mensual con cobro automático
+
+- `subscriptions.external_preapproval_id` (único) y `subscriptions.preapproval_status`: la suscripción en Mercado Pago y su estado (`pending`, `authorized`, `paused`, `cancelled`).
+- `mp_update_preapproval(subscription_id, preapproval_id, status)`: guarda el estado; si se pausa o cancela, `auto_renew = false`.
+- `mp_record_subscription_payment(p)`: primer cobro → activa el pedido (vía `mp_record_payment`); cobros siguientes → compra `subscription_renewal` aprobada, fila en `subscription_renewals` y un mes más. Idempotente por id de pago.
+- `mp_record_payment`: si se devuelve el cobro de una renovación, esa renovación queda `canceled` y se resta el mes.
+- Las tres funciones son solo para `service_role`.
+
 ## Regla para futuras actividades
 
 No asumir que todas las actividades usan yeso/agua/porcentaje de agua.
