@@ -48,7 +48,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
           <div><span className="opacity-60">Valor al costo</span><strong className="mt-1 block text-lg">{row.unitValue != null ? money(Math.max(row.quantity, 0) * row.unitValue) : '—'}</strong></div>
         </div>
         {isLow(row) && <p className="mt-3 rounded-xl bg-amber-400 px-3 py-2 text-sm font-medium text-amber-950">Está en el mínimo o por debajo: conviene reponer.</p>}
-        <p className="mt-3 text-xs opacity-60">{row.unitValue != null ? `Valor según el ${row.valueSource} (${money(row.unitValue)} por ${row.unit}).` : row.type === 'finished_product' ? 'Sin valor: guardá un cálculo de este producto para conocer su costo.' : 'Sin valor: el material no tiene precio cargado.'}</p>
+        <p className="mt-3 text-xs opacity-60">{row.unitValue != null ? `Valor según el ${row.valueSource} (${money(row.unitValue)} por ${row.unit}).` : row.type === 'finished_product' ? 'Sin valor: guardá un cálculo o registrá una producción de este producto para conocer su costo.' : 'Sin valor: el material no tiene precio cargado.'}</p>
       </section>
 
       <section className={cardClass}>

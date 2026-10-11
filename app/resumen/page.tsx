@@ -117,7 +117,7 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
                 </div>
               ))}
             </div>
-            <div className="mt-1 flex justify-between text-xs text-neutral-500"><span>{dayLabel(days[0][0])}</span><span>máx. {money(maxDay)}</span><span>{dayLabel(days[days.length - 1][0])}</span></div>
+            <div className="mt-1 flex justify-between text-xs text-neutral-500"><span>{dayLabel(days[0][0])}</span><span>máx. {money(maxDay)}</span><span>{days.length > 1 ? dayLabel(days[days.length - 1][0]) : ''}</span></div>
           </>
         )}
       </section>
