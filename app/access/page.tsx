@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
-import { mercadoPagoReady } from "@/lib/mercadopago";
+import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -30,20 +30,32 @@ const money = (value: number | string) => Number(value).toLocaleString("es-AR", 
 const date = (value: string) => new Date(value).toLocaleDateString("es-AR", { dateStyle: "long", timeZone: "America/Argentina/Buenos_Aires" });
 const monthsLabel = (months: number) => (months === 1 ? "1 mes" : `${months} meses`);
 
+// Mercado Pago pide, para la suscripción mensual, el email de la cuenta de Mercado Pago con la que se va a pagar.
+function MercadoPagoEmail({ defaultValue }: { defaultValue: string }) {
+  return (
+    <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Email de tu cuenta de Mercado Pago (solo para la suscripción mensual)
+      <input name="mp_email" type="email" defaultValue={defaultValue} maxLength={200} autoComplete="email" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
+    </label>
+  );
+}
+
 export default async function AccessPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string; confirmar?: string }> }) {
   const { ok, error, confirmar } = await searchParams;
-  const snapshot = await getAccessSnapshot();
-  if (!snapshot) redirect("/login");
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Suscripción mensual: confirma cobros que no hayan llegado por aviso y cancela en Mercado Pago lo que ya no se renueva.
+  if (mercadoPagoReady()) await syncUserPreapprovals(user.id).catch(() => null);
+
+  const snapshot = await getAccessSnapshot();
+  if (!snapshot) redirect("/login");
+
   const [counts, { data: pending }, { data: monthly }, quotes, upgradeQuotes] = await Promise.all([
     Promise.all(RESOURCES.map((resource) => countActive(supabase, user.id, resource))),
-    supabase.from("subscriptions").select("id, duration_months, final_price, total_discount_percentage, upgrade_credit, created_at").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
+    supabase.from("subscriptions").select("id, duration_months, auto_renew, final_price, total_discount_percentage, upgrade_credit, created_at, external_preapproval_id, preapproval_status").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
     // Suscripción mensual vigente (la más nueva), con o sin renovación.
-    supabase.from("subscriptions").select("id, auto_renew, auto_renew_canceled_at, expires_at").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("subscriptions").select("id, auto_renew, auto_renew_canceled_at, expires_at, final_price, external_preapproval_id").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     snapshot.baseLicenseActive
       ? Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null))
       : Promise.resolve([]),
@@ -101,7 +113,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               {monthly.auto_renew ? (
                 <>
                   <p>Tenés la <strong>suscripción mensual</strong>: se renueva cada mes. Podés cancelar la renovación cuando quieras; Emprendedor sigue activo hasta que venza.</p>
-                  <p className="mt-1 text-xs">Por ahora la renovación no se cobra sola: eso llega con el pago por Mercado Pago.</p>
+                  <p className="mt-1 text-xs">{monthly.external_preapproval_id ? `Mercado Pago te cobra ${money(monthly.final_price)} por mes. La próxima renovación es el ${date(monthly.expires_at)}.` : "Esta suscripción no tiene cobro automático: para renovarla, pedí Emprendedor de nuevo cuando venza."}</p>
                   <form action={cancelEntrepreneurAutoRenew} className="mt-3">
                     <input type="hidden" name="subscription_id" value={monthly.id} />
                     <SubmitButton className="rounded-xl border border-violet-400 px-4 py-2 font-medium dark:border-violet-700">Cancelar renovación</SubmitButton>
@@ -156,11 +168,15 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           {pending ? (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
               <p>Pedido pendiente: <strong>{pending.upgrade_credit != null ? `actualización a ${monthsLabel(pending.duration_months)}` : pending.duration_months === 1 ? "suscripción mensual" : monthsLabel(pending.duration_months)}</strong> por {money(pending.final_price)}{pending.upgrade_credit != null ? ` (con ${money(pending.upgrade_credit)} descontados por tu plan actual)` : Number(pending.total_discount_percentage) > 0 ? ` (con ${Number(pending.total_discount_percentage)} % de descuento)` : ""}, enviado el {date(pending.created_at)}.</p>
-              <p className="mt-1">{mercadoPagoReady() ? 'Pagalo con Mercado Pago y se activa en el momento.' : 'Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.'}</p>
+              <p className="mt-1">{!mercadoPagoReady() ? 'Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.'
+                : pending.preapproval_status === 'authorized' ? 'Ya autorizaste la suscripción en Mercado Pago. Emprendedor se activa solo apenas se acredite el primer cobro (suele tardar unos minutos).'
+                : pending.duration_months === 1 && pending.auto_renew ? 'Autorizá la suscripción en Mercado Pago: se cobra ahora y después una vez por mes, hasta que la canceles.'
+                : 'Pagalo con Mercado Pago y se activa en el momento.'}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {mercadoPagoReady() && (
-                  <form action={payEntrepreneurRequest}>
+                {mercadoPagoReady() && pending.preapproval_status !== 'authorized' && (
+                  <form action={payEntrepreneurRequest} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="subscription_id" value={pending.id} />
+                    {pending.duration_months === 1 && pending.auto_renew && !pending.external_preapproval_id && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
                     <SubmitButton className="rounded-xl bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700">Pagar con Mercado Pago</SubmitButton>
                   </form>
                 )}
@@ -202,8 +218,9 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
                 <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
               </label>
+              {mercadoPagoReady() && !snapshot.entrepreneurActive && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
               <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</SubmitButton>
-              {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo.</p>}
+              {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo. La suscripción mensual se cobra sola cada mes hasta que la canceles.</p>}
             </form>
           )}
         </section>

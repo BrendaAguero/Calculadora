@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { processPayment } from "@/lib/mercadopago";
+import { processAuthorizedPayment, processPayment, syncPreapproval } from "@/lib/mercadopago";
 
 // Aviso de Mercado Pago. Si está configurada la clave secreta del webhook, se verifica la firma.
 // Igual se consulta el pago a Mercado Pago antes de activar nada, así que un aviso falso no logra nada.
@@ -21,11 +21,19 @@ export async function POST(request: Request) {
   const type = body.type ?? body.topic ?? url.searchParams.get("type") ?? url.searchParams.get("topic");
   const dataId = String(body.data?.id ?? url.searchParams.get("data.id") ?? url.searchParams.get("id") ?? "");
 
-  if (type !== "payment" || !dataId) return Response.json({ ignored: true });
+  // payment: pagos únicos y cobros; subscription_preapproval: cambios de la suscripción mensual
+  // (autorizada, pausada, cancelada); subscription_authorized_payment: cada cobro mensual.
+  const handlers: Record<string, (id: string) => Promise<string>> = {
+    payment: processPayment,
+    subscription_preapproval: syncPreapproval,
+    subscription_authorized_payment: processAuthorizedPayment,
+  };
+  const handler = type && Object.hasOwn(handlers, type) ? handlers[type] : undefined;
+  if (!handler || !dataId) return Response.json({ ignored: true });
   if (!validSignature(request, dataId)) return Response.json({ error: "firma inválida" }, { status: 401 });
 
   try {
-    const result = await processPayment(dataId);
+    const result = await handler(dataId);
     return Response.json({ result });
   } catch (error) {
     // 500 hace que Mercado Pago reintente más tarde.
