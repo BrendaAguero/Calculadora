@@ -104,9 +104,16 @@ export async function decideResellerClient(formData: FormData) {
   back('/admin/emails', 'ok', sent ? 'Clienta aprobada. Le mandamos la clave por correo.' : 'Clienta aprobada. Copiá la clave de abajo y mandásela (el correo automático falló).');
 }
 
-export async function setResellerPrice(formData: FormData) {
-  const n = Number(text(formData, 'unit').replace(/\./g, '').replace(',', '.'));
-  await rpc('/admin/precios', 'admin_set_reseller_price', { p_price: n }, 'Precio de revendedoras guardado.');
+export async function setResellerPrices(formData: FormData) {
+  const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/revendedoras', 'admin_set_reseller_prices', { p_unit: n('unit'), p_d5: n('d5'), p_d10: n('d10'), p_d20: n('d20') }, 'Precios de revendedoras guardados.');
+}
+
+export async function saveResellerResources(formData: FormData) {
+  await rpc('/admin/revendedoras', 'admin_save_reseller_resources', { p: {
+    whatsapp: text(formData, 'whatsapp'), group_link: text(formData, 'group_link'), wait_time: text(formData, 'wait_time'),
+    client_message: text(formData, 'client_message'), tips: text(formData, 'tips'), materials: text(formData, 'materials'),
+  } }, 'Recursos guardados.');
 }
 
 export async function newAccessKey(formData: FormData) {
