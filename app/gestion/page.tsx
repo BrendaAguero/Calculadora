@@ -11,6 +11,8 @@ export default function GestionPage() {
     <Link href="/formulas" className={card}><h2 className="font-semibold">Fórmulas</h2><p className={hint}>Recetas, ingredientes y versiones.</p></Link>
     <Link href="/gestion/productos" className={card}><h2 className="font-semibold">Productos</h2><p className={hint}>Fórmulas, moldes, precios con historial y rentabilidad.</p></Link>
     <Link href="/stock" className={card}><h2 className="font-semibold">Stock</h2><p className={hint}>Materias primas y productos terminados: cantidades, mínimos, alertas y valor.</p></Link>
+    <Link href="/produccion" className={card}><h2 className="font-semibold">Producción</h2><p className={hint}>Registrá lo que fabricaste: materiales, costo y stock.</p></Link>
+    <Link href="/compras" className={card}><h2 className="font-semibold">Compras y proveedores</h2><p className={hint}>Compras de materiales, precios al día y comparación entre proveedores.</p></Link>
     <Link href="/historial" className={card}><h2 className="font-semibold">Historial</h2><p className={hint}>Tus cálculos guardados: detalle, duplicar y recalcular.</p></Link>
   </div></AppShell>;
 }

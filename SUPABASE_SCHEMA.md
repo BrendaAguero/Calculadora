@@ -453,6 +453,8 @@ Reglas (migración `20261011_stock.sql`):
 - los movimientos no se editan ni se borran; los errores se corrigen con un `adjustment`;
 - la unidad del stock es la del material (`default_unit`) o `unidad` para productos; la app convierte kg↔g, l↔ml.
 
+Producción (migración `20261011_produccion_compras.sql`): `register_production(p jsonb)` guarda la producción, sus materiales (con el costo de ese día) y, si se pide, descuenta el stock (`production_consumption`) y suma el producto terminado (`production_output`) en una sola transacción. Si falta stock no se bloquea: el stock puede quedar negativo. `ensure_stock_item` crea el ítem de stock en cero si no existía.
+
 ### suppliers
 - id
 - user_id
@@ -486,6 +488,8 @@ Representa compras de materiales realizadas a proveedores, no compras de licenci
 - unit_price
 - total
 - created_at
+
+Compras (misma migración): `register_supplier_purchase(p jsonb)` guarda la compra y sus ítems; opcionalmente crea un precio nuevo por material (con `supplier_id`, cerrando el anterior con `valid_until`) y suma al stock (`purchase`). Todas son SECURITY INVOKER: RLS sigue aplicando.
 
 ### sales
 - id

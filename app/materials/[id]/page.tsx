@@ -21,7 +21,7 @@ export default async function MaterialDetailPage({ params, searchParams }: { par
     ? await supabase.from('activities').select('id,name').eq('id', material.activity_id).maybeSingle()
     : { data: null };
   const activityOptions = [...activities.map(a => ({ id: a.id, name: a.name })), ...(linked ? [linked] : [])];
-  const { data: prices } = await supabase.from('material_prices').select('id,purchase_price,purchase_quantity,purchase_unit,unit_cost,currency,is_estimated,valid_from,valid_until').eq('material_id', id).order('valid_from', { ascending: false });
+  const { data: prices } = await supabase.from('material_prices').select('id,purchase_price,purchase_quantity,purchase_unit,unit_cost,currency,is_estimated,valid_from,valid_until,suppliers(name)').eq('material_id', id).order('valid_from', { ascending: false });
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-4 py-6 pb-24">
@@ -48,7 +48,7 @@ export default async function MaterialDetailPage({ params, searchParams }: { par
         </form>
       </section>
 
-      <section className="grid gap-3"><h2 className="text-lg font-semibold">Historial de precios</h2>{(prices ?? []).map(price => <article key={price.id} className="rounded-2xl border p-4"><div className="flex justify-between gap-3"><strong>${Number(price.purchase_price).toFixed(2)} {price.currency}</strong><span className="text-sm text-neutral-500">{new Date(price.valid_from).toLocaleDateString('es-AR')}</span></div><p className="mt-1 text-sm text-neutral-600">{price.purchase_quantity} {price.purchase_unit} · costo unitario: ${Number(price.unit_cost).toFixed(4)} / {material.default_unit}</p></article>)}</section>
+      <section className="grid gap-3"><h2 className="text-lg font-semibold">Historial de precios</h2>{(prices ?? []).map(price => <article key={price.id} className="rounded-2xl border p-4"><div className="flex justify-between gap-3"><strong>${Number(price.purchase_price).toFixed(2)} {price.currency}</strong><span className="text-sm text-neutral-500">{new Date(price.valid_from).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}{(Array.isArray(price.suppliers) ? price.suppliers[0] : price.suppliers)?.name ? ` · ${(Array.isArray(price.suppliers) ? price.suppliers[0] : price.suppliers)!.name}` : ''}{!price.valid_until ? ' · actual' : ''}</span></div><p className="mt-1 text-sm text-neutral-600">{price.purchase_quantity} {price.purchase_unit} · costo unitario: ${Number(price.unit_cost).toFixed(4)} / {material.default_unit}</p></article>)}</section>
     </main>
   );
 }

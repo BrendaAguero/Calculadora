@@ -13,9 +13,9 @@ export default async function PreferencesPage() {
 
   const { data: preferences } = await supabase
     .from("user_preferences")
-    .select("currency, default_margin, default_markup")
+    .select("currency, default_margin, default_markup, auto_deduct_stock")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   return (
     <main className="mx-auto max-w-md px-6 py-10">
@@ -59,6 +59,10 @@ export default async function PreferencesPage() {
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2"
           />
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="auto_deduct_stock" defaultChecked={preferences?.auto_deduct_stock ?? false} className="mt-1" />
+          <span>Al registrar una producción, proponer descontar los materiales del stock. En cada producción podés elegir no descontar.</span>
+        </label>
         <button
           type="submit"
           className="rounded-md bg-orange-800 px-4 py-2 text-white"
