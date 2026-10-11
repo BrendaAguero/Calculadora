@@ -14,7 +14,10 @@ export async function isLeakedPassword(password: string) {
       cache: "no-store",
       signal: AbortSignal.timeout(4000),
     });
-    if (!response.ok) return false;
+    if (!response.ok) {
+      console.warn("Pwned Passwords respondió", response.status);
+      return false;
+    }
     const body = await response.text();
     return body.split("\n").some((line) => {
       const [candidate, count] = line.trim().split(":");
