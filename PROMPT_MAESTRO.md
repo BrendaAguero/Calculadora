@@ -62,6 +62,10 @@ Renovación: si ya hay Emprendedor vigente, 6 y 12 meses se suman al final del a
 
 1 mes es una suscripción mensual: se renueva cada mes y la persona puede cancelar la renovación (sigue activa hasta que vence). No se suma: solo se contrata cuando no hay Emprendedor vigente. Si alguien con la suscripción mensual compra 6 o 12 meses, el plazo largo empieza cuando termina el mes pagado y la renovación mensual se cancela sola. El cobro automático de la renovación llega con Mercado Pago (Etapa 18).
 
+Comprar más tiempo con Emprendedor vigente pide confirmación («¿Seguro querés comprar 6 meses más?») y, si conviene, ofrece actualizar.
+
+Actualizar a un plan más largo (1→6, 1→12, 6→12), con prorrateo: crédito = lo pagado por el plan actual × (tiempo que le queda ÷ duración total). Precio = precio del plan nuevo con su descuento − crédito. El plan nuevo empieza hoy y dura completo; el anterior termina hoy. Solo con un único plan activo y pagado (los de cortesía no dan crédito). Decisión del 11/10/2026.
+
 Hasta integrar Mercado Pago (Etapa 18), el pedido queda pendiente y una administradora lo activa a mano al recibir el pago.
 
 Cuando vence:
