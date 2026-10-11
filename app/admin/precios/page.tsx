@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
 import { requireAdmin } from '@/lib/admin';
 import { cardClass, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { setPrices } from '../actions';
+import { setActivityPrices, setPrices } from '../actions';
 
 export default async function AdminPricesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
   const [{ data: config }, { data: monthly }, { data: device }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre']),
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'activity_price_secondary', 'activity_price_extra']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).maybeSingle(),
     supabase.from('modules').select('price').eq('code', 'EXTRA_DEVICE').maybeSingle(),
   ]);
@@ -30,6 +30,12 @@ export default async function AdminPricesPage({ searchParams }: { searchParams: 
         <label className={labelClass}>Mensualidad Plus (por mes)<input name="monthly" inputMode="numeric" required defaultValue={Number(monthly?.price ?? 0)} className={inputClass} /></label>
         <label className={labelClass}>Aparato extra<input name="extra_device" inputMode="numeric" required defaultValue={Number(device?.price ?? 0)} className={inputClass} /></label>
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar precios</SubmitButton></div>
+      </form>
+      <form action={setActivityPrices} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
+        <h2 className="font-semibold sm:col-span-2">Actividades</h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">La actividad principal viene incluida. La segunda sale siempre a mitad de precio (se calcula sola); las siguientes, precio normal. Con Plus tienen todas.</p>
+        <label className={labelClass}>Actividad (precio normal)<input name="extra" inputMode="numeric" required defaultValue={value('activity_price_extra')} className={inputClass} /><span>La segunda actividad: {Math.round(value('activity_price_extra') / 2).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })} (mitad).</span></label>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar precios de actividades</SubmitButton></div>
       </form>
     </main>
   );

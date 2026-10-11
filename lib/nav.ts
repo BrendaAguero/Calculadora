@@ -42,6 +42,6 @@ export const BOTTOM_ITEMS: NavItem[] = [
 ];
 
 // Pantallas sin menú (entrada, páginas públicas y administración).
-export const NO_NAV_PATHS = ["/login", "/auth/", "/comprar", "/legal", "/arrepentimiento", "/baja", "/r/", "/set-password", "/ayuda", "/admin"];
+export const NO_NAV_PATHS = ["/login", "/auth/", "/comprar", "/legal", "/arrepentimiento", "/baja", "/r/", "/set-password", "/ayuda", "/admin", "/bienvenida"];
 
 export const isActive = (pathname: string, href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);

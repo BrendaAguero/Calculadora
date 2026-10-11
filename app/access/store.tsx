@@ -3,7 +3,7 @@ import { SubmitButton } from '@/components/submit-button';
 import type { AccessSnapshot } from '@/lib/access/permissions';
 import { mercadoPagoReady } from '@/lib/mercadopago';
 import { createClient } from '@/lib/supabase/server';
-import { buyModule, cancelPurchase, payPurchase, releaseDevice } from './actions';
+import { buyActivity, buyModule, cancelPurchase, payPurchase, releaseDevice } from './actions';
 import { signOutEverywhere } from '../seguridad/actions';
 
 const money = (value: number | string) => Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
@@ -24,13 +24,16 @@ const PURCHASE_LABELS: Record<string, string> = { license: 'Edición Personal', 
 
 export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot; userId: string; referral?: string }) {
   const supabase = await createClient();
-  const [{ data: modules }, { data: pending }, { data: devices }, { data: allowed }] = await Promise.all([
+  const [{ data: modules }, { data: pending }, { data: devices }, { data: allowed }, { data: activities }, { data: owned }, { data: activityPrice }] = await Promise.all([
     supabase.from('modules').select('id,code,name,price').eq('active', true).order('price'),
-    supabase.from('purchases').select('id,product_type,product_id,total,created_at').eq('user_id', userId).eq('payment_status', 'pending').in('product_type', ['module']).order('created_at', { ascending: false }),
+    supabase.from('purchases').select('id,product_type,product_id,total,created_at').eq('user_id', userId).eq('payment_status', 'pending').in('product_type', ['module', 'activity']).order('created_at', { ascending: false }),
     supabase.from('user_devices').select('id,label,created_at,last_seen_at,last_city').eq('user_id', userId).is('released_at', null).order('created_at'),
     supabase.rpc('allowed_devices', { p_user_id: userId }),
+    supabase.from('activities').select('id,code,name').eq('active', true).order('sort_order'),
+    supabase.from('user_activities').select('activity_id,is_primary').eq('user_id', userId).eq('status', 'active'),
+    supabase.rpc('my_activity_price'),
   ]);
-  const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
+  const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? activities?.find((a) => a.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
   const online = mercadoPagoReady();
 
   if (!snapshot.baseLicenseActive && !snapshot.isAdmin && !snapshot.isTester) {
@@ -84,6 +87,32 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
           })}
         </ul>
         {online && <p className="mt-2 text-xs text-neutral-500">Pagás en Mercado Pago y se activa apenas se aprueba el pago. Tenés 10 días para arrepentirte.</p>}
+      </section>
+
+      <section id="actividades" className={cardClass}>
+        <h2 className="font-semibold">Actividades</h2>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Mensualidad Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
+        <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+          {(activities ?? []).map((activity) => {
+            const mine = owned?.find((o) => o.activity_id === activity.id);
+            return (
+              <li key={activity.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span><strong>{activity.name}</strong>{mine?.is_primary && <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-800 dark:bg-orange-950 dark:text-orange-300">Principal</span>}</span>
+                {mine ? <span className="text-emerald-700 dark:text-emerald-400">✓ La tenés</span>
+                  : snapshot.entrepreneurActive ? <span className="text-xs text-neutral-500">Incluida con Plus</span>
+                  : !owned?.length ? <Link href="/bienvenida" className="text-xs font-semibold underline">Elegí tu actividad principal</Link>
+                  : (
+                    <form action={buyActivity} className="flex items-center gap-3">
+                      <input type="hidden" name="activity" value={activity.code} />
+                      <input type="hidden" name="name" value={activity.name} />
+                      {activityPrice != null && <span>{money(activityPrice)}</span>}
+                      <SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 font-medium dark:border-neutral-700">Comprar</SubmitButton>
+                    </form>
+                  )}
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section id="aparatos" className={cardClass}>

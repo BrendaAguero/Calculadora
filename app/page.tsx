@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Calculator, Factory, Plus, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessSnapshot } from "@/lib/access/permissions";
 import { AppShell } from "@/components/app-shell";
 import { LegalLinks } from "@/components/legal-links";
 import { InstallApp } from "@/components/install-app";
@@ -35,6 +37,14 @@ const ACTIONS = [
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  // Edición Personal recién activada: primero elige su actividad principal.
+  if (user) {
+    const snapshot = await getAccessSnapshot();
+    if (snapshot?.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester) {
+      const { count } = await supabase.from("user_activities").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active");
+      if (count === 0) redirect("/bienvenida");
+    }
+  }
   const month = resolvePeriod({ periodo: "mes" });
   const monthName = MONTHS[new Date(month.from!.getTime() + 12 * 3_600_000).getUTCMonth()];
 

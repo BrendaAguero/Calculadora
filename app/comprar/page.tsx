@@ -29,7 +29,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
         <p className="text-3xl font-bold">{money(price('personal_price_online', 44900))}</p>
         <p className="text-xs text-neutral-500">pago único con Mercado Pago</p>
         <ul className="mt-4 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
-          <li>✓ Calculadora de Yeso completa</li>
+          <li>✓ Calculadora de tu actividad principal: Yeso, Resina, Jesmonite o Cemento</li>
           <li>✓ Stock, producción, compras, proveedores, ventas y resumen</li>
           <li>✓ Hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes</li>
           <li>✓ En {devices} aparatos (celular y computadora)</li>

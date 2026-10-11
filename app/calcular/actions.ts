@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getOwnedActivities } from '@/lib/access/activities';
+import { canUseActivity } from '@/lib/access/activities';
 import { getAccessSnapshot } from '@/lib/access/permissions';
 import { compute, num, type CalcInput } from './compute';
 
@@ -25,10 +25,9 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Iniciá sesión para guardar el cálculo.' };
 
-  const { activities, error: activitiesError } = await getOwnedActivities(supabase, user.id);
-  if (activitiesError) return { ok: false, error: `No se pudieron verificar tus actividades: ${activitiesError}` };
-  const yeso = activities.find(activity => activity.code === 'YESO');
-  if (!yeso) return { ok: false, error: 'La calculadora de Yeso requiere tener la actividad Yeso.' };
+  const access = await canUseActivity(supabase, user.id, 'YESO');
+  if (!access.allowed || !access.activityId) return { ok: false, error: 'La calculadora de Yeso requiere tener la actividad Yeso o Mensualidad Plus.' };
+  const yeso = { id: access.activityId };
 
   const values: CalcInput = { ...input };
   // La versión gratis no tiene el modo Personalizado.
