@@ -3,6 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const API = "https://api.mercadopago.com";
 
+export class MercadoPagoError extends Error {
+  constructor(public status: number, public detail: string) {
+    super(`Mercado Pago respondió ${status}${detail ? `: ${detail}` : ""}`);
+  }
+}
+
 export const mercadoPagoReady = () => Boolean(process.env.MP_ACCESS_TOKEN && process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function mp<T>(path: string, init?: RequestInit): Promise<T> {
@@ -11,7 +17,11 @@ async function mp<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, "Content-Type": "application/json", ...init?.headers },
     cache: "no-store",
   });
-  if (!response.ok) throw new Error(`Mercado Pago respondió ${response.status}`);
+  if (!response.ok) {
+    // Mercado Pago explica el problema en «message» (por ejemplo, un email que no es de una cuenta de Mercado Pago).
+    const detail = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new MercadoPagoError(response.status, detail?.message ?? "");
+  }
   return response.json() as Promise<T>;
 }
 

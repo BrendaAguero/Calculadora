@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { cancelStalePreapprovals, createPreapproval, createPreference, getPreapprovalUrl, mercadoPagoReady } from '@/lib/mercadopago';
+import { cancelStalePreapprovals, createPreapproval, createPreference, getPreapprovalUrl, MercadoPagoError, mercadoPagoReady } from '@/lib/mercadopago';
 import { siteOrigin } from '@/lib/origin';
 
 const back = (key: 'ok' | 'error', message: string): never => redirect(`/access?${key}=${encodeURIComponent(message.slice(0, 300))}#emprendedor`);
@@ -54,8 +54,10 @@ async function checkout(subscriptionId: string, formData: FormData): Promise<nev
       url = sub!.external_preapproval_id
         ? await getPreapprovalUrl(sub!.external_preapproval_id)
         : (await createPreapproval({ subscriptionId: sub!.id, price: Number(purchase!.total), payerEmail, origin: await siteOrigin() })).url;
-    } catch {
-      back('error', 'No se pudo abrir la suscripción en Mercado Pago. Revisá que el email sea el de tu cuenta de Mercado Pago y probá de nuevo. Si ya la autorizaste, se activa sola con el primer cobro.');
+    } catch (error) {
+      console.error('Suscripción de Mercado Pago', error instanceof Error ? error.message : error);
+      const detail = error instanceof MercadoPagoError && error.detail ? ` (Mercado Pago dice: «${error.detail.slice(0, 160)}»)` : '';
+      back('error', `No se pudo abrir la suscripción en Mercado Pago. Revisá que el email sea el de tu cuenta de Mercado Pago y probá de nuevo.${detail}`);
     }
     redirect(url!);
   }
@@ -70,7 +72,8 @@ async function checkout(subscriptionId: string, formData: FormData): Promise<nev
       origin: await siteOrigin(),
     });
     initPoint = preference.url;
-  } catch {
+  } catch (error) {
+    console.error('Pago de Mercado Pago', error instanceof Error ? error.message : error);
     back('error', 'No se pudo conectar con Mercado Pago. Probá de nuevo en un rato; tu pedido quedó guardado.');
   }
   redirect(initPoint!);
