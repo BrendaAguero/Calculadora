@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/admin';
+import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
+import { siteOrigin } from '@/lib/origin';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
@@ -52,4 +56,66 @@ export async function saveBanner(formData: FormData) {
     p_title: text(formData, 'title'), p_text: text(formData, 'text'), p_link: text(formData, 'link'),
     p_button: text(formData, 'button'), p_image: text(formData, 'image'), p_active: formData.get('active') === 'on',
   }, 'Banner guardado.');
+}
+
+export async function approveEmail(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const email = text(formData, 'email').toLowerCase();
+  const { data: id, error } = await supabase.rpc('admin_approve_email', { p_email: email, p_source: text(formData, 'source'), p_note: text(formData, 'note') || null });
+  if (error || !id) back('/admin/emails', 'error', error?.message ?? 'No se pudo aprobar.');
+  // Clave de acceso: cada email tiene una sola. Si ya tenía, se reenvía la misma; si no, se crea.
+  // Además queda visible acá para copiarla.
+  let sent = false;
+  let reused = false;
+  try {
+    const admin = createAdminClient();
+    const { data: existing } = admin ? await admin.from('approved_emails').select('key_cipher').eq('id', id as string).maybeSingle() : { data: null };
+    const current = decryptKey(existing?.key_cipher);
+    reused = Boolean(current);
+    const key = current ?? await issueKey(supabase, id as string);
+    sent = await sendKeyEmail(email, key, await siteOrigin());
+  } catch (e) {
+    back('/admin/emails', 'error', `Email aprobado, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
+  }
+  revalidatePath('/admin/emails');
+  const which = reused ? 'su clave de siempre' : 'la clave';
+  back('/admin/emails', 'ok', sent ? `Email aprobado. Le mandamos ${which} por correo (también la ves abajo).` : `Email aprobado. Copiá ${which} de abajo y mandásela (el correo automático no está configurado o falló).`);
+}
+
+export async function newAccessKey(formData: FormData) {
+  const supabase = await createClient();
+  try {
+    const key = await issueKey(supabase, text(formData, 'id'));
+    const sent = text(formData, 'send') === '1' ? await sendKeyEmail(text(formData, 'email'), key, await siteOrigin()) : false;
+    revalidatePath('/admin/emails');
+    back('/admin/emails', 'ok', sent ? 'Clave nueva creada y enviada por correo. La anterior ya no sirve.' : 'Clave nueva creada. La anterior ya no sirve.');
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e;
+    back('/admin/emails', 'error', e instanceof Error ? e.message : 'No se pudo crear la clave.');
+  }
+}
+
+export async function resendAccessKey(formData: FormData) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { data } = admin ? await admin.from('approved_emails').select('email,key_cipher').eq('id', text(formData, 'id')).maybeSingle() : { data: null };
+  const key = decryptKey(data?.key_cipher);
+  if (!data || !key) back('/admin/emails', 'error', 'Esta persona no tiene clave guardada. Creá una nueva.');
+  const sent = await sendKeyEmail(data!.email, key!, await siteOrigin());
+  back('/admin/emails', sent ? 'ok' : 'error', sent ? 'Clave reenviada por correo.' : 'No se pudo mandar el correo. Copiá la clave y mandásela por mensaje.');
+}
+
+export async function revokeEmail(formData: FormData) {
+  await rpc('/admin/emails', 'admin_revoke_email', { p_id: text(formData, 'id') }, 'Acceso revocado.');
+}
+
+export async function adminReleaseDevice(formData: FormData) {
+  await rpc('/admin/emails', 'release_device', { p_id: text(formData, 'device_id') }, 'Aparato liberado.');
+}
+
+export async function setPrices(formData: FormData) {
+  const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/precios', 'admin_set_prices', { p_online: n('online'), p_transfer: n('transfer'), p_mercadolibre: n('mercadolibre'), p_monthly: n('monthly'), p_extra_device: n('extra_device') }, 'Precios guardados.');
 }

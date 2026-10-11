@@ -62,7 +62,7 @@ async function checkout(subscriptionId: string, formData: FormData): Promise<nev
     redirect(url!);
   }
 
-  const plan = sub!.duration_months === 1 ? 'Emprendedor · suscripción mensual' : `Emprendedor · ${sub!.duration_months} meses`;
+  const plan = sub!.duration_months === 1 ? 'Mensualidad Plus' : `Mensualidad Plus · ${sub!.duration_months} meses`;
   let initPoint: string;
   try {
     const preference = await createPreference({
@@ -151,7 +151,7 @@ export async function cancelEntrepreneurAutoRenew(formData: FormData) {
   // Se cancela también en Mercado Pago para que no se cobre el mes siguiente (si falla, se reintenta al volver a entrar).
   await cancelStalePreapprovals({ userId: user.id });
   revalidatePath('/access');
-  back('ok', 'Renovación cancelada. Emprendedor sigue activo hasta que vence.');
+  back('ok', 'Renovación cancelada. Plus sigue activo hasta que vence.');
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -226,4 +226,13 @@ export async function cancelPurchase(formData: FormData) {
   if (error) goStore('error', error.message);
   revalidatePath('/access');
   goStore('ok', 'Pedido cancelado.');
+}
+
+// Libera un aparato propio (por ejemplo, un celular que ya no usa) para poder entrar desde otro.
+export async function releaseDevice(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('release_device', { p_id: String(formData.get('device_id') ?? '') });
+  if (error) redirect(`/access?error=${encodeURIComponent(error.message)}#aparatos`);
+  revalidatePath('/access');
+  redirect(`/access?ok=${encodeURIComponent('Aparato liberado.')}#aparatos`);
 }

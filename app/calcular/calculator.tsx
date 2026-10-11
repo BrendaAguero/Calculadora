@@ -115,7 +115,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
 
       <section className="mt-6 grid grid-cols-3 gap-2" aria-label="Modo de cálculo">
         {([['easy', 'Fácil'], ['standard', 'Estándar'], ['personalized', 'Personalizado']] as const).map(([value, label]) => (
-          <button key={value} type="button" aria-pressed={input.mode === value} disabled={value === 'personalized' && !allowPersonalized} title={value === 'personalized' && !allowPersonalized ? 'Disponible con Básico o Avanzado' : undefined} onClick={() => set({ mode: value as Mode })} className={`rounded-xl border px-2 py-3 text-sm font-semibold ${input.mode === value ? 'border-orange-700 bg-orange-700 text-white' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'} disabled:cursor-not-allowed disabled:opacity-50`}>{label}{value === 'personalized' && !allowPersonalized ? ' 🔒' : ''}</button>
+          <button key={value} type="button" aria-pressed={input.mode === value} disabled={value === 'personalized' && !allowPersonalized} title={value === 'personalized' && !allowPersonalized ? 'Disponible con la Edición Personal' : undefined} onClick={() => set({ mode: value as Mode })} className={`rounded-xl border px-2 py-3 text-sm font-semibold ${input.mode === value ? 'border-orange-700 bg-orange-700 text-white' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'} disabled:cursor-not-allowed disabled:opacity-50`}>{label}{value === 'personalized' && !allowPersonalized ? ' 🔒' : ''}</button>
         ))}
       </section>
 

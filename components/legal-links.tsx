@@ -11,7 +11,6 @@ export function LegalLinks({ className = '' }: { className?: string }) {
       <Link href="/legal/terminos" className={link}>Términos</Link>
       <Link href="/legal/privacidad" className={link}>Privacidad</Link>
       <Link href="/legal/compras" className={link}>Compras y reembolsos</Link>
-      <Link href="/legal/afiliadas" className={link}>Afiliadas</Link>
     </nav>
   );
 }

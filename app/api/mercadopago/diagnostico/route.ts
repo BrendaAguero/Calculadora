@@ -1,5 +1,6 @@
 import { getAccessSnapshot } from "@/lib/access/permissions";
 import { isLeakedPassword } from "@/lib/password";
+import { verifyMail } from "@/lib/mail";
 
 // Diagnóstico interno (solo administradoras y cuentas de prueba): a qué cuenta de Mercado Pago pertenecen
 // las credenciales configuradas. No muestra ninguna clave.
@@ -12,6 +13,8 @@ export async function GET(request: Request) {
     if (res instanceof Error) return Response.json({ pwned: "error", message: res.message });
     return Response.json({ pwned: res.status, leakedPassword123: await isLeakedPassword("password123") });
   }
+  // ?correo=1: comprueba que el Gmail de la app acepta el usuario y la contraseña (no manda nada).
+  if (new URL(request.url).searchParams.get("correo")) return Response.json(await verifyMail());
   if (!process.env.MP_ACCESS_TOKEN) return Response.json({ configured: false });
 
   // ?pago=ID: quién pagó ese pago (sirve para saber el email del comprador de prueba).

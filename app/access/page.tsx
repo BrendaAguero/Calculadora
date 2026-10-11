@@ -21,7 +21,8 @@ const labels: Record<string, string> = {
 };
 
 const RESOURCES: Resource[] = ["materials", "products", "formulas", "molds"];
-const MONTHS = [1, 6, 12] as const;
+// Mensualidad Plus: solo plazo mensual (6 y 12 meses quedaron desactivados).
+const MONTHS = [1] as const;
 const cardClass = "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900";
 
 type Quote = { ok: true; price: number; discount_pct: number; final_price: number; age_pct: number; recent_pct: number } | { ok: false; error: string };
@@ -73,16 +74,16 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
   const hasMonthly = Boolean(monthly?.auto_renew);
   const referral = (await cookies()).get("ref")?.value ?? "";
-  const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : snapshot.basePlan === "BASIC" ? "Básico" : "Gratis";
+  const planLabel = snapshot.basePlan === "ADVANCED" ? "Edición Personal" : snapshot.basePlan === "BASIC" ? "Básico (plan anterior)" : "Sin Edición Personal";
 
   return (
     <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Link href="/mas" className="text-sm underline">← Volver</Link>
-          <h1 className="mt-3 text-3xl font-semibold">Licencias y acceso</h1>
+          <h1 className="mt-3 text-3xl font-semibold">Mi acceso</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Los permisos se comprueban en el servidor. Tener una pantalla o botón visible no otorga acceso por sí mismo.
+            Tu Edición Personal, la Mensualidad Plus, extras y aparatos.
           </p>
         </div>
 
@@ -92,8 +93,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <section className={cardClass}>
           <h2 className="font-semibold">Tu plan</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-neutral-500">Licencia base</span><p className="font-medium">{planLabel}</p></div>
-            <div><span className="text-neutral-500">Emprendedor</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
+            <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p></div>
+            <div><span className="text-neutral-500">Mensualidad Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
@@ -106,24 +107,24 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <PlanStore snapshot={snapshot} userId={user.id} referral={referral} />
 
         <section id="emprendedor" className={cardClass}>
-          <h2 className="font-semibold">Emprendedor</h2>
+          <h2 className="font-semibold">Mensualidad Plus</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Mientras está activo habilita todas las funciones avanzadas y módulos, sin límite de altas. Al vencer volvés a tu plan {snapshot.basePlan ? planLabel : "base"} y no se borra nada.
+            Sin publicidad, todas las actividades y módulos, sin límites de altas y modo sin conexión (próximamente). Se cobra sola cada mes y la cancelás cuando quieras: seguís con tu Edición Personal y no se borra nada.
           </p>
 
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
             <div className="mt-4 rounded-xl border border-violet-300 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
               {monthly.auto_renew ? (
                 <>
-                  <p>Tenés la <strong>suscripción mensual</strong>: se renueva cada mes. Podés cancelar la renovación cuando quieras; Emprendedor sigue activo hasta que venza.</p>
-                  <p className="mt-1 text-xs">{monthly.external_preapproval_id ? `Mercado Pago te cobra ${money(monthly.final_price)} por mes. La próxima renovación es el ${date(monthly.expires_at)}.` : "Esta suscripción no tiene cobro automático: para renovarla, pedí Emprendedor de nuevo cuando venza."}</p>
+                  <p>Tenés la <strong>suscripción mensual</strong>: se renueva cada mes. Podés cancelar la renovación cuando quieras; Plus sigue activo hasta que venza.</p>
+                  <p className="mt-1 text-xs">{monthly.external_preapproval_id ? `Mercado Pago te cobra ${money(monthly.final_price)} por mes. La próxima renovación es el ${date(monthly.expires_at)}.` : "Esta suscripción no tiene cobro automático: para renovarla, pedí Plus de nuevo cuando venza."}</p>
                   <form action={cancelEntrepreneurAutoRenew} className="mt-3">
                     <input type="hidden" name="subscription_id" value={monthly.id} />
                     <SubmitButton className="rounded-xl border border-violet-400 px-4 py-2 font-medium dark:border-violet-700">Cancelar renovación</SubmitButton>
                   </form>
                 </>
               ) : (
-                <p>Cancelaste la renovación de la suscripción mensual. Emprendedor sigue activo hasta el {date(snapshot.entrepreneurExpiresAt ?? monthly.expires_at)}.</p>
+                <p>Cancelaste la renovación de la suscripción mensual. Plus sigue activo hasta el {date(snapshot.entrepreneurExpiresAt ?? monthly.expires_at)}.</p>
               )}
             </div>
           )}
@@ -131,7 +132,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           {confirming && (
             <div role="dialog" aria-labelledby="confirmar-titulo" className="mt-4 rounded-xl border-2 border-violet-400 bg-white p-4 text-sm dark:border-violet-700 dark:bg-neutral-900">
               <p id="confirmar-titulo" className="font-semibold">¿Seguro querés comprar {monthsLabel(confirming)} más?</p>
-              <p className="mt-1 text-neutral-600 dark:text-neutral-400">Se suman al final: te quedaría Emprendedor hasta el {date(addMonths(snapshot.entrepreneurExpiresAt!, confirming))}.</p>
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">Se suman al final: te quedaría Plus hasta el {date(addMonths(snapshot.entrepreneurExpiresAt!, confirming))}.</p>
               {upgrades.filter((upgrade) => upgrade.months >= confirming).map((upgrade) => (
                 <p key={upgrade.months} className="mt-2 text-violet-800 dark:text-violet-200">Por <strong>{money(upgrade.upgrade_price)}</strong> podés actualizar a {monthsLabel(upgrade.months)} desde hoy (te descontamos {money(upgrade.credit)} por lo que te queda de tu plan actual).</p>
               ))}
@@ -172,7 +173,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
               <p>Pedido pendiente: <strong>{pending.upgrade_credit != null ? `actualización a ${monthsLabel(pending.duration_months)}` : pending.duration_months === 1 ? "suscripción mensual" : monthsLabel(pending.duration_months)}</strong> por {money(pending.final_price)}{pending.upgrade_credit != null ? ` (con ${money(pending.upgrade_credit)} descontados por tu plan actual)` : Number(pending.total_discount_percentage) > 0 ? ` (con ${Number(pending.total_discount_percentage)} % de descuento)` : ""}, enviado el {date(pending.created_at)}.</p>
               <p className="mt-1">{!mercadoPagoReady() ? 'Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.'
-                : pending.preapproval_status === 'authorized' ? 'Ya autorizaste la suscripción en Mercado Pago. Emprendedor se activa solo apenas se acredite el primer cobro (suele tardar unos minutos).'
+                : pending.preapproval_status === 'authorized' ? 'Ya autorizaste la suscripción en Mercado Pago. Plus se activa solo apenas se acredite el primer cobro (suele tardar unos minutos).'
                 : pending.duration_months === 1 && pending.auto_renew ? 'Autorizá la suscripción en Mercado Pago: se cobra ahora y después una vez por mes, hasta que la canceles.'
                 : 'Pagalo con Mercado Pago y se activa en el momento.'}</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -190,7 +191,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               </div>
             </div>
           ) : !snapshot.baseLicenseActive ? (
-            <p className="mt-4 text-sm text-neutral-500">Para sumar Emprendedor primero necesitás Básico o Avanzado. <a href="#planes" className="underline">Ver planes</a></p>
+            <p className="mt-4 text-sm text-neutral-500">Para sumar Plus primero necesitás la Edición Personal. <a href="/comprar" className="underline">Comprarla</a></p>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
               {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
@@ -198,7 +199,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
                   const title = months === 1 ? "Suscripción mensual" : monthsLabel(months);
-                  // La suscripción mensual no se suma: se contrata cuando no hay Emprendedor vigente.
+                  // La suscripción mensual no se suma: se contrata cuando no hay Plus vigente.
                   const monthlyBlocked = months === 1 && snapshot.entrepreneurActive;
                   if (!quote?.ok || monthlyBlocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {monthlyBlocked ? (hasMonthly ? "ya la tenés" : `disponible cuando venza tu plan actual (${date(snapshot.entrepreneurExpiresAt!)})`) : quote && !quote.ok ? quote.error : "no disponible"}</div>;
                   // Comparación con pagar mes a mes: los plazos largos salen más baratos.
@@ -217,13 +218,13 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                   );
                 })}
               </div>
-              <p className="text-xs text-neutral-500">Descuentos: por antigüedad de tu licencia o por compra reciente de licencia. Si te corresponden los dos, se aplica el mayor.</p>
+              
               <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
                 <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
               </label>
               {mercadoPagoReady() && !snapshot.entrepreneurActive && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
-              <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</SubmitButton>
-              {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo. La suscripción mensual se cobra sola cada mes hasta que la canceles.</p>}
+              <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Plus'}</SubmitButton>
+              {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Plus se activa solo. La suscripción mensual se cobra sola cada mes hasta que la canceles.</p>}
             </form>
           )}
         </section>

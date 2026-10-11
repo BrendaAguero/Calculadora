@@ -34,7 +34,7 @@ export default async function RegretPage({ searchParams }: { searchParams: Promi
           <label className={labelClass}>Nombre y apellido<input name="full_name" required minLength={2} maxLength={120} autoComplete="name" defaultValue={profile?.full_name ?? ''} className={inputClass} /></label>
           <label className={labelClass}>Email de la cuenta o con el que pagaste<input name="email" type="email" required maxLength={200} autoComplete="email" defaultValue={profile?.email ?? user?.email ?? ''} className={inputClass} /></label>
           <label className={labelClass}>Fecha de la compra (opcional)<input name="purchase_date" type="date" className={inputClass} /></label>
-          <label className={labelClass}>Número de operación de Mercado Pago o qué compraste (opcional)<input name="purchase_reference" maxLength={120} className={inputClass} placeholder="Ej.: 183629276202 o Emprendedor 6 meses" /></label>
+          <label className={labelClass}>Número de operación de Mercado Pago o qué compraste (opcional)<input name="purchase_reference" maxLength={120} className={inputClass} placeholder="Ej.: 183629276202 o Edición Personal" /></label>
           <label className={labelClass}>Comentario (opcional)<textarea name="details" rows={3} maxLength={1000} className={inputClass} /></label>
           <div><SubmitButton className={primaryButton} pendingText="Enviando…">Revocar mi compra</SubmitButton></div>
           <p className="text-xs text-neutral-500">También podés pedirlo escribiendo a <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>

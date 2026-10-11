@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { getAccessSnapshot } from "@/lib/access/permissions";
+import { getAccessSnapshot, showsAds } from "@/lib/access/permissions";
 import { getBanner } from "@/lib/banner";
 
-// Banner fijo de la versión gratis. Solo lo ven las cuentas sin licencia; no usa cookies ni anuncios de terceros.
+// Banner fijo de la Edición Personal. Lo ocultan Mensualidad Plus, la administración y la cuenta de prueba. Sin cookies ni anuncios de terceros.
 export async function FreeBanner() {
   const snapshot = await getAccessSnapshot();
-  if (!snapshot?.isFree) return null;
+  if (!snapshot || !showsAds(snapshot)) return null;
   const banner = await getBanner();
   if (!banner.active) return null;
 
@@ -26,7 +26,7 @@ export async function FreeBanner() {
 
   return (
     <aside aria-label="Publicidad">
-      <p className="mb-1 text-[10px] uppercase tracking-wide text-neutral-400">Publicidad · versión gratis</p>
+      <p className="mb-1 text-[10px] uppercase tracking-wide text-neutral-400">Publicidad</p>
       {banner.link?.startsWith("/") ? <Link href={banner.link} className={box}>{body}</Link>
         : banner.link ? <a href={banner.link} target="_blank" rel="noopener noreferrer sponsored" className={box}>{body}</a>
         : <div className={box}>{body}</div>}

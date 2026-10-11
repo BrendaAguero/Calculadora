@@ -14,12 +14,14 @@ export default async function AdminHome() {
   ]);
 
   const sections: [string, string, string, number?][] = [
+    ['/admin/emails', 'Edición Personal: emails', 'Aprobar emails (transferencia, MercadoLibre), revocar y liberar aparatos.'],
+    ['/admin/precios', 'Precios', 'Edición Personal, Mensualidad Plus y aparato extra.'],
     ['/admin/usuarios', 'Usuarios', 'Cuentas, licencias, Emprendedor; suspender y dar licencias de cortesía.', users],
-    ['/admin/emprendedor', 'Pedidos de Emprendedor', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
+    ['/admin/emprendedor', 'Pedidos de Mensualidad Plus', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
     ['/admin/ventas', 'Ventas de la plataforma', 'Compras, pagos de Mercado Pago y suscripciones.'],
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],
     ['/admin/arrepentimiento', 'Arrepentimiento y bajas', 'Pedidos para revocar una compra (10 días) o dar de baja la suscripción.', regrets],
-    ['/admin/banner', 'Banner de la versión gratis', 'El aviso que ven las cuentas gratis: tus planes o un sponsor.'],
+    ['/admin/banner', 'Banner de publicidad', 'El aviso que ve quien no tiene Mensualidad Plus: tus planes o un sponsor.'],
     ['/admin/auditoria', 'Auditoría', 'Todo lo que se hizo desde la administración.'],
   ];
 

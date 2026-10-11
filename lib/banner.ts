@@ -4,10 +4,10 @@ export type Banner = { title: string; text: string; link: string | null; button:
 
 // Banner por defecto (si la administración todavía no cargó uno): promociona los planes pagos.
 export const DEFAULT_BANNER: Banner = {
-  title: "Sin publicidad y con más espacio",
-  text: "Con Básico guardás hasta 30 materiales y 10 productos, y usás la calculadora completa. Pago único.",
-  link: "/access#planes",
-  button: "Ver planes",
+  title: "Sin publicidad, sin límites y sin conexión",
+  text: "Con Mensualidad Plus también tenés todas las actividades y módulos.",
+  link: "/access#emprendedor",
+  button: "Ver Plus",
   image: null,
   active: true,
 };

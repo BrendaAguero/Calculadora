@@ -49,7 +49,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       <HelpTip guide="ventas"><p>Cada venta descuenta stock y calcula la ganancia con el costo de producción, los descuentos y las comisiones.</p><p>Si te equivocás, anulala: el stock vuelve.</p></HelpTip>
 
       {!allowed ? (
-        <FeatureLocked title="Ventas es parte de Emprendedor.">Registrá cada venta con su precio, descuento y comisión, y conocé tu ganancia y margen reales.</FeatureLocked>
+        <FeatureLocked title="Ventas es parte de la Edición Personal.">Registrá cada venta con su precio, descuento y comisión, y conocé tu ganancia y margen reales.</FeatureLocked>
       ) : (
         <>
           {params.ok && <div role="status" className={okBox}>{params.ok}</div>}

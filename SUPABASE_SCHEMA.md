@@ -726,6 +726,16 @@ Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo 
 - `revoke_purchase_items(purchase)` (interna): al devolverse el pago, la licencia o el módulo pasan a `refunded` (y vuelve la Básico anterior si era un pase).
 - Banner: `content_entries` (`banner` / `free`), editado con `admin_save_banner(...)` (solo admin; enlaces https o internos).
 
+## Edición Personal
+
+- `approved_emails` (email único, origen online/transferencia/mercadolibre/revendedora/cortesía, estado, usuario y licencia). RLS: lectura admin o la propia persona.
+- `personal_orders`: pedidos online sin cuenta; `create_personal_order(email, nombre)` (anon) y `mp_record_personal_order(p)` (service_role) que al aprobarse aprueba el email.
+- `approve_email_internal`, `grant_personal_license` (internas), `admin_approve_email`, `admin_revoke_email`, `login_allowed(email)` (service_role).
+- `handle_new_user`: da Yeso y, si el email está aprobado, la Edición Personal (licencia ADVANCED por otorgamiento).
+- `user_devices` + `allowed_devices(user)` (2 + aparatos extra comprados), `register_device(device_id, etiqueta)` → 'ok'/'limit', `release_device(id)`.
+- `admin_set_prices(...)`: precios de la Edición Personal (online/transferencia/ML), mensualidad y aparato extra.
+- Planes BASIC y FREE desactivados; ADVANCED renombrado «Edición Personal»; catálogo 6/12 meses y descuentos desactivados; mensual a $4.900.
+
 ## Regla para futuras actividades
 
 No asumir que todas las actividades usan yeso/agua/porcentaje de agua.
@@ -754,3 +764,8 @@ Después de aprobación:
 8. funciones necesarias;
 9. triggers solo cuando sean necesarios;
 10. pruebas.
+
+### Clave de acceso (20261012_clave_de_acceso)
+- `approved_emails.key_hash` (sha256, único), `key_hint`, `key_cipher` (AES-256-GCM con secreto del servidor), `key_created_at`. Las columnas `key_hash` y `key_cipher` no son legibles por `authenticated`.
+- `set_email_key` (admin o service_role), `key_lookup(hash)` y `approved_email_for(email)` (solo service_role).
+- Se entra en `/login` con la clave (`redeemAccessKey`); la sesión queda abierta en el aparato. La clave se crea y se manda por correo (SMTP propio, `SMTP_USER`/`SMTP_PASS`) al aprobar un email o al aprobarse un pago online.

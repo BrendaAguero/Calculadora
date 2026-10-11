@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { registerCurrentDevice } from "@/lib/devices";
 
 const OTP_TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", "email_change", "email"];
 
@@ -41,12 +42,14 @@ export async function GET(request: Request) {
     return fail("missing_code");
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
 
-  // Primer ingreso o recuperación: hay que crear la contraseña. La recuperación se reconoce por el
-  // método de ingreso de la sesión, porque Supabase puede descartar ?next= si esa dirección no está permitida.
-  if (!user?.user_metadata?.password_set || type === "recovery" || isRecovery(accessToken) || safeNext === "/set-password") {
+  // Edición Personal: cada cuenta se usa en una cantidad limitada de aparatos.
+  if (!(await registerCurrentDevice())) return fail("device_limit");
+
+  // Recuperación de contraseña: hay que crear una nueva. Se reconoce por el método de ingreso de la sesión,
+  // porque Supabase puede descartar ?next= si esa dirección no está permitida. (Con el ingreso por código ya no hace falta contraseña.)
+  if (type === "recovery" || isRecovery(accessToken) || safeNext === "/set-password") {
     return NextResponse.redirect(new URL("/set-password", requestUrl.origin));
   }
 

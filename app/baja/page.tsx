@@ -23,8 +23,8 @@ export default async function CancellationPage({ searchParams }: { searchParams:
     <PublicPage>
       <h1 className="text-2xl font-bold">Botón de baja</h1>
       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        Desde acá das de baja la suscripción mensual de Emprendedor: no se te vuelve a cobrar. Lo que ya pagaste sigue activo hasta que vence.
-        Las licencias, actividades y módulos son de pago único, así que no tienen nada que dar de baja.
+        Desde acá das de baja la Mensualidad Plus: no se te vuelve a cobrar. Lo que ya pagaste sigue activo hasta que vence.
+        La Edición Personal y los extras son de pago único, así que no tienen nada que dar de baja.
       </p>
 
       {codigo && (
@@ -40,7 +40,7 @@ export default async function CancellationPage({ searchParams }: { searchParams:
         <section className={`mt-6 ${cardClass}`}>
           {renewing?.length ? (
             <>
-              <p className="text-sm">Tenés la suscripción mensual con renovación automática{renewing[0].status === 'active' ? `; Emprendedor sigue activo hasta el ${date(renewing[0].expires_at)}` : ''}.</p>
+              <p className="text-sm">Tenés la suscripción mensual con renovación automática{renewing[0].status === 'active' ? `; Plus sigue activo hasta el ${date(renewing[0].expires_at)}` : ''}.</p>
               <form action={cancelMySubscriptions} className="mt-4">
                 <SubmitButton className={primaryButton} pendingText="Dando de baja…">Dar de baja mi suscripción</SubmitButton>
               </form>

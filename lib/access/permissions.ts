@@ -120,11 +120,20 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
   };
 }
 
+// Funciones de gestión incluidas en la Edición Personal (licencia base).
+const PERSONAL_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
+
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   if (snapshot.isAdmin || snapshot.isTester) return true;
   if (snapshot.accountStatus !== "active" || !snapshot.baseLicenseActive) return false;
+  // Mensualidad Plus (la suscripción mensual) desbloquea todos los módulos.
   if (snapshot.entrepreneurActive) return true;
-  return snapshot.modules.includes(feature);
+  return PERSONAL_FEATURES.has(feature) || snapshot.modules.includes(feature);
+}
+
+// Publicidad: la ven todas las cuentas salvo las que tienen Mensualidad Plus (y administración / prueba).
+export function showsAds(snapshot: AccessSnapshot) {
+  return !snapshot.isAdmin && !snapshot.isTester && !snapshot.entrepreneurActive;
 }
 
 export function getResourceLimit(snapshot: AccessSnapshot, resource: Resource): number {
@@ -158,9 +167,8 @@ export async function createLimitError(supabase: Supabase, userId: string, resou
   const { count, error } = await countActive(supabase, userId, resource);
   if (error) return `No se pudo comprobar el límite de tu plan: ${error}`;
   if (count < limit) return null;
-  if (!snapshot.basePlan) return `Llegaste al límite de la versión gratis: ${limit} ${label}. Con Básico o Avanzado podés guardar muchos más.`;
-  const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : "Básico";
-  return `Llegaste al límite de tu plan ${planLabel}: ${limit} ${label} activos. Podés archivar alguno que no uses o activar Emprendedor para tener altas sin límite.`;
+  if (!snapshot.basePlan) return `Llegaste al límite: ${limit} ${label}. Con la Edición Personal podés guardar muchos más.`;
+  return `Llegaste al límite de tu Edición Personal: ${limit} ${label} activos. Podés archivar alguno que no uses o sumar Mensualidad Plus para tener altas sin límite.`;
 }
 
 export async function canCreateResource(resource: Resource, currentCount: number): Promise<boolean> {

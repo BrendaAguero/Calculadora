@@ -1,5 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { issueKey, sendKeyEmail } from "@/lib/access-key";
+import { PRODUCTION_ORIGIN, siteOrigin } from "@/lib/origin";
 
 const API = "https://api.mercadopago.com";
 
@@ -69,8 +71,11 @@ export async function processPayment(paymentId: string) {
     const { data: purchase } = await admin.from("purchases").select("id").eq("id", purchaseId).maybeSingle();
     if (!purchase) {
       const { data: sub } = await admin.from("subscriptions").select("id,external_preapproval_id").eq("id", purchaseId).eq("duration_months", 1).maybeSingle();
-      if (!sub) return "purchase_not_found";
-      return recordSubscriptionPayment(sub.id, sub.external_preapproval_id, payment);
+      if (sub) return recordSubscriptionPayment(sub.id, sub.external_preapproval_id, payment);
+      // Pedido online de la Edición Personal (se compra sin cuenta, con el email).
+      const { data: order } = await admin.from("personal_orders").select("id").eq("id", purchaseId).maybeSingle();
+      if (!order) return "purchase_not_found";
+      return recordPersonalOrder(order.id, payment);
     }
     purchaseId = purchase.id;
   }
@@ -89,6 +94,35 @@ export async function processPayment(paymentId: string) {
   if (error) throw new Error(error.message);
   await cancelStalePreapprovals(purchaseId);
   return data as string;
+}
+
+async function recordPersonalOrder(orderId: string, payment: Payment) {
+  const admin = createAdminClient();
+  if (!admin) return "not_configured";
+  const { data, error } = await admin.rpc("mp_record_personal_order", {
+    p: { order_id: orderId, payment_id: String(payment.id), status: payment.status, amount: payment.transaction_amount, currency: payment.currency_id },
+  });
+  if (error) throw new Error(error.message);
+  // Recién aprobado: se crea la clave de acceso y se manda por correo (una sola vez, porque solo un aviso lo activa).
+  if (data === "activated") await sendPersonalKey(admin, orderId);
+  return `personal_${data as string}`;
+}
+
+async function sendPersonalKey(admin: NonNullable<ReturnType<typeof createAdminClient>>, orderId: string) {
+  try {
+    const { data: order } = await admin.from("personal_orders").select("email").eq("id", orderId).maybeSingle();
+    if (!order) return;
+    const { data: rows } = await admin.rpc("approved_email_for", { p_email: order.email });
+    const approved = (rows as { id: string; key_hash: string | null }[] | null)?.[0];
+    if (!approved || approved.key_hash) return;
+    const key = await issueKey(admin, approved.id);
+    let origin = PRODUCTION_ORIGIN;
+    try { origin = await siteOrigin(); } catch { /* fuera de una petición: se usa producción */ }
+    await sendKeyEmail(order.email, key, origin);
+  } catch (error) {
+    // El pago ya quedó aprobado; si falla el correo, la administración puede reenviar la clave.
+    console.error("No se pudo mandar la clave de acceso", error instanceof Error ? error.message : error);
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
