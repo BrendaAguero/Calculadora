@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { archiveMold, restoreMold, updateMold } from '../actions';
 import { MoldForm } from '../mold-form';
 
-const pageClass = 'mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
+const pageClass = 'mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
 const errorClass = 'rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200';
 
 export default async function MoldDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {

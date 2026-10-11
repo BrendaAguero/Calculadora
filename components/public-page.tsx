@@ -4,7 +4,7 @@ import { LegalLinks } from '@/components/legal-links';
 // Contenedor para páginas que se pueden abrir sin sesión (ayuda, legales, arrepentimiento).
 export function PublicPage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <div className="min-h-screen text-neutral-900 dark:text-neutral-100">
       <main className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
         <Link href="/" className="text-sm font-medium text-orange-800 dark:text-orange-300">Calculadora Emprender</Link>
         <div className="mt-4">{children}</div>

@@ -1,9 +1,9 @@
-export const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
-export const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
-export const inputClass = 'w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
+export const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:max-w-4xl lg:px-8 lg:py-10';
+export const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
+export const inputClass = 'w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-900 focus:border-orange-600 focus:bg-white dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 export const labelClass = 'grid gap-1 text-xs text-neutral-500 dark:text-neutral-400';
-export const primaryButton = 'rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900';
-export const secondaryButton = 'rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700';
+export const primaryButton = 'rounded-xl bg-orange-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-500';
+export const secondaryButton = 'rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium dark:border-neutral-700 dark:bg-neutral-900';
 export const errorBox = 'rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200';
 export const okBox = 'rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200';
 export const warnBox = 'rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100';

@@ -5,8 +5,8 @@ import { archiveFormula, duplicateFormula, restoreFormula } from '../actions';
 import { INGREDIENT_LABELS } from '../constants';
 import { Scaler } from '../scaler';
 
-const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
-const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
+const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
+const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const errorClass = 'rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200';
 const secondaryButton = 'rounded-xl border border-neutral-300 px-3 py-2 text-sm font-medium dark:border-neutral-700';
 

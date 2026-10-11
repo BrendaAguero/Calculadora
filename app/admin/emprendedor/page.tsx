@@ -21,7 +21,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
   const requests = (data ?? []) as Request[];
 
   return (
-    <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <main className="min-h-screen px-5 py-8 text-neutral-900 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Link href="/admin" className="text-sm underline">← Administración</Link>
@@ -37,7 +37,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
         ) : (
           <section className="grid gap-3">
             {requests.map((request) => (
-              <div key={request.subscription_id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+              <div key={request.subscription_id} className="rounded-3xl bg-white p-5 dark:bg-neutral-900">
                 <p className="font-medium">{request.user_name || request.user_email}</p>
                 {request.user_name && <p className="text-sm text-neutral-500">{request.user_email}</p>}
                 <p className="mt-2 text-sm">

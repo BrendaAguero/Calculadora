@@ -23,7 +23,7 @@ const labels: Record<string, string> = {
 const RESOURCES: Resource[] = ["materials", "products", "formulas", "molds"];
 // Mensualidad Plus: solo plazo mensual (6 y 12 meses quedaron desactivados).
 const MONTHS = [1] as const;
-const cardClass = "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900";
+const cardClass = "rounded-3xl bg-white p-5 dark:bg-neutral-900";
 
 type Quote = { ok: true; price: number; discount_pct: number; final_price: number; age_pct: number; recent_pct: number } | { ok: false; error: string };
 type UpgradeQuote = { ok: true; months: number; from_months: number; credit: number; final_price: number; upgrade_price: number } | { ok: false; error: string };
@@ -77,7 +77,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const planLabel = snapshot.basePlan === "ADVANCED" ? "Edición Personal" : snapshot.basePlan === "BASIC" ? "Básico (plan anterior)" : "Sin Edición Personal";
 
   return (
-    <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <main className="min-h-screen px-5 py-8 text-neutral-900 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Link href="/mas" className="text-sm underline">← Volver</Link>

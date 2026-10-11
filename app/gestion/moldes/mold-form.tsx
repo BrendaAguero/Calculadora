@@ -43,7 +43,7 @@ export function MoldForm({ activities, activityCode, action, initialValues, mold
         </div>
       )}
       {/* key: al volver con error, se remonta el formulario con los valores enviados para no perderlos. */}
-      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <form key={JSON.stringify(values)} action={formAction} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
         {moldId && <input type="hidden" name="mold_id" value={moldId} />}
         {activities && activities.length === 1 && (
           // Con una sola actividad no hace falta preguntar.

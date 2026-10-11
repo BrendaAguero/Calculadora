@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { addPrice, changeLink, endPrice, updateProduct } from '../actions';
 import { PRICE_TYPES, PRODUCT_STATUSES, priceTypeLabel, statusLabel } from '../constants';
 
-const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
-const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
+const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
+const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const inputClass = 'w-full rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const primaryButton = 'rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white dark:bg-white dark:text-neutral-900';
 const smallButton = 'rounded-lg border border-neutral-300 px-2.5 py-1 text-xs dark:border-neutral-700';

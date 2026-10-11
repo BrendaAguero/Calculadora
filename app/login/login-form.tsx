@@ -28,10 +28,12 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
   const back = () => { setMode("code"); setRound(r => r + 1); };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-neutral-50 px-6 text-neutral-900 dark:bg-neutral-950 dark:text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-neutral-900 dark:text-white">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-orange-800 dark:text-orange-300">Calculadora Emprender</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element -- ícono chico y fijo */}
+          <img src="/icons/icon-192.png" alt="" className="mx-auto mb-3 h-16 w-16 rounded-2xl" />
+          <h1 className="text-3xl text-neutral-900 dark:text-white">Calculadora Emprender</h1>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Edición Personal</p>
         </div>
 

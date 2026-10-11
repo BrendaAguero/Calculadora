@@ -7,7 +7,7 @@ import { buyModule, cancelPurchase, payPurchase, releaseDevice } from './actions
 import { signOutEverywhere } from '../seguridad/actions';
 
 const money = (value: number | string) => Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-const cardClass = 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
+const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const dateTime = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires' });
 
 // Extras que ya funcionan; el resto se muestra como «Próximamente» (con Plus se incluyen al estar listos).
