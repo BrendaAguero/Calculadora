@@ -33,7 +33,7 @@ async function checkout(subscriptionId: string): Promise<never> {
       price: Number(purchase!.total),
       origin: await siteOrigin(),
     });
-    initPoint = preference.init_point;
+    initPoint = preference.url;
   } catch {
     back('error', 'No se pudo conectar con Mercado Pago. Probá de nuevo en un rato; tu pedido quedó guardado.');
   }
