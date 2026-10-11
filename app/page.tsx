@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app-shell";
 import { LegalLinks } from "@/components/legal-links";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InstallApp } from "@/components/install-app";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -28,6 +29,7 @@ export default async function Home() {
         <ThemeToggle />
       </header>
       {/* Res. 424/2020 y 316/2018: arrepentimiento y baja a la vista en la primera pantalla. */}
+      <div className="mt-4"><InstallApp /></div>
       <p className="mt-2 flex gap-4 text-xs"><a href="/arrepentimiento" className="text-neutral-500 underline dark:text-neutral-400">Botón de arrepentimiento</a><a href="/baja" className="text-neutral-500 underline dark:text-neutral-400">Botón de baja</a></p>
 
       {done < steps.length && (
