@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
+import { Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
 
 // Menú de la app: el mismo en la barra del costado (computadora), la barra de abajo y «Más» (celular).
 export type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -27,6 +27,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: "Mi cuenta", items: [
     { href: "/access", label: "Mi acceso", icon: Star },
     { href: "/profile", label: "Mi perfil", icon: User },
+    { href: "/revendedora", label: "Revendedora", icon: Store },
     { href: "/preferences", label: "Preferencias", icon: Settings },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
   ] },

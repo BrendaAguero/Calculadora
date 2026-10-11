@@ -74,8 +74,15 @@ export async function processPayment(paymentId: string) {
       if (sub) return recordSubscriptionPayment(sub.id, sub.external_preapproval_id, payment);
       // Pedido online de la Edición Personal (se compra sin cuenta, con el email).
       const { data: order } = await admin.from("personal_orders").select("id").eq("id", purchaseId).maybeSingle();
-      if (!order) return "purchase_not_found";
-      return recordPersonalOrder(order.id, payment);
+      if (order) return recordPersonalOrder(order.id, payment);
+      // Paquete de licencias de una revendedora.
+      const { data: pack } = await admin.from("reseller_orders").select("id").eq("id", purchaseId).maybeSingle();
+      if (!pack) return "purchase_not_found";
+      const { data: packResult, error: packError } = await admin.rpc("mp_record_reseller_order", {
+        p: { order_id: pack.id, payment_id: String(payment.id), status: payment.status, amount: payment.transaction_amount, currency: payment.currency_id },
+      });
+      if (packError) throw new Error(packError.message);
+      return `reseller_${packResult as string}`;
     }
     purchaseId = purchase.id;
   }

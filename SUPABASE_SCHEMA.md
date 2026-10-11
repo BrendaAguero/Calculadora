@@ -773,3 +773,11 @@ Después de aprobación:
 ### Proporciones por actividad (20261012_proporciones_por_actividad)
 - `activity_settings (user_id, activity_code, settings jsonb, updated_at)`: proporciones, % de pigmento, merma, densidad y precios por kg propios de cada usuaria para RESINA, JESMONITE y CEMENTO_DECORATIVO. RLS: cada una lee y escribe solo las suyas.
 - Los cálculos de estas actividades se guardan en `calculations` (modo `standard`) y `calculation_items`; la primera línea lleva `metadata.kind = 'mix'` con la receta completa.
+
+### Revendedoras (20261012_revendedoras)
+- `reseller_accounts(user_id, status)`, `reseller_orders(id, user_id, quantity 5|10|20, unit_price, total, status, payment_reference)`, `reseller_clients(id, reseller_id, email, full_name, status pending|approved|rejected, approved_email_id, note)`. RLS: cada revendedora ve lo suyo; la administración ve todo.
+- Saldo = licencias de paquetes aprobados − clientas pendientes o aprobadas (`reseller_balance`, `my_reseller_balance`).
+- `become_reseller`, `request_reseller_order`, `mp_record_reseller_order` (service_role), `reseller_add_client`, `reseller_cancel_client`, `admin_decide_reseller_client` (aprueba el email con origen «revendedora»), `admin_set_reseller_price`. Precio en `pricing_config.reseller_unit_price`.
+
+### Actividades (20261012_actividad_principal)
+- La principal la elige la usuaria (`choose_primary_activity`); la segunda sale a mitad de precio y las siguientes a precio normal (`activity_price_for`, `my_activity_price`, `request_activity_purchase`); `apply_purchase_activation` activa compras `activity`.
