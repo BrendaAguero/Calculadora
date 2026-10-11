@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { addStockItem } from './actions';
-import { money, qty } from './constants';
+import { amount, money } from './constants';
 import { isLow, loadStock } from './data';
 
 const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
@@ -76,10 +76,10 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="font-medium">{row.name}{row.archived && <span className="ml-2 text-xs text-neutral-500">(archivado)</span>}</h2>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{row.minimum !== null ? `Mínimo ${qty(row.minimum)} ${row.unit}` : 'Sin mínimo'}{row.unitValue != null ? ` · Valor ${money(Math.max(row.quantity, 0) * row.unitValue)}` : ''}</p>
+                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{row.minimum !== null ? `Mínimo ${amount(row.minimum, row.unit)}` : 'Sin mínimo'}{row.unitValue != null ? ` · Valor ${money(Math.max(row.quantity, 0) * row.unitValue)}` : ''}</p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-lg font-semibold ${row.quantity < 0 ? 'text-red-600 dark:text-red-400' : ''}`}>{qty(row.quantity)} {row.unit}</p>
+                    <p className={`text-lg font-semibold ${row.quantity < 0 ? 'text-red-600 dark:text-red-400' : ''}`}>{amount(row.quantity, row.unit)}</p>
                     {isLow(row) && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">Bajo mínimo</span>}
                   </div>
                 </div>

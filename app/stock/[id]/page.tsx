@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { registerMovement, updateMinimum } from '../actions';
-import { MOVEMENT_KINDS, MOVEMENT_LABELS, compatibleUnits, money, qty } from '../constants';
+import { MOVEMENT_KINDS, MOVEMENT_LABELS, amount, compatibleUnits, money } from '../constants';
 import { isLow, loadStock } from '../data';
 
 const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 bg-white px-4 py-6 pb-24 text-neutral-900 dark:bg-neutral-950 dark:text-white';
@@ -43,8 +43,8 @@ export default async function StockItemPage({ params, searchParams }: { params: 
 
       <section className="rounded-3xl bg-neutral-950 p-5 text-white dark:bg-white dark:text-neutral-950">
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-          <div><span className="opacity-60">Cantidad</span><strong className={`mt-1 block text-2xl ${row.quantity < 0 ? 'text-red-400 dark:text-red-600' : ''}`}>{qty(row.quantity)} {row.unit}</strong></div>
-          <div><span className="opacity-60">Mínimo</span><strong className="mt-1 block text-lg">{row.minimum !== null ? `${qty(row.minimum)} ${row.unit}` : '—'}</strong></div>
+          <div><span className="opacity-60">Cantidad</span><strong className={`mt-1 block text-2xl ${row.quantity < 0 ? 'text-red-400 dark:text-red-600' : ''}`}>{amount(row.quantity, row.unit)}</strong></div>
+          <div><span className="opacity-60">Mínimo</span><strong className="mt-1 block text-lg">{row.minimum !== null ? `${amount(row.minimum, row.unit)}` : '—'}</strong></div>
           <div><span className="opacity-60">Valor al costo</span><strong className="mt-1 block text-lg">{row.unitValue != null ? money(Math.max(row.quantity, 0) * row.unitValue) : '—'}</strong></div>
         </div>
         {isLow(row) && <p className="mt-3 rounded-xl bg-amber-400 px-3 py-2 text-sm font-medium text-amber-950">Está en el mínimo o por debajo: conviene reponer.</p>}
@@ -76,7 +76,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
         <h2 className="font-semibold">Mínimo para el aviso</h2>
         <form action={updateMinimum} className="mt-3 flex flex-wrap items-end gap-2">
           <input type="hidden" name="item_id" value={row.id} />
-          <label className={labelClass}>Mínimo en {row.unit}<input name="minimum" inputMode="decimal" defaultValue={row.minimum ?? ''} placeholder="Sin mínimo" className={inputClass} /></label>
+          <label className={labelClass}>Mínimo en {row.unit === 'unidad' ? 'unidades' : row.unit}<input name="minimum" inputMode="decimal" defaultValue={row.minimum ?? ''} placeholder="Sin mínimo" className={inputClass} /></label>
           <button type="submit" className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700">Guardar</button>
         </form>
         <p className="mt-2 text-xs text-neutral-500">Dejalo vacío para no recibir avisos.</p>
@@ -95,7 +95,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
                     <p className="font-medium">{MOVEMENT_LABELS[movement.movement_type] ?? movement.movement_type}</p>
                     <p className="text-xs text-neutral-500">{new Date(movement.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}{movement.notes ? ` · ${movement.notes}` : ''}</p>
                   </div>
-                  <span className={`font-medium ${Number(movement.quantity) < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>{Number(movement.quantity) > 0 ? '+' : ''}{qty(movement.quantity)} {movement.unit}</span>
+                  <span className={`font-medium ${Number(movement.quantity) < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>{Number(movement.quantity) > 0 ? '+' : ''}{amount(movement.quantity, movement.unit)}</span>
                 </li>
               ))}
             </ul>}

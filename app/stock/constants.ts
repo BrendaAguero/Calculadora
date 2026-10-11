@@ -43,4 +43,6 @@ export function convert(quantity: number, from: string, to: string) {
 }
 
 export const qty = (value: number | string | null) => Number(value ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 3 });
+// Cantidad con su unidad, en plural cuando corresponde («1 unidad», «5 unidades»).
+export const amount = (value: number | string | null, unit: string) => `${qty(value)} ${unit === 'unidad' && Math.abs(Number(value ?? 0)) !== 1 ? 'unidades' : unit}`;
 export const money = (value: number | string | null) => Number(value ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
