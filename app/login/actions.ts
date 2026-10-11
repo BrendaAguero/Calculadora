@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { siteOrigin as authOrigin } from "@/lib/origin";
 import { redirect } from "next/navigation";
+import { isLeakedPassword, weakPasswordReason } from "@/lib/password";
 
 export type ActionState = { error?: string; success?: boolean };
 
@@ -73,6 +74,12 @@ export async function setPassword(_prevState: ActionState, formData: FormData): 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const weak = weakPasswordReason(password, user.email);
+  if (weak) return { error: weak };
+  if (await isLeakedPassword(password)) {
+    return { error: "Esa contraseña apareció en filtraciones de otros sitios, así que no es segura. Elegí otra que no uses en ningún otro lado." };
+  }
 
   const { error } = await supabase.auth.updateUser({
     password,

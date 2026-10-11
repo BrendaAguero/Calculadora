@@ -16,6 +16,9 @@ export default function SetPasswordPage() {
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
             Este paso es necesario para que después puedas ingresar con tu email y contraseña.
           </p>
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Mínimo 8 caracteres. Usá una que no uses en otros sitios: revisamos que no haya aparecido en filtraciones conocidas, sin enviarla a nadie.
+          </p>
         </div>
         <form action={action} className="space-y-4">
           <div>
