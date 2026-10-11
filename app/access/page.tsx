@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
-import { cancelEntrepreneurRequest, requestEntrepreneur } from "./actions";
+import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, requestEntrepreneur } from "./actions";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -35,14 +35,18 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [counts, { data: pending }, quotes] = await Promise.all([
+  const [counts, { data: pending }, { data: monthly }, quotes] = await Promise.all([
     Promise.all(RESOURCES.map((resource) => countActive(supabase, user.id, resource))),
     supabase.from("subscriptions").select("id, duration_months, final_price, total_discount_percentage, created_at").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
+    // Suscripción mensual vigente (la más nueva), con o sin renovación.
+    supabase.from("subscriptions").select("id, auto_renew, expires_at").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     snapshot.baseLicenseActive
       ? Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null))
       : Promise.resolve([]),
   ]);
 
+  const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
+  const hasMonthly = Boolean(monthly?.auto_renew);
   const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : snapshot.basePlan === "BASIC" ? "Básico" : "Sin licencia";
 
   return (
@@ -78,9 +82,26 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             Mientras está activo habilita todas las funciones avanzadas y módulos, sin límite de altas. Al vencer volvés a tu plan {snapshot.basePlan ? planLabel : "base"} y no se borra nada.
           </p>
 
+          {monthly && (
+            <div className="mt-4 rounded-xl border border-violet-300 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
+              {monthly.auto_renew ? (
+                <>
+                  <p>Tenés la <strong>suscripción mensual</strong>: se renueva cada mes. Podés cancelar la renovación cuando quieras; Emprendedor sigue activo hasta que venza.</p>
+                  <p className="mt-1 text-xs">Por ahora la renovación no se cobra sola: eso llega con el pago por Mercado Pago.</p>
+                  <form action={cancelEntrepreneurAutoRenew} className="mt-3">
+                    <input type="hidden" name="subscription_id" value={monthly.id} />
+                    <button type="submit" className="rounded-xl border border-violet-400 px-4 py-2 font-medium dark:border-violet-700">Cancelar renovación</button>
+                  </form>
+                </>
+              ) : (
+                <p>Cancelaste la renovación de la suscripción mensual. Emprendedor sigue activo hasta el {date(snapshot.entrepreneurExpiresAt ?? monthly.expires_at)}.</p>
+              )}
+            </div>
+          )}
+
           {pending ? (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-              <p>Pedido pendiente: <strong>{monthsLabel(pending.duration_months)}</strong> por {money(pending.final_price)}{Number(pending.total_discount_percentage) > 0 ? ` (con ${Number(pending.total_discount_percentage)} % de descuento)` : ""}, enviado el {date(pending.created_at)}.</p>
+              <p>Pedido pendiente: <strong>{pending.duration_months === 1 ? "suscripción mensual" : monthsLabel(pending.duration_months)}</strong> por {money(pending.final_price)}{Number(pending.total_discount_percentage) > 0 ? ` (con ${Number(pending.total_discount_percentage)} % de descuento)` : ""}, enviado el {date(pending.created_at)}.</p>
               <p className="mt-1">Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.</p>
               <form action={cancelEntrepreneurRequest} className="mt-3">
                 <input type="hidden" name="subscription_id" value={pending.id} />
@@ -91,18 +112,24 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             <p className="mt-4 text-sm text-neutral-500">Para pedir Emprendedor primero necesitás una licencia Básico o Avanzado.</p>
           ) : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
-              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si renovás ahora con 6 o 12 meses, el tiempo nuevo se suma al final del que ya tenés. La mensualidad no se suma: podés pedirla cuando venza el actual.</p>}
+              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís más tiempo ahora, se suma al final del que ya tenés.</p>}
               <div className="grid gap-2 sm:grid-cols-3">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
-                  const blocked = months === 1 && snapshot.entrepreneurActive;
-                  if (!quote?.ok || blocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{monthsLabel(months)}: {blocked ? `disponible cuando venza tu Emprendedor actual (${date(snapshot.entrepreneurExpiresAt!)})` : quote && !quote.ok ? quote.error : "no disponible"}</div>;
+                  const title = months === 1 ? "Suscripción mensual" : monthsLabel(months);
+                  if (!quote?.ok || (months === 1 && hasMonthly)) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {months === 1 && hasMonthly ? "ya la tenés" : quote && !quote.ok ? quote.error : "no disponible"}</div>;
+                  // Comparación con pagar mes a mes: los plazos largos salen más baratos.
+                  const perMonth = Number(quote.final_price) / months;
+                  const savings = monthlyQuote && months > 1 ? Number(monthlyQuote.final_price) * months - Number(quote.final_price) : 0;
                   return (
                     <label key={months} className="flex cursor-pointer flex-col rounded-xl border border-neutral-300 p-3 text-sm has-[:checked]:border-violet-500 has-[:checked]:ring-2 has-[:checked]:ring-violet-500/30 dark:border-neutral-700">
-                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 6 : 1)} required />{monthsLabel(months)}</span>
+                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (hasMonthly ? 6 : 1)} required />{title}</span>
                       {Number(quote.discount_pct) > 0 && <span className="mt-1 text-neutral-500 line-through">{money(quote.price)}</span>}
                       <strong className="text-lg">{money(quote.final_price)}</strong>
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}
+                      {months === 1
+                        ? <span className="mt-1 text-xs text-neutral-500">Se renueva cada mes. Cancelás cuando quieras.</span>
+                        : <span className="mt-1 text-xs text-neutral-500">{money(perMonth)} por mes{savings > 0 ? ` · ahorrás ${money(savings)} frente a ${months} mensualidades` : ""}</span>}
                     </label>
                   );
                 })}
