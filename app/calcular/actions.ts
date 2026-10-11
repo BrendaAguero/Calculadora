@@ -4,8 +4,17 @@ import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
 import { compute, num, type CalcInput } from './compute';
 
-export type SaveInput = CalcInput & { moldId: string; formulaId: string; materialId: string; productId: string };
-export type SaveResult = { ok: true } | { ok: false; error: string };
+export type SaveInput = CalcInput & {
+  moldId: string;
+  formulaId: string;
+  materialId: string;
+  productId: string;
+  // true si el costo del molde salió del molde guardado (costo ÷ usos × piezas) y no se cargó a mano.
+  moldCostAuto?: boolean;
+  // Si es un recálculo, el cálculo original (que no se modifica).
+  recalculatedFrom?: string;
+};
+export type SaveResult = { ok: true; id: string } | { ok: false; error: string };
 
 // Precio por kg a partir del costo unitario del material (que está expresado en su unidad de referencia).
 const PER_KG: Record<string, number> = { mg: 1_000_000, g: 1000, kg: 1 };
@@ -99,7 +108,16 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
       unit_cost_snapshot: item.unit_cost,
       total_cost: item.total_cost,
       metadata: isPlaster
-        ? { kind: 'plaster', plaster_per_piece_g: result.plaster, water_percentage: result.waterPercentage, water_total_g: result.waterTotal, price_per_kg: num(values.plasterPriceKg) }
+        ? {
+          kind: 'plaster',
+          plaster_per_piece_g: result.plaster,
+          water_percentage: result.waterPercentage,
+          water_total_g: result.waterTotal,
+          price_per_kg: num(values.plasterPriceKg),
+          // Datos de entrada completos, para poder duplicar o recalcular este cálculo desde el historial.
+          inputs: { ...values, moldId: input.moldId, formulaId: input.formulaId, materialId: input.materialId, productId: input.productId, moldCostAuto: Boolean(input.moldCostAuto) },
+          recalculated_from: input.recalculatedFrom ?? null,
+        }
         : null,
     };
   });
@@ -110,5 +128,5 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
     return { ok: false, error: `No se pudo guardar el detalle del cálculo: ${itemsError.message}` };
   }
 
-  return { ok: true };
+  return { ok: true, id: calculation.id };
 }

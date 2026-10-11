@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
-import { saveCalculation } from './actions';
+import { saveCalculation, type SaveInput } from './actions';
 import { compute, num, type CalcInput, type Mode, type PriceMethod } from './compute';
 
 export type SavedMold = { id: string; name: string; measurement: number | null; unit: string | null; cost: number | null; estimatedUses: number | null };
@@ -25,20 +26,27 @@ function grams(value: number) {
   return `${value.toLocaleString('es-AR', { maximumFractionDigits: 1 })} g`;
 }
 
-export function Calculator({ molds, formulas, materials, products }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[] }) {
+export function Calculator({ molds, formulas, materials, products, initial }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null }) {
+  // Al duplicar desde el historial se arranca con los datos de ese cálculo; los vínculos que ya no existen se descartan.
+  const keep = (id: string | undefined, list: { id: string }[]) => (id && list.some(item => item.id === id) ? id : '');
   // Un solo estado para los tres modos: cambiar de modo no borra lo cargado.
-  const [input, setInput] = useState<CalcInput>({
-    mode: 'easy', quantity: '1', moldWater: '', plasterPerPiece: '', waterPercentage: '75', plasterPriceKg: '', waste: '0',
-    moldCost: '', packaging: '', labor: '', electricity: '', gas: '', commissions: '', other: '',
-    priceMethod: 'percentage', profitPercentage: '30', fixedProfit: '', manualPrice: '',
+  const [input, setInput] = useState<CalcInput>(() => {
+    const defaults: CalcInput = {
+      mode: 'easy', quantity: '1', moldWater: '', plasterPerPiece: '', waterPercentage: '75', plasterPriceKg: '', waste: '0',
+      moldCost: '', packaging: '', labor: '', electricity: '', gas: '', commissions: '', other: '',
+      priceMethod: 'percentage', profitPercentage: '30', fixedProfit: '', manualPrice: '',
+    };
+    if (!initial) return defaults;
+    const { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice } = { ...defaults, ...initial };
+    return { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice };
   });
-  const [moldId, setMoldId] = useState('');
-  const [formulaId, setFormulaId] = useState('');
-  const [materialId, setMaterialId] = useState('');
-  const [productId, setProductId] = useState('');
+  const [moldId, setMoldId] = useState(() => keep(initial?.moldId, molds));
+  const [formulaId, setFormulaId] = useState(() => keep(initial?.formulaId, formulas));
+  const [materialId, setMaterialId] = useState(() => keep(initial?.materialId, materials));
+  const [productId, setProductId] = useState(() => keep(initial?.productId, products));
   // Con un molde guardado, el costo del molde se reparte por uso: costo ÷ usos estimados × piezas, hasta que la usuaria lo edite.
-  const [moldCostAuto, setMoldCostAuto] = useState(false);
-  const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  const [moldCostAuto, setMoldCostAuto] = useState(() => Boolean(initial?.moldCostAuto && keep(initial.moldId, molds)));
+  const [status, setStatus] = useState<{ ok: boolean; message: string; id?: string } | null>(null);
   const [saving, startSaving] = useTransition();
 
   const mold = molds.find(m => m.id === moldId);
@@ -88,8 +96,8 @@ export function Calculator({ molds, formulas, materials, products }: { molds: Sa
 
   function save() {
     startSaving(async () => {
-      const response = await saveCalculation({ ...effective, moldId, formulaId, materialId, productId });
-      setStatus(response.ok ? { ok: true, message: 'Cálculo guardado. Los precios de hoy quedan congelados en él.' } : { ok: false, message: response.error });
+      const response = await saveCalculation({ ...effective, moldId, formulaId, materialId, productId, moldCostAuto });
+      setStatus(response.ok ? { ok: true, message: 'Cálculo guardado. Los precios de hoy quedan congelados en él.', id: response.id } : { ok: false, message: response.error });
     });
   }
 
@@ -216,7 +224,7 @@ export function Calculator({ molds, formulas, materials, products }: { molds: Sa
         </div>
         <div className="mt-4 rounded-2xl bg-white/10 p-3 text-sm dark:bg-black/10">Margen: <strong data-testid="margin">{result.margin.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %</strong>. El precio sugerido es una referencia: vos decidís el precio final.</div>
         <button type="button" onClick={save} disabled={saving} className="mt-4 min-h-11 w-full rounded-xl bg-orange-500 px-4 font-semibold text-white disabled:opacity-50">{saving ? 'Guardando…' : 'Guardar cálculo'}</button>
-        {status && <p role={status.ok ? 'status' : 'alert'} className={`mt-3 rounded-xl p-3 text-sm ${status.ok ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>{status.message}</p>}
+        {status && <p role={status.ok ? 'status' : 'alert'} className={`mt-3 rounded-xl p-3 text-sm ${status.ok ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
       </section>
     </>
   );
