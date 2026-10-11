@@ -112,18 +112,20 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             <p className="mt-4 text-sm text-neutral-500">Para pedir Emprendedor primero necesitás una licencia Básico o Avanzado.</p>
           ) : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
-              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís más tiempo ahora, se suma al final del que ya tenés.</p>}
+              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
               <div className="grid gap-2 sm:grid-cols-3">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
                   const title = months === 1 ? "Suscripción mensual" : monthsLabel(months);
-                  if (!quote?.ok || (months === 1 && hasMonthly)) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {months === 1 && hasMonthly ? "ya la tenés" : quote && !quote.ok ? quote.error : "no disponible"}</div>;
+                  // La suscripción mensual no se suma: se contrata cuando no hay Emprendedor vigente.
+                  const monthlyBlocked = months === 1 && snapshot.entrepreneurActive;
+                  if (!quote?.ok || monthlyBlocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {monthlyBlocked ? (hasMonthly ? "ya la tenés" : `disponible cuando venza tu plan actual (${date(snapshot.entrepreneurExpiresAt!)})`) : quote && !quote.ok ? quote.error : "no disponible"}</div>;
                   // Comparación con pagar mes a mes: los plazos largos salen más baratos.
                   const perMonth = Number(quote.final_price) / months;
                   const savings = monthlyQuote && months > 1 ? Number(monthlyQuote.final_price) * months - Number(quote.final_price) : 0;
                   return (
                     <label key={months} className="flex cursor-pointer flex-col rounded-xl border border-neutral-300 p-3 text-sm has-[:checked]:border-violet-500 has-[:checked]:ring-2 has-[:checked]:ring-violet-500/30 dark:border-neutral-700">
-                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (hasMonthly ? 6 : 1)} required />{title}</span>
+                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 6 : 1)} required />{title}</span>
                       {Number(quote.discount_pct) > 0 && <span className="mt-1 text-neutral-500 line-through">{money(quote.price)}</span>}
                       <strong className="text-lg">{money(quote.final_price)}</strong>
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}

@@ -656,7 +656,7 @@ Funciones (migración `supabase/migrations/20261011_emprendedor.sql`, todas SECU
 - `request_entrepreneur(meses)`: crea la compra (`payment_provider = 'manual'`) y la suscripción, ambas pendientes. Un solo pedido pendiente por persona.
 - `cancel_entrepreneur_request(id)`: la persona cancela su pedido pendiente.
 - `admin_list_entrepreneur_requests()` y `admin_activate_subscription(id)`: solo administradoras. Al activar, el plazo empieza al terminar el Emprendedor vigente (si hay) y la compra pasa a `approved`.
-- 1 mes = suscripción mensual (`auto_renew = true`). `cancel_entrepreneur_auto_renew(id)`: la persona cancela la renovación (`auto_renew_canceled_at`). Una sola suscripción mensual con renovación a la vez (migración `20261011_emprendedor_suscripcion_mensual.sql`, que reemplaza la regla anterior de `20261011_emprendedor_mensual.sql`).
+- 1 mes = suscripción mensual (`auto_renew = true`). `cancel_entrepreneur_auto_renew(id)`: la persona cancela la renovación (`auto_renew_canceled_at`). La suscripción mensual no se suma: solo se pide y activa sin Emprendedor vigente. Al activar 6 o 12 meses se cancela la renovación de la mensual (migración vigente: `20261011_emprendedor_mensual_no_suma.sql`; reemplaza las reglas de `20261011_emprendedor_mensual.sql` y `20261011_emprendedor_suscripcion_mensual.sql`).
 
 Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo lo que tiene `expires_at` en el futuro.
 
