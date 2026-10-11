@@ -56,6 +56,12 @@ Suscripción temporal:
 
 Emprendedor requiere tener Básico o Avanzado y temporalmente habilita todas las funciones avanzadas y módulos funcionales.
 
+Descuentos de Emprendedor (tabla `discount_rules`): por antigüedad de la licencia base y por compra/upgrade reciente de licencia. Si corresponden los dos, se aplica solo el mayor (no se suman). Decisión del 11/10/2026.
+
+Renovación: si ya hay Emprendedor vigente, el plazo nuevo se suma al final del actual.
+
+Hasta integrar Mercado Pago (Etapa 18), el pedido queda pendiente y una administradora lo activa a mano al recibir el pago.
+
 Cuando vence:
 - Básico -> vuelve a Básico.
 - Avanzado -> vuelve a Avanzado.

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ownsActivity } from '@/lib/access/activities';
+import { createLimitError } from '@/lib/access/permissions';
 
 const UNIT_FACTORS: Record<string, { group: string; factor: number }> = {
   g: { group: 'mass', factor: 1 },
@@ -57,6 +58,8 @@ export async function createMaterial(formData: FormData) {
   if (!name || purchaseQuantity <= 0 || purchasePrice < 0) throw new Error('Datos de material inválidos.');
   const invalidActivity = await activityError(supabase, id, activityId);
   if (invalidActivity) redirect(`/materials/new?error=${encodeURIComponent(invalidActivity)}`);
+  const limitError = await createLimitError(supabase, id, 'materials');
+  if (limitError) redirect(`/materials/new?error=${encodeURIComponent(limitError)}`);
 
   const { data: material, error } = await supabase
     .from('materials')

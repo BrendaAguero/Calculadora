@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ownsActivity } from '@/lib/access/activities';
+import { createLimitError } from '@/lib/access/permissions';
 
 export type MoldFormValues = {
   activity_id: string;
@@ -97,6 +98,8 @@ export async function createMold(_prev: MoldFormState, formData: FormData): Prom
 
   // La actividad debe ser una de las que tiene la usuaria (principal, secundaria o comprada después).
   if (!values.activity_id || !(await ownsActivity(supabase, userId, values.activity_id))) return { error: 'Elegí una de tus actividades.', values };
+  const limitError = await createLimitError(supabase, userId, 'molds');
+  if (limitError) return { error: limitError, values };
 
   // user_id sale de la sesión, nunca del formulario. RLS vuelve a comprobarlo en la base.
   const { error } = await supabase
@@ -133,6 +136,9 @@ export async function updateMold(_prev: MoldFormState, formData: FormData): Prom
 async function setMoldStatus(formData: FormData, status: 'active' | 'archived') {
   const moldId = String(formData.get('mold_id') ?? '');
   const { supabase, userId } = await auth();
+  // Restaurar vuelve a sumar un molde en uso, así que respeta el límite del plan.
+  const limitError = status === 'active' ? await createLimitError(supabase, userId, 'molds') : null;
+  if (limitError) redirect(`/gestion/moldes/${moldId}?error=${encodeURIComponent(limitError)}`);
   // Archivar no borra el registro: solo cambia su estado.
   const { data, error } = await supabase
     .from('molds')

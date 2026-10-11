@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ownsActivity } from '@/lib/access/activities';
+import { createLimitError } from '@/lib/access/permissions';
 import { PRICE_TYPES, PRODUCT_STATUSES } from './constants';
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -58,6 +59,8 @@ export async function createProduct(_prev: ProductFormState, formData: FormData)
     const problem = await checkLinkable(supabase, userId, kind, id, values.activity_id);
     if (problem) return { error: problem, values };
   }
+  const limitError = await createLimitError(supabase, userId, 'products');
+  if (limitError) return { error: limitError, values };
 
   const { data: product, error } = await supabase
     .from('products')
@@ -91,6 +94,14 @@ export async function updateProduct(formData: FormData) {
   if (!PRODUCT_STATUSES.some(s => s.value === status)) back(productId, 'Estado inválido.');
 
   const { supabase, userId } = await auth();
+  // Sacar un producto de «archivado» vuelve a sumarlo al límite del plan.
+  if (status !== 'archived') {
+    const { data: current } = await supabase.from('products').select('status').eq('id', productId).eq('user_id', userId).maybeSingle();
+    if (current?.status === 'archived') {
+      const limitError = await createLimitError(supabase, userId, 'products');
+      if (limitError) back(productId, limitError);
+    }
+  }
   // Archivar o pausar no borra el producto, sus precios ni sus vínculos.
   const { data, error } = await supabase.from('products').update({ name, photo_url: photoUrl || null, notes: text(formData, 'notes') || null, status }).eq('id', productId).eq('user_id', userId).select('id');
   if (error) back(productId, `No se pudieron guardar los datos: ${error.message}`);
