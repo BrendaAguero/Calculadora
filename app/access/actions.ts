@@ -2,12 +2,33 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createPreference, mercadoPagoReady } from '@/lib/mercadopago';
 import { siteOrigin } from '@/lib/origin';
 
 const back = (key: 'ok' | 'error', message: string): never => redirect(`/access?${key}=${encodeURIComponent(message.slice(0, 300))}#emprendedor`);
 const MANUAL = 'Queda activo cuando la administradora confirme el pago.';
+
+// Código de afiliada: el que escribió la persona o el del enlace con el que llegó (cookie «ref»).
+// Si lo escribió y no sirve, se avisa antes de crear el pedido.
+async function affiliateCode(formData: FormData, supabase: Awaited<ReturnType<typeof createClient>>) {
+  const typed = String(formData.get('affiliate_code') ?? '').trim().toUpperCase();
+  if (typed) {
+    const { data } = await supabase.rpc('check_affiliate_code', { p_code: typed });
+    if (data === 'self_referral') back('error', 'No podés usar tu propio código de afiliada.');
+    if (data !== 'ok') back('error', 'Ese código de afiliada no existe o no está activo. Revisalo o dejalo vacío.');
+    return typed;
+  }
+  return (await cookies()).get('ref')?.value ?? null;
+}
+
+// Asocia la compra del pedido a la afiliada (la base valida todo; si no corresponde, no hace nada).
+async function attribute(supabase: Awaited<ReturnType<typeof createClient>>, subscriptionId: string, code: string | null) {
+  if (!code) return;
+  const { data: sub } = await supabase.from('subscriptions').select('purchase_id').eq('id', subscriptionId).maybeSingle();
+  if (sub?.purchase_id) await supabase.rpc('attribute_purchase', { p_purchase_id: sub.purchase_id, p_code: code });
+}
 
 // Lleva a pagar un pedido pendiente con Mercado Pago. El precio sale de la compra guardada en la base, no del formulario.
 async function checkout(subscriptionId: string): Promise<never> {
@@ -60,8 +81,10 @@ export async function requestEntrepreneur(formData: FormData) {
     if (count) redirect(`/access?confirmar=${months}#emprendedor`);
   }
 
+  const code = await affiliateCode(formData, supabase);
   const { data: subscriptionId, error } = await supabase.rpc('request_entrepreneur', { p_months: months });
   if (error) back('error', error.message);
+  await attribute(supabase, subscriptionId as string, code);
   revalidatePath('/access');
   if (mercadoPagoReady()) await checkout(subscriptionId as string);
   back('ok', `Pedido enviado. ${MANUAL}`);
@@ -76,8 +99,10 @@ export async function requestEntrepreneurUpgrade(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const code = await affiliateCode(formData, supabase);
   const { data: subscriptionId, error } = await supabase.rpc('request_entrepreneur_upgrade', { p_months: months });
   if (error) back('error', error.message);
+  await attribute(supabase, subscriptionId as string, code);
   revalidatePath('/access');
   if (mercadoPagoReady()) await checkout(subscriptionId as string);
   back('ok', `Pedido de actualización enviado. ${MANUAL}`);

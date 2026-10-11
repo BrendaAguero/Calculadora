@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
@@ -57,6 +58,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
 
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
   const hasMonthly = Boolean(monthly?.auto_renew);
+  const referral = (await cookies()).get("ref")?.value ?? "";
   const planLabel = snapshot.basePlan === "ADVANCED" ? "Avanzado" : snapshot.basePlan === "BASIC" ? "Básico" : "Sin licencia";
 
   return (
@@ -82,7 +84,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
             <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-              Sos administradora: tenés acceso completo. <Link href="/admin/emprendedor" className="underline">Ver pedidos de Emprendedor</Link>
+              Sos administradora: tenés acceso completo. <Link href="/admin" className="underline">Ir a la administración</Link>
             </p>
           )}
         </section>
@@ -196,6 +198,9 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 })}
               </div>
               <p className="text-xs text-neutral-500">Descuentos: por antigüedad de tu licencia o por compra reciente de licencia. Si te corresponden los dos, se aplica el mayor.</p>
+              <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
+                <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
+              </label>
               <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</button>
               {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo.</p>}
             </form>

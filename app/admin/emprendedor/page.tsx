@@ -23,7 +23,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
     <main className="min-h-screen bg-neutral-50 px-5 py-8 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <Link href="/access" className="text-sm underline">← Licencia y acceso</Link>
+          <Link href="/admin" className="text-sm underline">← Administración</Link>
           <h1 className="mt-3 text-3xl font-semibold">Pedidos de Emprendedor</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, 6 y 12 meses se suman al final (y su suscripción mensual deja de renovarse). La suscripción mensual no se suma. Las actualizaciones empiezan el día que las activás y el plan anterior termina ese día.</p>
         </div>

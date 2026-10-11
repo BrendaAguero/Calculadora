@@ -521,6 +521,12 @@ Ventas (migración `20261011_ventas.sql`):
 - `void_sale(id)` anula y devuelve al stock lo descontado con un movimiento `return`.
 - Ganancia (`net_income`) = total − comisión − costo; `total` = subtotal − descuento. El costo por pieza es el más reciente entre el último cálculo y la última producción del producto.
 
+Afiliados y administración (migración `20261011_afiliados_admin.sql`):
+- Flujo: `apply_affiliate` (solicitud) → `admin_review_affiliate` (aprueba con 15/20 %, crea el código) → `attribute_purchase` (la compra pendiente queda asociada; antifraude: código activo, afiliada aprobada, no propio, una sola por compra) → al activarse la compra, `create_commission_for_purchase` crea la comisión `held` por 11 días → `refresh_affiliate` la pasa a `available` y evalúa PRO (10 ventas válidas/mes, 3 meses seguidos → 25 %) → `request_withdrawal` (mínimo $20.000, PRO $10.000) → `admin_update_withdrawal` (pagado/rechazado). Un reembolso anula la comisión (`reversed`).
+- `commissions.withdrawal_id` vincula cada comisión con su retiro; índice único por compra.
+- Administradoras: políticas `admin_select_all` (solo lectura) en perfiles, compras, suscripciones, licencias, pagos, afiliados, comisiones, retiros, dev_grants y auditoría. Las escrituras van por funciones `admin_*` que verifican `is_admin()` y registran en `audit_logs` (`log_audit`).
+- `admin_set_account_status` (no sobre la propia cuenta) y `admin_grant_license` (licencia de cortesía vía `dev_grants`). El trigger de perfiles ahora también permite estos cambios a administradoras.
+
 ### affiliates
 - id
 - user_id
