@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAccessSnapshot } from "@/lib/access/permissions";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -28,4 +29,16 @@ export async function getOwnedActivities(supabase: Supabase, userId: string): Pr
 export async function ownsActivity(supabase: Supabase, userId: string, activityId: string) {
   const { activities } = await getOwnedActivities(supabase, userId);
   return activities.some((activity) => activity.id === activityId);
+}
+
+// Se puede usar una actividad si se la compró, o con Mensualidad Plus, la administración o la cuenta de prueba.
+export async function canUseActivity(supabase: Supabase, userId: string, code: string): Promise<{ allowed: boolean; activityId: string | null }> {
+  const [{ activities }, snapshot] = await Promise.all([getOwnedActivities(supabase, userId), getAccessSnapshot()]);
+  const owned = activities.find((a) => a.code === code);
+  if (owned) return { allowed: true, activityId: owned.id };
+  if (snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester)) {
+    const { data } = await supabase.from("activities").select("id").eq("code", code).eq("active", true).maybeSingle();
+    return { allowed: Boolean(data), activityId: data?.id ?? null };
+  }
+  return { allowed: false, activityId: null };
 }

@@ -25,6 +25,14 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
     ],
   },
   {
+    id: 'mezclas', title: 'Resina, Jesmonite y Cemento', steps: [
+      <>En <Link href="/calcular">Calcular</Link> elegí arriba la actividad: Resina, Jesmonite o Cemento.</>,
+      <>Tocá «Ajustar» en «Mi receta» para poner tu proporción (por ejemplo, Jesmonite AC100: 1 de líquido por 2,5 de polvo), el % de pigmento, la merma y el precio por kg de cada material. Con «Guardar como mis valores» la próxima vez arranca así.</>,
+      <>Poné cuántas piezas y el agua que entra en el molde: la app te dice cuántos gramos preparar de cada componente, el costo por pieza y el precio sugerido.</>,
+      <>Estas calculadoras vienen con la Mensualidad Plus o comprando la actividad.</>,
+    ],
+  },
+  {
     id: 'stock', title: 'Stock', steps: [
       <>En <Link href="/stock">Stock</Link> ves materias primas y productos terminados, con su cantidad, mínimo y valor.</>,
       <>El stock se mueve solo cuando registrás producción, compras o ventas. Si necesitás corregirlo, usá un ajuste desde el detalle del ítem.</>,

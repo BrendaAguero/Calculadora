@@ -769,3 +769,7 @@ Después de aprobación:
 - `approved_emails.key_hash` (sha256, único), `key_hint`, `key_cipher` (AES-256-GCM con secreto del servidor), `key_created_at`. Las columnas `key_hash` y `key_cipher` no son legibles por `authenticated`.
 - `set_email_key` (admin o service_role), `key_lookup(hash)` y `approved_email_for(email)` (solo service_role).
 - Se entra en `/login` con la clave (`redeemAccessKey`); la sesión queda abierta en el aparato. La clave se crea y se manda por correo (SMTP propio, `SMTP_USER`/`SMTP_PASS`) al aprobar un email o al aprobarse un pago online.
+
+### Proporciones por actividad (20261012_proporciones_por_actividad)
+- `activity_settings (user_id, activity_code, settings jsonb, updated_at)`: proporciones, % de pigmento, merma, densidad y precios por kg propios de cada usuaria para RESINA, JESMONITE y CEMENTO_DECORATIVO. RLS: cada una lee y escribe solo las suyas.
+- Los cálculos de estas actividades se guardan en `calculations` (modo `standard`) y `calculation_items`; la primera línea lleva `metadata.kind = 'mix'` con la receta completa.

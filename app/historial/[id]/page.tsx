@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { mixByCode } from '@/lib/mixes';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { recalculate } from '../actions';
@@ -25,6 +26,10 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
   if (!calculation) return <main className={pageClass}><Link href="/historial" className={hint}>← Historial</Link><div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudo cargar el cálculo: {loadError}</div></main>;
 
   const plaster = items.find(item => item.metadata?.kind === 'plaster');
+  // Cálculos de Resina, Jesmonite o Cemento: guardan la receta en la primera línea.
+  const mix = items.find(item => item.metadata?.kind === 'mix');
+  const mixDef = mix ? mixByCode(String(mix.metadata?.activity ?? '')) : null;
+  const mixAmounts = (mix?.metadata?.amounts ?? []) as { label: string; grams: number; ml: number }[];
   const { reconstructed } = inputsFromCalculation(calculation, items);
   const originalId = plaster?.metadata?.recalculated_from as string | undefined;
   const { data: original } = originalId
@@ -40,7 +45,7 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
     <main className={pageClass}>
       <header>
         <Link href="/historial" className={hint}>← Historial</Link>
-        <h1 className="mt-2 text-2xl font-semibold">{calculation.productName ?? calculation.formulaName ?? 'Cálculo'}</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{calculation.productName ?? calculation.formulaName ?? (mixDef ? `Cálculo de ${mixDef.name}` : 'Cálculo')}</h1>
         <p className={hint}>{new Date(calculation.created_at).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' })} · {MODE_LABELS[calculation.calculation_mode] ?? calculation.calculation_mode} · {Number(calculation.quantity)} piezas</p>
       </header>
 
@@ -80,10 +85,17 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
               </tr>
             ))}</tbody>
           </table></div>}
+        {mix && <p className={`mt-3 ${hint}`}>Mezcla preparada: {qty(Number(mix.metadata?.total_mix_g ?? 0), 'g')} ({qty(Number(mix.metadata?.per_piece_g ?? 0), 'g')} por pieza, con la merma){mixAmounts.length > 0 ? ` · ${mixAmounts.map(a => `${a.label}: ${qty(a.grams, 'g')}`).join(' · ')}` : ''}{Number(mix.metadata?.pigment_g ?? 0) > 0 ? ` · Pigmento: ${qty(Number(mix.metadata?.pigment_g), 'g')}` : ''}</p>}
         {plaster && <p className={`mt-3 ${hint}`}>Yeso por pieza: {qty(Number(meta.plaster_per_piece_g ?? 0), 'g')}{meta.water_percentage != null ? ` · agua ${meta.water_percentage} % (${qty(Number(meta.water_total_g ?? 0), 'g')} en total)` : ''}</p>}
         <p className={`mt-1 ${hint}`}>{[calculation.moldName && `Molde: ${calculation.moldName}`, calculation.formulaName && `Fórmula: ${calculation.formulaName}${calculation.formulaVersion ? ` (v${calculation.formulaVersion})` : ''}`].filter(Boolean).join(' · ')}</p>
       </section>
 
+      {mixDef ? (
+        <section className={cardClass}>
+          <h2 className="font-semibold">¿Qué querés hacer?</h2>
+          <Link href={`/calcular/${mixDef.slug}`} className="mt-3 inline-block rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700">Hacer otro cálculo de {mixDef.name}</Link>
+        </section>
+      ) : (
       <section className={cardClass}>
         <h2 className="font-semibold">¿Qué querés hacer?</h2>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -94,6 +106,7 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
         {reconstructed && items.length > 0 && <p className={`mt-1 ${hint}`}>Este cálculo es anterior a que se guardaran todos los datos: el precio se toma como % de ganancia sobre el costo.</p>}
         {(recalculations ?? []).length > 0 && <p className={`mt-2 ${hint}`}>Recalculado {recalculations!.length} {recalculations!.length === 1 ? 'vez' : 'veces'}: {recalculations!.map((r, i) => <Link key={r.calculation_id} href={`/historial/${r.calculation_id}`} className="underline">{i ? ', ' : ''}ver</Link>)}.</p>}
       </section>
+      )}
     </main>
   );
 }
