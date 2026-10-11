@@ -43,7 +43,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
                   {request.months === 1 ? '1 mes' : `${request.months} meses`} · plan base {request.base_plan === 'ADVANCED' ? 'Avanzado' : 'Básico'} · <strong>{money(request.final_price)}</strong>
                   {Number(request.discount_pct) > 0 && <span className="text-neutral-500"> (precio {money(request.price)}, {Number(request.discount_pct)} % de descuento)</span>}
                 </p>
-                <p className="text-xs text-neutral-500">Pedido el {new Date(request.requested_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</p>
+                <p className="text-xs text-neutral-500">Pedido el {new Date(request.requested_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}</p>
                 <form action={activateSubscription} className="mt-3">
                   <input type="hidden" name="subscription_id" value={request.subscription_id} />
                   <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Activar (pago recibido)</button>

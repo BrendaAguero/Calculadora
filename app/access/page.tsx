@@ -23,7 +23,7 @@ const cardClass = "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm 
 type Quote = { ok: true; price: number; discount_pct: number; final_price: number; age_pct: number; recent_pct: number } | { ok: false; error: string };
 
 const money = (value: number | string) => Number(value).toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
-const date = (value: string) => new Date(value).toLocaleDateString("es-AR", { dateStyle: "long" });
+const date = (value: string) => new Date(value).toLocaleDateString("es-AR", { dateStyle: "long", timeZone: "America/Argentina/Buenos_Aires" });
 const monthsLabel = (months: number) => (months === 1 ? "1 mes" : `${months} meses`);
 
 export default async function AccessPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
