@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { HelpTip } from '@/components/help-tip';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { ActivityTabs } from '@/components/activity-tabs';
+import { MIXES } from '@/lib/mixes';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
 import { getAccessSnapshot } from '@/lib/access/permissions';
@@ -72,12 +74,17 @@ export default async function CalcularPage({ searchParams }: { searchParams: Pro
   const source = desde ? await loadCalculation(supabase, user.id, desde) : null;
   const initial = source?.calculation ? inputsFromCalculation(source.calculation, source.items).inputs : null;
 
+  const snapshot = await getAccessSnapshot();
+  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
+  const available = plus ? ['YESO', ...MIXES.map(m => m.code)] : activities.map(a => a.code);
+
   return (
     <AppShell>
+      <ActivityTabs current="YESO" available={available} />
       {initial && <div role="status" className="mb-4 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">Copia de un cálculo del historial. Al guardar se crea uno nuevo; el original no cambia.</div>}
       {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudieron cargar todos tus datos guardados: {loadError}</div>}
       <div className="mb-4"><HelpTip guide="calcular"><p>Elegí el modo, cuántas piezas y los gramos por pieza. ¿No sabés cuánto lleva el molde? Llenalo con agua y pesala.</p><p>El precio sugerido es una referencia: vos decidís el precio final.</p></HelpTip></div>
-      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} initial={initial} allowPersonalized={!(await getAccessSnapshot())?.isFree} />
+      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} initial={initial} allowPersonalized={!snapshot?.isFree} />
     </AppShell>
   );
 }
