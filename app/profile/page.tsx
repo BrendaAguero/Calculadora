@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { updateProfile } from "./actions";
 import { signOut } from "../login/actions";
 import { CONTACT_EMAIL } from "@/lib/legal";
+import { AppLockSettings } from "@/components/app-lock-settings";
+import { signOutEverywhere } from "../seguridad/actions";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -47,6 +49,14 @@ export default async function ProfilePage() {
           Guardar
         </button>
       </form>
+
+      <AppLockSettings name={profile?.email ?? user.email ?? "Calculadora Emprender"} />
+
+      <section className="mt-8 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+        <h2 className="font-semibold">Cerrar sesión en todos mis aparatos</h2>
+        <p className="mt-1 text-neutral-600 dark:text-neutral-400">Si perdiste un aparato o creés que alguien más usa tu cuenta. Después entrás de nuevo con tu clave.</p>
+        <form action={signOutEverywhere} className="mt-3"><button className="rounded-md border border-red-300 px-3 py-1.5 text-red-700 dark:border-red-900 dark:text-red-300">Cerrar en todos</button></form>
+      </section>
 
       <section className="mt-8 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800">
         <h2 className="font-semibold">Eliminar mi cuenta</h2>

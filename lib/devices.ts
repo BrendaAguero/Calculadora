@@ -5,6 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 
 const DEVICE_COOKIE = "did";
 
+// Identificador de este aparato (cookie que se crea al entrar), o null si todavía no tiene.
+export async function currentDeviceId() {
+  const value = (await cookies()).get(DEVICE_COOKIE)?.value;
+  return value && /^[0-9a-f]{32}$/.test(value) ? value : null;
+}
+
 // Nombre simple del aparato para mostrarlo en «Mis aparatos» (por ejemplo, «Android · Chrome»).
 function deviceLabel(userAgent: string) {
   const os = /iPhone|iPad/.test(userAgent) ? "iPhone/iPad" : /Android/.test(userAgent) ? "Android" : /Windows/.test(userAgent) ? "Windows" : /Mac OS X/.test(userAgent) ? "Mac" : /Linux/.test(userAgent) ? "Linux" : "Otro";

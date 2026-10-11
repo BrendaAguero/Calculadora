@@ -18,12 +18,15 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
   if (q) query = query.ilike('email', `%${q.replace(/[%_]/g, '')}%`);
   // Las claves se leen con el cliente del servidor (la columna cifrada no es visible para nadie más).
   const admin = createAdminClient();
-  const [{ data: emails }, { data: devices }, { data: orders }, { data: keys }] = await Promise.all([
+  const [{ data: emails }, { data: devices }, { data: orders }, { data: keys }, { data: alerts }] = await Promise.all([
     query,
     supabase.from('user_devices').select('id,user_id,label,last_seen_at').is('released_at', null),
     supabase.from('personal_orders').select('id,email,total,status,created_at').order('created_at', { ascending: false }).limit(20),
     admin ? admin.from('approved_emails').select('id,key_cipher') : Promise.resolve({ data: [] as { id: string; key_cipher: string | null }[] }),
+    supabase.from('session_alerts').select('id,user_id,place_a,place_b,distance_km,status,created_at').order('created_at', { ascending: false }).limit(20),
   ]);
+  const emailOf = (userId: string) => emails?.find((e) => e.user_id === userId)?.email ?? 'Cuenta sin email aprobado';
+  const ALERT_STATUS: Record<string, string> = { open: 'Sin responder', mine: 'Dijo «fui yo»', not_mine: 'Dijo «no fui yo» (se cerró todo y se cambió la clave)' };
   const keyOf = (id: string) => decryptKey(keys?.find((k) => k.id === id)?.key_cipher);
 
   return (
@@ -85,6 +88,15 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
             );
           })}
           {!emails?.length && <li className="py-3 text-neutral-500">No hay emails aprobados todavía.</li>}
+        </ul>
+      </section>
+
+      <section className={cardClass}>
+        <h2 className="font-semibold">Avisos de uso en paralelo</h2>
+        <p className="mt-1 text-xs text-neutral-500">Dos aparatos de la misma cuenta usados a la vez a más de 150 km. La ubicación es aproximada (con datos del celular puede variar).</p>
+        <ul className="mt-2 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+          {(alerts ?? []).map((a) => <li key={a.id} className="py-2">{emailOf(a.user_id)} · {a.place_a ?? '?'} y {a.place_b ?? '?'} ({a.distance_km} km) · {ALERT_STATUS[a.status] ?? a.status} · {dateTime(a.created_at)}</li>)}
+          {!alerts?.length && <li className="py-2 text-neutral-500">Sin avisos.</li>}
         </ul>
       </section>
 
