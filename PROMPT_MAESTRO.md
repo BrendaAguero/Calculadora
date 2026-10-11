@@ -66,7 +66,9 @@ Comprar más tiempo con Emprendedor vigente pide confirmación («¿Seguro quer�
 
 Actualizar a un plan más largo (1→6, 1→12, 6→12), con prorrateo: crédito = lo pagado por el plan actual × (tiempo que le queda ÷ duración total). Precio = precio del plan nuevo con su descuento − crédito. El plan nuevo empieza hoy y dura completo; el anterior termina hoy. Solo con un único plan activo y pagado (los de cortesía no dan crédito). Decisión del 11/10/2026.
 
-Hasta integrar Mercado Pago (Etapa 18), el pedido queda pendiente y una administradora lo activa a mano al recibir el pago.
+Pago con Mercado Pago (Checkout Pro): al pedir Emprendedor se va a pagar a Mercado Pago y, al aprobarse, se activa solo. El servidor confirma cada pago consultándolo a Mercado Pago. Si el pago en línea no está configurado, la administradora sigue pudiendo activar pedidos a mano. La renovación automática de la suscripción mensual (Suscripciones de Mercado Pago) queda para una etapa posterior.
+
+Variables de entorno (solo servidor salvo la pública): `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y, opcional, `MP_WEBHOOK_SECRET` para verificar la firma de los avisos.
 
 Cuando vence:
 - Básico -> vuelve a Básico.

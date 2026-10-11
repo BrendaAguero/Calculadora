@@ -1,23 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
+import { siteOrigin as authOrigin } from "@/lib/origin";
 import { redirect } from "next/navigation";
 
 export type ActionState = { error?: string; success?: boolean };
-
-const PRODUCTION_ORIGIN = "https://calculadora-emprender.vercel.app";
-
-// El enlace del correo tiene que volver al mismo sitio donde se pidió (producción o una vista previa),
-// porque el código solo se puede canjear en el navegador que lo pidió. Solo se aceptan sitios de este
-// proyecto, para que nadie pueda desviar el enlace con un encabezado falso.
-async function authOrigin() {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "";
-  if (/^calculadora-emprender(-[a-z0-9-]+)?\.vercel\.app$/.test(host)) return `https://${host}`;
-  if (/^localhost(:\d+)?$/.test(host)) return `http://${host}`;
-  return PRODUCTION_ORIGIN;
-}
 
 // Mensajes de Supabase traducidos para que la persona sepa qué hacer.
 function friendlyEmailError(message: string) {

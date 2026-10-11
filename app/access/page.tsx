@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
-import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
+import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
+import { mercadoPagoReady } from "@/lib/mercadopago";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -152,11 +153,19 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           {pending ? (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
               <p>Pedido pendiente: <strong>{pending.upgrade_credit != null ? `actualización a ${monthsLabel(pending.duration_months)}` : pending.duration_months === 1 ? "suscripción mensual" : monthsLabel(pending.duration_months)}</strong> por {money(pending.final_price)}{pending.upgrade_credit != null ? ` (con ${money(pending.upgrade_credit)} descontados por tu plan actual)` : Number(pending.total_discount_percentage) > 0 ? ` (con ${Number(pending.total_discount_percentage)} % de descuento)` : ""}, enviado el {date(pending.created_at)}.</p>
-              <p className="mt-1">Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.</p>
-              <form action={cancelEntrepreneurRequest} className="mt-3">
-                <input type="hidden" name="subscription_id" value={pending.id} />
-                <button type="submit" className="rounded-xl border border-amber-400 px-4 py-2 font-medium dark:border-amber-700">Cancelar pedido</button>
-              </form>
+              <p className="mt-1">{mercadoPagoReady() ? 'Pagalo con Mercado Pago y se activa en el momento.' : 'Por ahora la activación es manual: queda activo cuando la administradora confirme el pago.'}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {mercadoPagoReady() && (
+                  <form action={payEntrepreneurRequest}>
+                    <input type="hidden" name="subscription_id" value={pending.id} />
+                    <button type="submit" className="rounded-xl bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700">Pagar con Mercado Pago</button>
+                  </form>
+                )}
+                <form action={cancelEntrepreneurRequest}>
+                  <input type="hidden" name="subscription_id" value={pending.id} />
+                  <button type="submit" className="rounded-xl border border-amber-400 px-4 py-2 font-medium dark:border-amber-700">Cancelar pedido</button>
+                </form>
+              </div>
             </div>
           ) : !snapshot.baseLicenseActive ? (
             <p className="mt-4 text-sm text-neutral-500">Para pedir Emprendedor primero necesitás una licencia Básico o Avanzado.</p>
@@ -187,7 +196,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 })}
               </div>
               <p className="text-xs text-neutral-500">Descuentos: por antigüedad de tu licencia o por compra reciente de licencia. Si te corresponden los dos, se aplica el mayor.</p>
-              <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Pedir Emprendedor</button>
+              <button type="submit" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Emprendedor'}</button>
+              {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Emprendedor se activa solo.</p>}
             </form>
           )}
         </section>
