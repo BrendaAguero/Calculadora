@@ -58,7 +58,7 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
 
 const FAQ: [string, React.ReactNode][] = [
   ['¿Mis datos los puede ver otra persona?', <>No. Cada cuenta solo puede ver sus propios datos. Más detalles en la <Link href="/legal/privacidad">Política de privacidad</Link>.</>],
-  ['¿Qué diferencia hay entre Básico, Avanzado y Emprendedor?', <>Básico y Avanzado son licencias de pago único que no vencen; cambian los límites de materiales, productos, fórmulas y moldes. Emprendedor habilita por un tiempo todas las funciones y módulos. Mirá tu plan en <Link href="/access">Mi acceso</Link>.</>],
+  ['¿Qué diferencia hay entre Gratis, Básico, Avanzado y Emprendedor?', <>La versión gratis tiene la calculadora y pocos registros, con publicidad. Básico y Avanzado son licencias de pago único que no vencen, sin publicidad; cambian los límites de materiales, productos, fórmulas y moldes. Emprendedor habilita por un tiempo todas las funciones y módulos. Mirá tu plan en <Link href="/access">Mi acceso</Link>.</>],
   ['¿Qué pasa cuando vence Emprendedor?', <>Volvés a tu plan base. <strong>No se borra nada.</strong> Si tenías más cosas que las que permite tu plan, las seguís viendo, pero no podés crear nuevas hasta liberar lugar o volver a Emprendedor.</>],
   ['¿Cómo doy de baja la suscripción mensual?', <>Desde el <Link href="/baja">Botón de baja</Link> o en <Link href="/access">Mi acceso</Link> → «Cancelar renovación». No se te vuelve a cobrar y seguís teniendo el plan hasta que termina el mes pagado.</>],
   ['¿Puedo comprar 6 meses si ya tengo Emprendedor?', <>Sí. Los 6 y 12 meses se suman al final del plan que tenés. Antes de pagar te mostramos si te conviene más actualizar a un plan más largo.</>],

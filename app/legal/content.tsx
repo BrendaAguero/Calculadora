@@ -69,7 +69,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Podés pedir gratis acceder, corregir, actualizar o eliminar tus datos escribiendo a <Mail /> desde el email de tu cuenta. Respondemos el pedido de acceso dentro de los 10 días corridos y los de corrección o eliminación dentro de los 5 días hábiles, como indica la ley.</p>
         <p className="text-sm">La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales. Más información en <a href="https://www.argentina.gob.ar/aaip" target="_blank" rel="noreferrer">argentina.gob.ar/aaip</a>.</p>
         <h2>8. Cookies</h2>
-        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) se guarda solo en tu navegador. No usamos cookies de publicidad.</p>
+        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) se guarda solo en tu navegador. No usamos cookies de publicidad: el aviso de la versión gratis es una imagen fija, sin seguimiento.</p>
         <h2>9. Seguridad</h2>
         <p>La conexión es cifrada, cada cuenta solo puede leer sus propios datos y las claves de los servicios nunca se exponen en el navegador. Cuando creás tu contraseña, revisamos que no haya aparecido en filtraciones conocidas consultando el servicio Pwned Passwords: solo se envía un fragmento de una huella cifrada, nunca la contraseña. Si detectamos un incidente que afecte tus datos, te avisaremos.</p>
       </>
@@ -82,8 +82,9 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
       <>
         <h2>1. Qué se puede comprar</h2>
         <ul>
-          <li><strong>Licencia Básico o Avanzado:</strong> pago único. Es permanente: no vence.</li>
-          <li><strong>Actividades y módulos:</strong> pago único y permanentes.</li>
+          <li><strong>Versión gratis:</strong> sin costo, con límites (calculadora de Yeso en modo Fácil y Estándar, pocos materiales, productos, fórmulas y moldes) y con un aviso publicitario propio. No hace falta tarjeta.</li>
+          <li><strong>Licencia Básico o Avanzado:</strong> pago único. Es permanente: no vence. De Básico podés pasarte a Avanzado pagando la diferencia que se muestra en la app.</li>
+          <li><strong>Actividades y módulos:</strong> pago único y permanentes. Solo se venden los que ya están disponibles; los demás figuran como «Próximamente».</li>
           <li><strong>Plan Emprendedor:</strong> habilita por un tiempo todas las funciones avanzadas y módulos. Requiere tener Básico o Avanzado. Se ofrece por 1 mes (suscripción mensual), 6 meses o 12 meses.</li>
         </ul>
         <p>El precio final, con los descuentos que correspondan, se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan.</p>

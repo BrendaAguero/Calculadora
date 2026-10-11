@@ -153,3 +153,77 @@ export async function cancelEntrepreneurAutoRenew(formData: FormData) {
   revalidatePath('/access');
   back('ok', 'Renovación cancelada. Emprendedor sigue activo hasta que vence.');
 }
+
+// ---------------------------------------------------------------------------------------------
+// Compras de pago único: licencia Básico/Avanzado, pase Básico → Avanzado y módulos (Checkout Pro).
+
+const PRODUCT_TITLES: Record<string, string> = { license: 'Licencia', license_upgrade: 'Pase a Avanzado', module: 'Módulo' };
+const goStore = (key: 'ok' | 'error', message: string): never => redirect(`/access?${key}=${encodeURIComponent(message.slice(0, 300))}#planes`);
+
+async function attributeToPurchase(supabase: Awaited<ReturnType<typeof createClient>>, purchaseId: string, code: string | null) {
+  if (code) await supabase.rpc('attribute_purchase', { p_purchase_id: purchaseId, p_code: code });
+}
+
+// Lleva a pagar una compra pendiente. El precio sale de la base, no del formulario.
+async function checkoutPurchase(purchaseId: string, name: string): Promise<never> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: purchase } = await supabase.from('purchases').select('id,total,payment_status,product_type').eq('id', purchaseId).eq('user_id', user.id).maybeSingle();
+  if (!purchase || purchase.payment_status !== 'pending') goStore('error', 'No se encontró un pedido pendiente para pagar.');
+  if (!mercadoPagoReady()) goStore('ok', `Pedido guardado. ${MANUAL}`);
+  let url: string;
+  try {
+    url = (await createPreference({ purchaseId: purchase!.id, title: `Calculadora Emprender · ${PRODUCT_TITLES[purchase!.product_type] ?? 'Compra'} ${name}`.trim(), price: Number(purchase!.total), origin: await siteOrigin() })).url;
+  } catch (error) {
+    console.error('Pago de Mercado Pago', error instanceof Error ? error.message : error);
+    goStore('error', 'No se pudo conectar con Mercado Pago. Probá de nuevo en un rato; tu pedido quedó guardado.');
+  }
+  redirect(url!);
+}
+
+export async function buyLicense(formData: FormData) {
+  const plan = String(formData.get('plan') ?? '');
+  if (!['BASIC', 'ADVANCED'].includes(plan)) goStore('error', 'Elegí un plan.');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const code = await affiliateCode(formData, supabase);
+  const { data: purchaseId, error } = await supabase.rpc('request_license_purchase', { p_plan_code: plan });
+  if (error || !purchaseId) goStore('error', error?.message ?? 'No se pudo crear el pedido.');
+  await attributeToPurchase(supabase, purchaseId as string, code);
+  await checkoutPurchase(purchaseId as string, plan === 'ADVANCED' ? 'Avanzado' : 'Básico');
+}
+
+export async function upgradeLicense(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const code = await affiliateCode(formData, supabase);
+  const { data: purchaseId, error } = await supabase.rpc('request_license_upgrade');
+  if (error || !purchaseId) goStore('error', error?.message ?? 'No se pudo crear el pedido.');
+  await attributeToPurchase(supabase, purchaseId as string, code);
+  await checkoutPurchase(purchaseId as string, '');
+}
+
+export async function buyModule(formData: FormData) {
+  const moduleCode = String(formData.get('module') ?? '');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: purchaseId, error } = await supabase.rpc('request_module_purchase', { p_module_code: moduleCode });
+  if (error || !purchaseId) goStore('error', error?.message ?? 'No se pudo crear el pedido.');
+  await checkoutPurchase(purchaseId as string, String(formData.get('name') ?? ''));
+}
+
+export async function payPurchase(formData: FormData) {
+  await checkoutPurchase(String(formData.get('purchase_id') ?? ''), String(formData.get('name') ?? ''));
+}
+
+export async function cancelPurchase(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('cancel_purchase_request', { p_purchase_id: String(formData.get('purchase_id') ?? '') });
+  if (error) goStore('error', error.message);
+  revalidatePath('/access');
+  goStore('ok', 'Pedido cancelado.');
+}

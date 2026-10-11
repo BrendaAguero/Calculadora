@@ -46,3 +46,10 @@ export async function resolveRegret(formData: FormData) {
   const status = text(formData, 'status');
   await rpc('/admin/arrepentimiento', 'admin_resolve_regret_request', { p_id: text(formData, 'id'), p_status: status, p_note: text(formData, 'note') || null }, status === 'refunded' ? 'Marcado como resuelto.' : 'Marcado como rechazado.');
 }
+
+export async function saveBanner(formData: FormData) {
+  await rpc('/admin/banner', 'admin_save_banner', {
+    p_title: text(formData, 'title'), p_text: text(formData, 'text'), p_link: text(formData, 'link'),
+    p_button: text(formData, 'button'), p_image: text(formData, 'image'), p_active: formData.get('active') === 'on',
+  }, 'Banner guardado.');
+}

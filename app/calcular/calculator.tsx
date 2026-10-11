@@ -26,7 +26,8 @@ function grams(value: number) {
   return `${value.toLocaleString('es-AR', { maximumFractionDigits: 1 })} g`;
 }
 
-export function Calculator({ molds, formulas, materials, products, initial }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null }) {
+// allowPersonalized: el modo Personalizado es de los planes pagos (la versión gratis tiene Fácil y Estándar).
+export function Calculator({ molds, formulas, materials, products, initial, allowPersonalized = true }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null; allowPersonalized?: boolean }) {
   // Al duplicar desde el historial se arranca con los datos de ese cálculo; los vínculos que ya no existen se descartan.
   const keep = (id: string | undefined, list: { id: string }[]) => (id && list.some(item => item.id === id) ? id : '');
   // Un solo estado para los tres modos: cambiar de modo no borra lo cargado.
@@ -38,7 +39,7 @@ export function Calculator({ molds, formulas, materials, products, initial }: { 
     };
     if (!initial) return defaults;
     const { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice } = { ...defaults, ...initial };
-    return { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice };
+    return { mode: !allowPersonalized && mode === 'personalized' ? 'standard' : mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice };
   });
   const [moldId, setMoldId] = useState(() => keep(initial?.moldId, molds));
   const [formulaId, setFormulaId] = useState(() => keep(initial?.formulaId, formulas));
@@ -114,7 +115,7 @@ export function Calculator({ molds, formulas, materials, products, initial }: { 
 
       <section className="mt-6 grid grid-cols-3 gap-2" aria-label="Modo de cálculo">
         {([['easy', 'Fácil'], ['standard', 'Estándar'], ['personalized', 'Personalizado']] as const).map(([value, label]) => (
-          <button key={value} type="button" aria-pressed={input.mode === value} onClick={() => set({ mode: value as Mode })} className={`rounded-xl border px-2 py-3 text-sm font-semibold ${input.mode === value ? 'border-orange-700 bg-orange-700 text-white' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'}`}>{label}</button>
+          <button key={value} type="button" aria-pressed={input.mode === value} disabled={value === 'personalized' && !allowPersonalized} title={value === 'personalized' && !allowPersonalized ? 'Disponible con Básico o Avanzado' : undefined} onClick={() => set({ mode: value as Mode })} className={`rounded-xl border px-2 py-3 text-sm font-semibold ${input.mode === value ? 'border-orange-700 bg-orange-700 text-white' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'} disabled:cursor-not-allowed disabled:opacity-50`}>{label}{value === 'personalized' && !allowPersonalized ? ' 🔒' : ''}</button>
         ))}
       </section>
 
