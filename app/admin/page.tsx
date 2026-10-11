@@ -18,7 +18,7 @@ export default async function AdminHome() {
     ['/admin/emprendedor', 'Pedidos de Emprendedor', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
     ['/admin/ventas', 'Ventas de la plataforma', 'Compras, pagos de Mercado Pago y suscripciones.'],
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],
-    ['/admin/arrepentimiento', 'Botón de arrepentimiento', 'Pedidos para revocar una compra dentro de los 10 días.', regrets],
+    ['/admin/arrepentimiento', 'Arrepentimiento y bajas', 'Pedidos para revocar una compra (10 días) o dar de baja la suscripción.', regrets],
     ['/admin/auditoria', 'Auditoría', 'Todo lo que se hizo desde la administración.'],
   ];
 

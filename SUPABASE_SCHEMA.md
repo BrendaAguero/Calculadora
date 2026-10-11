@@ -711,6 +711,12 @@ Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo 
 - `mp_record_payment`: si se devuelve el cobro de una renovación, esa renovación queda `canceled` y se resta el mes.
 - Las tres funciones son solo para `service_role`.
 
+## Botón de baja (Res. 316/2018)
+
+- `regret_requests.kind`: `regret` (arrepentimiento) o `cancellation` (baja pedida sin sesión).
+- `cancel_my_subscriptions()`: con sesión; cancela la renovación de todas las suscripciones de la persona, deja auditoría `subscription.cancel_button` y devuelve el código `BAJA-…`. La app además cancela la suscripción en Mercado Pago.
+- `submit_cancellation_request(nombre, email, detalle)`: sin sesión (anon); crea el pedido con código `BAJA-…` para que lo resuelva la administración.
+
 ## Regla para futuras actividades
 
 No asumir que todas las actividades usan yeso/agua/porcentaje de agua.
