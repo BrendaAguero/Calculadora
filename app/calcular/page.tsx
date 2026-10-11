@@ -3,11 +3,13 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
+import { inputsFromCalculation, loadCalculation } from '@/app/historial/data';
 import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold, type SavedProduct } from './calculator';
 
 const PER_KG: Record<string, number> = { mg: 1_000_000, g: 1000, kg: 1 };
 
-export default async function CalcularPage() {
+export default async function CalcularPage({ searchParams }: { searchParams: Promise<{ desde?: string }> }) {
+  const { desde } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -64,10 +66,15 @@ export default async function CalcularPage() {
     defaultMoldId: (p.product_molds ?? []).find(m => m.is_default)?.mold_id ?? null,
   }));
 
+  // «Duplicar y editar» desde el historial: se arranca con los datos de ese cálculo.
+  const source = desde ? await loadCalculation(supabase, user.id, desde) : null;
+  const initial = source?.calculation ? inputsFromCalculation(source.calculation, source.items).inputs : null;
+
   return (
     <AppShell>
+      {initial && <div role="status" className="mb-4 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">Copia de un cálculo del historial. Al guardar se crea uno nuevo; el original no cambia.</div>}
       {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudieron cargar todos tus datos guardados: {loadError}</div>}
-      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} />
+      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} initial={initial} />
     </AppShell>
   );
 }

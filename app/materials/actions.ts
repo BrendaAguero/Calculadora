@@ -116,10 +116,11 @@ export async function addMaterialPrice(formData: FormData) {
   const purchaseUnit = String(formData.get('purchase_unit') ?? 'g');
   const defaultUnit = String(formData.get('default_unit') ?? 'g');
 
-  const { data: material } = await supabase.from('materials').select('id').eq('id', materialId).eq('user_id', id).single();
+  const { data: material } = await supabase.from('materials').select('id,current_price_id').eq('id', materialId).eq('user_id', id).single();
   if (!material || purchaseQuantity <= 0 || purchasePrice < 0) throw new Error('Datos de precio inválidos.');
 
-  const { error } = await supabase.from('material_prices').insert({
+  const now = new Date().toISOString();
+  const { data: price, error } = await supabase.from('material_prices').insert({
     material_id: materialId,
     purchase_price: purchasePrice,
     purchase_quantity: purchaseQuantity,
@@ -127,9 +128,16 @@ export async function addMaterialPrice(formData: FormData) {
     unit_cost: unitCost(purchasePrice, purchaseQuantity, purchaseUnit, defaultUnit),
     currency: 'ARS',
     is_estimated: false,
-    valid_from: new Date().toISOString(),
-  });
+    valid_from: now,
+  }).select('id').single();
   if (error) throw new Error(error.message);
+
+  // El precio nuevo pasa a ser el actual; el anterior se cierra y queda en el historial (nunca se borra ni se modifica su valor).
+  const { error: currentError } = await supabase.from('materials').update({ current_price_id: price.id }).eq('id', materialId).eq('user_id', id);
+  if (currentError) throw new Error(currentError.message);
+  if (material.current_price_id) {
+    await supabase.from('material_prices').update({ valid_until: now }).eq('id', material.current_price_id).eq('material_id', materialId).is('valid_until', null);
+  }
 
   revalidatePath(`/materials/${materialId}`);
   revalidatePath('/materials');
