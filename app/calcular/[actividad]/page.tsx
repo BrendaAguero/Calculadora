@@ -25,6 +25,7 @@ export default async function MixPage({ params }: { params: Promise<{ actividad:
   ]);
   const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
   const available = plus ? ['YESO', ...MIXES.map(m => m.code)] : activities.map(a => a.code);
+  if (activities.length === 0 && snapshot?.baseLicenseActive && !plus) redirect('/bienvenida');
 
   return (
     <AppShell>
@@ -36,9 +37,9 @@ export default async function MixPage({ params }: { params: Promise<{ actividad:
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300"><Lock size={22} aria-hidden="true" /></span>
           <h1 className="mt-4 text-2xl">Calculadora de {def.name}</h1>
           <p className="mt-2 text-neutral-600 dark:text-neutral-300">{def.intro} Calcula cuánto preparar de cada componente, el costo de cada pieza y el precio de venta.</p>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-300">Se habilita con la <strong>Mensualidad Plus</strong> (incluye todas las actividades) o comprando la actividad.</p>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-300">Sumala desde «Mi acceso» o tenela con la <strong>Mensualidad Plus</strong>, que incluye todas las actividades.</p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/access" className="rounded-2xl bg-resina px-5 py-3 font-bold text-resina-dark">Ver Mensualidad Plus</Link>
+            <Link href="/access#actividades" className="rounded-2xl bg-resina px-5 py-3 font-bold text-resina-dark">Sumar {def.name}</Link>
             <Link href="/calcular" className="rounded-2xl border border-neutral-300 px-5 py-3 font-semibold dark:border-neutral-700">Volver a Yeso</Link>
           </div>
         </section>

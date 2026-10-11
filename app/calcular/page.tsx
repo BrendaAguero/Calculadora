@@ -5,7 +5,7 @@ import { AppShell } from '@/components/app-shell';
 import { ActivityTabs } from '@/components/activity-tabs';
 import { MIXES } from '@/lib/mixes';
 import { createClient } from '@/lib/supabase/server';
-import { getOwnedActivities } from '@/lib/access/activities';
+import { canUseActivity, getOwnedActivities } from '@/lib/access/activities';
 import { getAccessSnapshot } from '@/lib/access/permissions';
 import { inputsFromCalculation, loadCalculation } from '@/app/historial/data';
 import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold, type SavedProduct } from './calculator';
@@ -18,19 +18,33 @@ export default async function CalcularPage({ searchParams }: { searchParams: Pro
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { activities, error } = await getOwnedActivities(supabase, user.id);
-  const yeso = activities.find(activity => activity.code === 'YESO');
-  if (error || !yeso) {
+  const [{ activities, error }, access, snapshot] = await Promise.all([
+    getOwnedActivities(supabase, user.id),
+    canUseActivity(supabase, user.id, 'YESO'),
+    getAccessSnapshot(),
+  ]);
+  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
+  const available = plus ? ['YESO', ...MIXES.map(m => m.code)] : activities.map(a => a.code);
+  // Edición Personal recién activada: primero elige su actividad principal.
+  if (!error && activities.length === 0 && snapshot?.baseLicenseActive && !plus) redirect('/bienvenida');
+  // Sin Yeso: se ofrece ir a su actividad.
+  if (error || !access.allowed || !access.activityId) {
+    const first = MIXES.find(m => available.includes(m.code));
     return (
       <AppShell>
-        <h1 className="text-3xl font-bold">Calcular</h1>
-        <div role="alert" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          {error ? `No se pudieron cargar tus actividades: ${error}` : 'La calculadora de Yeso requiere tener la actividad Yeso.'}
-          <Link href="/access" className="mt-3 block underline">Ver mi licencia y actividades</Link>
-        </div>
+        <ActivityTabs current="YESO" available={available} />
+        <section className="rounded-4xl bg-white p-6 dark:bg-neutral-900">
+          <h1 className="text-2xl">Calculadora de Yeso</h1>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-300">{error ? `No se pudieron cargar tus actividades: ${error}` : 'Yeso no está entre tus actividades. Podés sumarla desde «Mi acceso» o tenerla con la Mensualidad Plus.'}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {first && <Link href={`/calcular/${first.slug}`} className="rounded-2xl bg-orange-800 px-5 py-3 font-semibold text-white">Ir a {first.name}</Link>}
+            <Link href="/access#actividades" className="rounded-2xl border border-neutral-300 px-5 py-3 font-semibold dark:border-neutral-700">Sumar actividades</Link>
+          </div>
+        </section>
       </AppShell>
     );
   }
+  const yeso = { id: access.activityId };
 
   const [moldsResult, formulasResult, materialsResult, productsResult] = await Promise.all([
     supabase.from('molds').select('id,name,reference_measurement_value,reference_measurement_unit,cost,estimated_uses').eq('user_id', user.id).eq('activity_id', yeso.id).eq('status', 'active').order('name'),
@@ -73,10 +87,6 @@ export default async function CalcularPage({ searchParams }: { searchParams: Pro
   // «Duplicar y editar» desde el historial: se arranca con los datos de ese cálculo.
   const source = desde ? await loadCalculation(supabase, user.id, desde) : null;
   const initial = source?.calculation ? inputsFromCalculation(source.calculation, source.items).inputs : null;
-
-  const snapshot = await getAccessSnapshot();
-  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
-  const available = plus ? ['YESO', ...MIXES.map(m => m.code)] : activities.map(a => a.code);
 
   return (
     <AppShell>

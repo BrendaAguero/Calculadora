@@ -157,7 +157,7 @@ export async function cancelEntrepreneurAutoRenew(formData: FormData) {
 // ---------------------------------------------------------------------------------------------
 // Compras de pago único: licencia Básico/Avanzado, pase Básico → Avanzado y módulos (Checkout Pro).
 
-const PRODUCT_TITLES: Record<string, string> = { license: 'Licencia', license_upgrade: 'Pase a Avanzado', module: 'Módulo' };
+const PRODUCT_TITLES: Record<string, string> = { license: 'Licencia', license_upgrade: 'Pase a Avanzado', module: 'Módulo', activity: 'Actividad' };
 const goStore = (key: 'ok' | 'error', message: string): never => redirect(`/access?${key}=${encodeURIComponent(message.slice(0, 300))}#planes`);
 
 async function attributeToPurchase(supabase: Awaited<ReturnType<typeof createClient>>, purchaseId: string, code: string | null) {
@@ -212,6 +212,16 @@ export async function buyModule(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: purchaseId, error } = await supabase.rpc('request_module_purchase', { p_module_code: moduleCode });
+  if (error || !purchaseId) goStore('error', error?.message ?? 'No se pudo crear el pedido.');
+  await checkoutPurchase(purchaseId as string, String(formData.get('name') ?? ''));
+}
+
+// Compra de una actividad (la segunda con descuento la primera semana; el precio lo pone la base).
+export async function buyActivity(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: purchaseId, error } = await supabase.rpc('request_activity_purchase', { p_code: String(formData.get('activity') ?? '') });
   if (error || !purchaseId) goStore('error', error?.message ?? 'No se pudo crear el pedido.');
   await checkoutPurchase(purchaseId as string, String(formData.get('name') ?? ''));
 }

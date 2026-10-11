@@ -83,7 +83,8 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
       <>
         <h2>1. Qué se puede comprar</h2>
         <ul>
-          <li><strong>Edición Personal:</strong> pago único y permanente (no vence). Incluye la calculadora de Yeso, las funciones de gestión (stock, producción, compras, proveedores, ventas y resumen) con hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes, el uso en 2 aparatos y un aviso publicitario propio. Funciona con internet.</li>
+          <li><strong>Edición Personal:</strong> pago único y permanente (no vence). Incluye la calculadora de una actividad principal a elección (Yeso, Resina, Jesmonite o Cemento decorativo), que se elige la primera vez que entrás y no se puede cambiar después; las funciones de gestión (stock, producción, compras, proveedores, ventas y resumen) con hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes, el uso en 2 aparatos y un aviso publicitario propio. Funciona con internet.</li>
+          <li><strong>Actividades extra:</strong> pago único y permanente por cada actividad. La segunda tiene precio especial durante la primera semana desde que elegís la principal; después se cobra el precio normal publicado en la app.</li>
           <li><strong>Extras:</strong> pago único y permanentes (por ejemplo, «Aparato extra» para usar la app en un aparato más). Solo se venden los que ya están disponibles; los demás figuran como «Próximamente».</li>
           <li><strong>Mensualidad Plus:</strong> suscripción mensual que se suma a la Edición Personal. Quita la publicidad, desbloquea todas las actividades y módulos disponibles, elimina los límites de altas y, cuando esté disponible, permite usar la app sin conexión.</li>
         </ul>
