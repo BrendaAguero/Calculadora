@@ -70,6 +70,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               {plan.formulaName ? `Fórmula ${plan.formulaName}${plan.versionNumber ? ` (v${plan.versionNumber})` : ''}, rinde ${qty(plan.yieldQuantity)} ${plan.yieldQuantity === 1 ? 'pieza' : 'piezas'} por tanda.` : 'Este producto no tiene fórmula: se registra sin materiales.'}
             </p>
+            {plan.formulaName && !plan.lines.length && <p className="mt-3 text-sm text-amber-800 dark:text-amber-200">Esta fórmula no tiene materiales cargados, así que no hay nada para calcular ni descontar. <Link href={`/formulas/${plan.formulaId}`} className="underline">Ver la fórmula</Link> o elegí otra arriba.</p>}
             {plan.lines.length > 0 && (
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-left text-sm">

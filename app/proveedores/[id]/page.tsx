@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { money } from '@/app/stock/constants';
-import { cardClass, dateTime, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton, secondaryButton } from '@/lib/ui';
+import { cardClass, dateOnly, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton, secondaryButton } from '@/lib/ui';
 import { setSupplierStatus, updateSupplier } from '../actions';
 
 export default async function SupplierPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
@@ -39,7 +39,7 @@ export default async function SupplierPage({ params, searchParams }: { params: P
         {!purchases?.length
           ? <p className="mt-2 text-sm text-neutral-500">Todavía no hay compras.</p>
           : <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">{purchases.map((purchase) => (
-            <li key={purchase.id}><Link href={`/compras/${purchase.id}`} className="flex justify-between py-2 hover:underline"><span>{dateTime(purchase.purchase_date)} · {purchase.supplier_purchase_items?.length ?? 0} materiales</span><strong>{money(purchase.total)}</strong></Link></li>
+            <li key={purchase.id}><Link href={`/compras/${purchase.id}`} className="flex justify-between py-2 hover:underline"><span>{dateOnly(purchase.purchase_date)} · {purchase.supplier_purchase_items?.length ?? 0} materiales</span><strong>{money(purchase.total)}</strong></Link></li>
           ))}</ul>}
       </section>
 

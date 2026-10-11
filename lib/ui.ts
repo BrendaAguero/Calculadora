@@ -8,3 +8,4 @@ export const errorBox = 'rounded-xl border border-red-300 bg-red-50 px-4 py-3 te
 export const okBox = 'rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200';
 export const warnBox = 'rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100';
 export const dateTime = (iso: string) => new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' });
+export const dateOnly = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'short', timeZone: 'America/Argentina/Buenos_Aires' });

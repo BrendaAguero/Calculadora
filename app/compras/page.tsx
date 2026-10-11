@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { FeatureLocked } from '@/components/feature-locked';
 import { money } from '@/app/stock/constants';
-import { dateTime, errorBox, pageClass, primaryButton, secondaryButton } from '@/lib/ui';
+import { dateOnly, errorBox, pageClass, primaryButton, secondaryButton } from '@/lib/ui';
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 
@@ -44,7 +44,7 @@ export default async function PurchasesPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="font-medium">{one(purchase.suppliers)?.name ?? 'Sin proveedor'}</h2>
-                      <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{dateTime(purchase.purchase_date)} · {purchase.supplier_purchase_items?.length ?? 0} materiales{purchase.stock_updated ? ' · sumado al stock' : ''}</p>
+                      <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{dateOnly(purchase.purchase_date)} · {purchase.supplier_purchase_items?.length ?? 0} materiales{purchase.stock_updated ? ' · sumado al stock' : ''}</p>
                     </div>
                     <strong>{money(purchase.total)}</strong>
                   </div>

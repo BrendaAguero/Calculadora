@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { amount, money } from '@/app/stock/constants';
-import { cardClass, dateTime, okBox, pageClass } from '@/lib/ui';
+import { cardClass, dateOnly, okBox, pageClass } from '@/lib/ui';
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 
@@ -26,7 +26,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
       <header>
         <Link href="/compras" className="text-sm text-neutral-500 dark:text-neutral-400">← Compras</Link>
         <h1 className="mt-1 text-2xl font-semibold">Compra {one(purchase.suppliers)?.name ? `a ${one(purchase.suppliers)!.name}` : 'sin proveedor'}</h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">{dateTime(purchase.purchase_date)}{purchase.notes ? ` · ${purchase.notes}` : ''}</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">{dateOnly(purchase.purchase_date)}{purchase.notes ? ` · ${purchase.notes}` : ''}</p>
       </header>
       {ok && <div role="status" className={okBox}>Compra registrada{purchase.stock_updated ? ' y sumada al stock' : ''}.</div>}
       <section className={cardClass}>
