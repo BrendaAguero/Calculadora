@@ -655,7 +655,7 @@ Funciones (migración `supabase/migrations/20261011_emprendedor.sql`, todas SECU
 - `quote_entrepreneur(meses)`: precio, descuentos y precio final para quien llama (se aplica el mayor de los dos descuentos).
 - `request_entrepreneur(meses)`: crea la compra (`payment_provider = 'manual'`) y la suscripción, ambas pendientes. Un solo pedido pendiente por persona.
 - `cancel_entrepreneur_request(id)`: la persona cancela su pedido pendiente.
-- `admin_list_entrepreneur_requests()` y `admin_activate_subscription(id)`: solo administradoras. Al activar, el plazo empieza al terminar el Emprendedor vigente (si hay) y la compra pasa a `approved`.
+- `admin_list_entrepreneur_requests()` y `admin_activate_subscription(id)`: solo administradoras. Al activar, 6 y 12 meses empiezan al terminar el Emprendedor vigente (si hay) y la compra pasa a `approved`. La mensualidad no se suma: no se puede pedir ni activar con un Emprendedor vigente (migración `20261011_emprendedor_mensual.sql`).
 
 Vencimiento: no hay proceso que cambie el estado; la app considera vigente solo lo que tiene `expires_at` en el futuro.
 

@@ -91,14 +91,15 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             <p className="mt-4 text-sm text-neutral-500">Para pedir Emprendedor primero necesitás una licencia Básico o Avanzado.</p>
           ) : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
-              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si renovás ahora, el tiempo nuevo se suma al final del que ya tenés.</p>}
+              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si renovás ahora con 6 o 12 meses, el tiempo nuevo se suma al final del que ya tenés. La mensualidad no se suma: podés pedirla cuando venza el actual.</p>}
               <div className="grid gap-2 sm:grid-cols-3">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
-                  if (!quote?.ok) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{monthsLabel(months)}: {quote && !quote.ok ? quote.error : "no disponible"}</div>;
+                  const blocked = months === 1 && snapshot.entrepreneurActive;
+                  if (!quote?.ok || blocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{monthsLabel(months)}: {blocked ? `disponible cuando venza tu Emprendedor actual (${date(snapshot.entrepreneurExpiresAt!)})` : quote && !quote.ok ? quote.error : "no disponible"}</div>;
                   return (
                     <label key={months} className="flex cursor-pointer flex-col rounded-xl border border-neutral-300 p-3 text-sm has-[:checked]:border-violet-500 has-[:checked]:ring-2 has-[:checked]:ring-violet-500/30 dark:border-neutral-700">
-                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === 1} required />{monthsLabel(months)}</span>
+                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 6 : 1)} required />{monthsLabel(months)}</span>
                       {Number(quote.discount_pct) > 0 && <span className="mt-1 text-neutral-500 line-through">{money(quote.price)}</span>}
                       <strong className="text-lg">{money(quote.final_price)}</strong>
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}

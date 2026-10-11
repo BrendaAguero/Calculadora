@@ -25,7 +25,7 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
         <div>
           <Link href="/access" className="text-sm underline">← Licencia y acceso</Link>
           <h1 className="mt-3 text-3xl font-semibold">Pedidos de Emprendedor</h1>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, el tiempo se suma al final.</p>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, 6 y 12 meses se suman al final; la mensualidad no se suma y se activa cuando vence el actual.</p>
         </div>
 
         {ok && <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{ok}</div>}
