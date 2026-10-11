@@ -216,7 +216,7 @@ export async function buyModule(formData: FormData) {
   await checkoutPurchase(purchaseId as string, String(formData.get('name') ?? ''));
 }
 
-// Compra de una actividad (la segunda con descuento la primera semana; el precio lo pone la base).
+// Compra de una actividad (la segunda a mitad de precio; el precio lo pone la base).
 export async function buyActivity(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -122,5 +122,5 @@ export async function setPrices(formData: FormData) {
 
 export async function setActivityPrices(formData: FormData) {
   const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
-  await rpc('/admin/precios', 'admin_set_activity_prices', { p_secondary: n('secondary'), p_extra: n('extra') }, 'Precios de las actividades guardados.');
+  await rpc('/admin/precios', 'admin_set_activity_prices', { p_secondary: n('extra') / 2, p_extra: n('extra') }, 'Precios de las actividades guardados.');
 }

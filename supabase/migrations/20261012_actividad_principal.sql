@@ -205,3 +205,31 @@ set search_path = public
 as $$ select public.activity_price_for(auth.uid()) $$;
 revoke all on function public.my_activity_price() from public, anon;
 grant execute on function public.my_activity_price() to authenticated;
+
+-- Cambio del 11/10/2026: la secundaria sale SIEMPRE a mitad de precio (sin límite de tiempo).
+create or replace function public.activity_price_for(p_user_id uuid)
+returns numeric
+language sql stable security definer
+set search_path = public
+as $$
+  select case
+    when (select count(*) from user_activities where user_id = p_user_id and status = 'active') = 1
+     and not exists (select 1 from purchases where user_id = p_user_id and product_type = 'activity' and payment_status = 'approved')
+    then round((select value_numeric from pricing_config where key = 'activity_price_extra') / 2)
+    else (select value_numeric from pricing_config where key = 'activity_price_extra')
+  end
+$$;
+update pricing_config set value_numeric = round((select value_numeric from pricing_config where key = 'activity_price_extra') / 2), description = 'Actividad secundaria: siempre la mitad del precio normal (se calcula sola)', updated_at = now() where key = 'activity_price_secondary';
+create or replace function public.admin_set_activity_prices(p_secondary numeric, p_extra numeric)
+returns void
+language plpgsql volatile security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'Solo la administración puede hacer esto.'; end if;
+  if p_extra <= 0 then raise exception 'El precio tiene que ser mayor a cero.'; end if;
+  update pricing_config set value_numeric = p_extra, updated_at = now() where key = 'activity_price_extra';
+  update pricing_config set value_numeric = round(p_extra / 2), updated_at = now() where key = 'activity_price_secondary';
+  perform public.log_audit('prices.activities', 'pricing', null, null, jsonb_build_object('extra', p_extra, 'secondary', round(p_extra / 2)));
+end;
+$$;

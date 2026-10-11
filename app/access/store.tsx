@@ -91,7 +91,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
 
       <section id="actividades" className={cardClass}>
         <h2 className="font-semibold">Actividades</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Mensualidad Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. Las demás se compran una vez y quedan para siempre.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Mensualidad Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(activities ?? []).map((activity) => {
             const mine = owned?.find((o) => o.activity_id === activity.id);

@@ -33,9 +33,8 @@ export default async function AdminPricesPage({ searchParams }: { searchParams: 
       </form>
       <form action={setActivityPrices} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
         <h2 className="font-semibold sm:col-span-2">Actividades</h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">La actividad principal viene incluida. La segunda tiene precio especial durante la primera semana; después cada actividad sale al precio normal. Con Plus tienen todas.</p>
-        <label className={labelClass}>Secundaria (precio especial)<input name="secondary" inputMode="numeric" required defaultValue={value('activity_price_secondary')} className={inputClass} /></label>
-        <label className={labelClass}>Actividad extra (precio normal)<input name="extra" inputMode="numeric" required defaultValue={value('activity_price_extra')} className={inputClass} /></label>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">La actividad principal viene incluida. La segunda sale siempre a mitad de precio (se calcula sola); las siguientes, precio normal. Con Plus tienen todas.</p>
+        <label className={labelClass}>Actividad (precio normal)<input name="extra" inputMode="numeric" required defaultValue={value('activity_price_extra')} className={inputClass} /><span>La segunda actividad: {Math.round(value('activity_price_extra') / 2).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })} (mitad).</span></label>
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar precios de actividades</SubmitButton></div>
       </form>
     </main>

@@ -62,7 +62,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
         ) : (
           <>
             <h1 className="mt-4 text-3xl lg:text-4xl">¡Listo! Tu actividad principal es {primary.name}</h1>
-            <p className="mt-2 text-neutral-600 dark:text-neutral-300">¿Trabajás también con otro material? Sumá una actividad secundaria a precio especial: <strong>{pesos(offer!.price)}</strong> en lugar de {pesos(offer!.regular)}. Este precio vale durante tu primera semana.</p>
+            <p className="mt-2 text-neutral-600 dark:text-neutral-300">¿Trabajás también con otro material? Sumá una actividad secundaria a <strong>mitad de precio: {pesos(offer!.price)}</strong> en lugar de {pesos(offer!.regular)}.</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {ACTIVITIES.filter(a => a.code !== activities[0].code).map(a => (
                 <form key={a.code} action={buyActivity} className="flex flex-col rounded-3xl bg-white p-5 dark:bg-neutral-900">
@@ -75,7 +75,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
               ))}
             </div>
             <Link href="/" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-orange-800 px-5 py-3 font-semibold text-white"><Check size={18} aria-hidden="true" />Ahora no, ir a mi taller</Link>
-            <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">Más adelante podés sumar actividades desde «Mi acceso» a {pesos(offer!.regular)} cada una.</p>
+            <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">Si preferís, la sumás más adelante desde «Mi acceso»: tu segunda actividad siempre sale a mitad de precio.</p>
           </>
         )}
       </div>
