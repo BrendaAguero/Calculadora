@@ -20,6 +20,10 @@ export default function LegalIndex() {
           <h2 className="font-semibold">Botón de arrepentimiento</h2>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Revocá una compra dentro de los 10 días.</p>
         </Link>
+        <Link href="/baja" className={cardClass}>
+          <h2 className="font-semibold">Botón de baja</h2>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Dá de baja la suscripción mensual cuando quieras.</p>
+        </Link>
       </div>
     </PublicPage>
   );

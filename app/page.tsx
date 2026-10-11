@@ -27,6 +27,8 @@ export default async function Home() {
         </div>
         <ThemeToggle />
       </header>
+      {/* Res. 424/2020 y 316/2018: arrepentimiento y baja a la vista en la primera pantalla. */}
+      <p className="mt-2 flex gap-4 text-xs"><a href="/arrepentimiento" className="text-neutral-500 underline dark:text-neutral-400">Botón de arrepentimiento</a><a href="/baja" className="text-neutral-500 underline dark:text-neutral-400">Botón de baja</a></p>
 
       {done < steps.length && (
         <section aria-labelledby="primeros-pasos" className="mt-6 rounded-3xl border border-orange-200 bg-orange-50 p-5 dark:border-orange-900 dark:bg-orange-950/30">
