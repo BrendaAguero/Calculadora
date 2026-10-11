@@ -21,7 +21,10 @@ async function authOrigin() {
 
 // Mensajes de Supabase traducidos para que la persona sepa qué hacer.
 function friendlyEmailError(message: string) {
-  if (/rate limit|too many|security purposes/i.test(message)) return "Se pidieron demasiados correos seguidos. Esperá unos minutos y volvé a intentar.";
+  // Límite por persona: Supabase pide esperar unos segundos entre un correo y otro a la misma dirección.
+  if (/security purposes|after \d+ seconds/i.test(message)) return "Ya te enviamos un correo hace instantes. Esperá un minuto antes de pedir otro.";
+  // Límite general de la aplicación: el servicio de correo gratuito permite muy pocos envíos por hora en total.
+  if (/rate limit|too many/i.test(message)) return "El servicio de correo de la aplicación llegó a su límite por ahora (no es por algo que hayas hecho). Probá de nuevo en una hora.";
   if (/not authorized|not allowed/i.test(message)) return "Todavía no se pueden enviar correos a esta dirección: falta configurar el servicio de correo de la aplicación.";
   if (/invalid/i.test(message) && /email/i.test(message)) return "Revisá que el email esté bien escrito.";
   return `No se pudo enviar el correo: ${message}`;
