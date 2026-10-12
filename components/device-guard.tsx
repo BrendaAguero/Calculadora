@@ -6,9 +6,35 @@ import { Fingerprint, LockKeyhole } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { answerSessionAlert } from "@/app/seguridad/actions";
+import { LAST_ONLINE_KEY, OFFLINE_PLUS_KEY, OFFLINE_USER_KEY } from "@/lib/outbox";
+import { SW_PLUS_EVENT } from "@/components/sw-register";
 import { HIDDEN_AT_KEY, RELOCK_AFTER_MS, UNLOCKED_KEY, UNLOCKED_PATHS, checkBiometric, checkPin, readLock, saveLock, type LockConfig } from "@/lib/app-lock";
 
 type Alert = { id: string; place_a: string | null; place_b: string | null };
+// Pantallas que se guardan de antemano para usarlas sin conexión (Mensualidad Plus).
+const WARM_URLS = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/mas"];
+let warmed = false;
+
+// Guarda en el aparato si tiene el modo sin conexión, quién es y cuándo se conectó por última vez.
+function rememberConnection(data: { plus?: boolean; userId?: string }) {
+  try {
+    const before = localStorage.getItem(OFFLINE_PLUS_KEY) === "1";
+    localStorage.setItem(LAST_ONLINE_KEY, String(Date.now()));
+    if (data.userId) localStorage.setItem(OFFLINE_USER_KEY, data.userId);
+    if (data.plus) localStorage.setItem(OFFLINE_PLUS_KEY, "1"); else localStorage.removeItem(OFFLINE_PLUS_KEY);
+    if (before !== Boolean(data.plus)) window.dispatchEvent(new Event(SW_PLUS_EVENT));
+  } catch {}
+  if (data.plus && !warmed && "serviceWorker" in navigator) {
+    warmed = true;
+    navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage({ type: "warm", urls: WARM_URLS })).catch(() => {});
+  }
+}
+
+// Al cerrar sesión (pantalla de entrada): se borran las pantallas guardadas y los datos del modo sin conexión.
+function forgetConnection() {
+  try { localStorage.removeItem(OFFLINE_PLUS_KEY); localStorage.removeItem(OFFLINE_USER_KEY); } catch {}
+  if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage({ type: "clear" })).catch(() => {});
+}
 const PING_EVERY_MS = 5 * 60 * 1000;
 const MAX_PIN_TRIES = 5;
 
@@ -27,7 +53,8 @@ export function DeviceGuard() {
     try {
       const response = await fetch("/api/presence", { method: "POST", cache: "no-store" });
       if (!response.ok) return;
-      const data = (await response.json()) as { state: string; alert?: Alert | null };
+      const data = (await response.json()) as { state: string; alert?: Alert | null; plus?: boolean; userId?: string };
+      rememberConnection(data);
       if (data.state === "released") router.replace("/login?ok=" + encodeURIComponent("Este aparato fue liberado. Entrá de nuevo con tu clave."));
       else setAlert(data.alert ?? null);
     } catch {}
@@ -42,6 +69,10 @@ export function DeviceGuard() {
     document.documentElement.classList.toggle("app-locked", locked);
     setLock(locked ? config : null);
   }, [isOpenPage]);
+
+  useEffect(() => {
+    if (pathname.startsWith("/login")) forgetConnection();
+  }, [pathname]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- lee el bloqueo guardado en el navegador al montar

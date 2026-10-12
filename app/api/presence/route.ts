@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { currentDeviceId } from "@/lib/devices";
+import { getAccessSnapshot } from "@/lib/access/permissions";
 import { sendMail } from "@/lib/mail";
 import { CONTACT_EMAIL } from "@/lib/legal";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -47,6 +48,9 @@ export async function POST() {
     }
   }
 
+  // El modo sin conexión es de Mensualidad Plus (también la administración y la cuenta de prueba).
+  const snapshot = await getAccessSnapshot();
+  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
   const { data: open } = await supabase.from("session_alerts").select("id,place_a,place_b,created_at").eq("user_id", user.id).eq("status", "open").order("created_at", { ascending: false }).limit(1).maybeSingle();
-  return Response.json({ state: "ok", alert: open ?? null });
+  return Response.json({ state: "ok", alert: open ?? null, plus, userId: user.id });
 }

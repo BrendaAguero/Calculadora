@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { saveCalculation, type SaveInput } from './actions';
 import { compute, num, type CalcInput, type Mode, type PriceMethod } from './compute';
+import { enqueue, isOffline, offlineEnabled } from '@/lib/outbox';
 
 export type SavedMold = { id: string; name: string; measurement: number | null; unit: string | null; cost: number | null; estimatedUses: number | null };
 export type SavedFormula = { id: string; name: string; versionNumber: number | null; waterPercentage: number | null };
@@ -96,6 +97,13 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
   }
 
   function save() {
+    // Sin conexión (Mensualidad Plus): se guarda en el aparato y se sube solo al volver internet.
+    if (isOffline() && offlineEnabled()) {
+      void enqueue('yeso_calc', { ...effective, moldId, formulaId, materialId, productId, moldCostAuto }, 'Cálculo de Yeso')
+        .then(() => setStatus({ ok: true, message: 'Sin conexión: el cálculo quedó guardado en este aparato y se sube solo cuando vuelva internet.' }))
+        .catch(() => setStatus({ ok: false, message: 'No se pudo guardar en este aparato.' }));
+      return;
+    }
     startSaving(async () => {
       const response = await saveCalculation({ ...effective, moldId, formulaId, materialId, productId, moldCostAuto });
       setStatus(response.ok ? { ok: true, message: 'Cálculo guardado. Los precios de hoy quedan congelados en él.', id: response.id } : { ok: false, message: response.error });

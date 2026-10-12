@@ -4,6 +4,8 @@ import { SubmitButton } from '@/components/submit-button';
 import { useState } from 'react';
 import { registerSale } from '../actions';
 import { saleTotalsClient } from './totals';
+import { QueuedSaleMessage, queueSaleIfOffline } from './offline';
+import { isOffline, offlineEnabled } from '@/lib/outbox';
 
 const inputClass = 'w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const labelClass = 'grid gap-1 text-xs text-neutral-500 dark:text-neutral-400';
@@ -12,6 +14,7 @@ const num = (value: string) => { const n = Number(value.replace(',', '.')); retu
 
 type Props = {
   productId: string;
+  productName: string;
   quantity: string;
   suggestedPrice: number | null;
   priceLabel: string | null;
@@ -23,15 +26,23 @@ type Props = {
 };
 
 // Formulario de venta con ganancia y margen calculados mientras se escribe. El servidor vuelve a calcular todo al guardar.
-export function SaleForm({ productId, quantity, suggestedPrice, priceLabel, unitCost, costSource, today, inStock, paymentMethods }: Props) {
+export function SaleForm({ productId, productName, quantity, suggestedPrice, priceLabel, unitCost, costSource, today, inStock, paymentMethods }: Props) {
   const [price, setPrice] = useState(suggestedPrice != null ? String(suggestedPrice) : '');
   const [discount, setDiscount] = useState('');
   const [commission, setCommission] = useState('');
+  const [queued, setQueued] = useState(false);
   const q = num(quantity);
   const t = saleTotalsClient(q, num(price), unitCost ?? 0, num(discount), num(commission));
 
+  if (queued) return <QueuedSaleMessage />;
+
   return (
-    <form action={registerSale} className="grid gap-4">
+    <form action={registerSale} onSubmit={async (event) => {
+      // Sin conexión (Mensualidad Plus): se guarda en el aparato en lugar de mandarla al servidor.
+      if (!isOffline() || !offlineEnabled()) return;
+      event.preventDefault();
+      if (await queueSaleIfOffline(event.currentTarget, productName)) setQueued(true);
+    }} className="grid gap-4">
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={quantity} />
       <section className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:grid-cols-3 dark:border-neutral-800 dark:bg-neutral-900">
