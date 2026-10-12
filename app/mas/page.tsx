@@ -34,6 +34,7 @@ export default async function MasPage({ searchParams }: { searchParams: Promise<
       <h1 className="text-3xl font-bold">Más</h1>
       <div className="mt-6 space-y-5">
         <SimpleModeToggle initial={simple} />
+        <Link href="/empezar" className="flex items-center justify-between rounded-3xl bg-white px-4 py-4 font-semibold dark:bg-neutral-900">Personalizar Inicio y el menú<ChevronRight size={18} aria-hidden="true" className="text-neutral-400" /></Link>
         <InstallApp />
         {simple ? (
           <>
