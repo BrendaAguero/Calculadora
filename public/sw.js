@@ -12,7 +12,7 @@ const PLUS = new URL(self.location.href).searchParams.get("plus") === "1";
 // Pantallas que nunca se guardan (entrada, pagos, administración y datos de la API).
 const NEVER = ["/login", "/auth/", "/api/", "/admin", "/set-password", "/comprar", "/bienvenida"];
 // Pantallas principales que se guardan de antemano (Plus), para tenerlas aunque no se hayan abierto.
-const WARM = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas", "/materials/new", "/produccion/nueva", "/compras/nueva", "/lista-precios"];
+const WARM = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas", "/materials/new", "/produccion/nueva", "/compras/nueva", "/lista-precios", "/herramientas"];
 
 async function warm(paths) {
   await Promise.all(paths.slice(0, 20).map(async (path) => {

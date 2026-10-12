@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ROUND_STEPS, roundPrice, wholesalePrice } from '@/lib/pricing';
 
 const KEY = 'calculadora-precio';
@@ -48,6 +49,7 @@ export function PriceExtras({ price, unitCost }: { price: number; unitCost: numb
           <dd className={`text-xs ${below ? 'font-semibold text-red-200' : 'opacity-75'}`}>{below ? '¡Ojo! Queda por debajo del costo' : `ganás ${money(wholesale - unitCost)} por pieza`}</dd>
         </div>
       </dl>
+      <p className="text-xs"><Link href={`/herramientas?neto=${Math.round(rounded)}`} className="font-semibold underline">¿Lo vendés en Mercado Libre o Tiendanube? Mirá a cuánto publicarlo</Link> · <Link href={`/herramientas?costo=${Math.round(unitCost)}`} className="underline">armar un kit</Link></p>
     </div>
   );
 }

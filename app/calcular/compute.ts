@@ -18,6 +18,7 @@ export type CalcInput = {
   gas: string;
   commissions: string;
   other: string;
+  supplies?: string; // otros materiales de la tanda (pigmento, argollas, mechas…), en todos los modos
   priceMethod: PriceMethod;
   profitPercentage: string;
   fixedProfit: string;
@@ -29,6 +30,7 @@ export type CostType = 'material' | 'waste' | 'mold' | 'packaging' | 'labor' | '
 export type CalcItem = { cost_type: CostType; name: string; quantity: number; unit: string; unit_cost: number; total_cost: number };
 
 export const EXTRA_COSTS: { key: keyof CalcInput; type: CostType; label: string; modes: Mode[] }[] = [
+  { key: 'supplies', type: 'other', label: 'Otros materiales', modes: ['easy', 'standard', 'personalized'] },
   { key: 'moldCost', type: 'mold', label: 'Molde', modes: ['standard', 'personalized'] },
   { key: 'packaging', type: 'packaging', label: 'Packaging', modes: ['standard', 'personalized'] },
   { key: 'labor', type: 'labor', label: 'Mano de obra', modes: ['personalized'] },
@@ -60,7 +62,7 @@ export function compute(input: CalcInput) {
   if (wasteAmount > 0) items.push({ cost_type: 'waste', name: `Merma (${wastePercentage} %)`, quantity: wasteAmount, unit: 'g', unit_cost: pricePerGram, total_cost: wasteAmount * pricePerGram });
   // Solo cuentan los costos del modo elegido: los valores de otros modos se conservan pero no suman.
   for (const extra of EXTRA_COSTS) {
-    const value = num(input[extra.key] as string);
+    const value = num((input[extra.key] as string | undefined) ?? '');
     if (value > 0 && extra.modes.includes(input.mode)) items.push({ cost_type: extra.type, name: extra.label, quantity: 1, unit: 'tanda', unit_cost: value, total_cost: value });
   }
 
