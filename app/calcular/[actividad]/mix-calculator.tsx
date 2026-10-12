@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PriceExtras } from '@/components/price-extras';
 import { useMemo, useState, useTransition } from 'react';
 import { RotateCcw, Save, SlidersHorizontal } from 'lucide-react';
 import { computeMix, mixByCode, type MixCode, type MixInput, type MixSettings, type PriceMethod } from '@/lib/mixes';
@@ -152,6 +153,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
           <div><dt>Ganancia por pieza</dt><dd className="font-display text-lg font-bold text-white">{money(result.profit)}</dd></div>
           <div><dt>Margen</dt><dd className="font-display text-lg font-bold text-white">{result.margin.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %</dd></div>
         </dl>
+        <PriceExtras price={result.price} unitCost={result.unitCost} />
         <p className="mt-4 text-xs text-white/70">El precio sugerido es una referencia: vos decidís el precio final.</p>
         <button type="button" onClick={saveCalc} disabled={pending} className="mt-4 min-h-12 w-full rounded-2xl bg-resina px-4 font-bold text-resina-dark disabled:opacity-60">{pending ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className="mt-3 rounded-xl bg-white/15 p-3 text-sm">{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}

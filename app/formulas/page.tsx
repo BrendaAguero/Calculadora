@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
 import { HelpTip } from '@/components/help-tip';
 import { createClient } from '@/lib/supabase/server';
 import { UndoNotice } from '@/components/undo-notice';
@@ -20,11 +21,11 @@ export default async function FormulasPage({ searchParams }: { searchParams: Pro
     .order('name', { ascending: true });
 
   return (
-    <main className={pageClass}>
+    <AppShell>
+      <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Fórmulas</h1>
+          <h1 className="text-3xl">Mis fórmulas</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Recetas con ingredientes y versiones: cada cambio crea una versión nueva y las anteriores se conservan.</p>
         </div>
         <Link href="/formulas/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nueva</Link>
@@ -54,6 +55,7 @@ export default async function FormulasPage({ searchParams }: { searchParams: Pro
               );
             })}
           </section>}
-    </main>
+      </div>
+    </AppShell>
   );
 }

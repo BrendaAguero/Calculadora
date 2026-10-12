@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getSimpleMode } from '@/lib/simple-mode-server';
 import { HelpTip } from '@/components/help-tip';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
@@ -18,6 +19,7 @@ const pct = (value: number) => `${value.toLocaleString('es-AR', { maximumFractio
 type Params = { periodo?: string; desde?: string; hasta?: string; ok?: string; error?: string; anuladas?: string; anulada?: string };
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const simple = await getSimpleMode();
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,7 +44,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Ventas</h1>
+          <h1 className={simple ? "text-3xl" : "text-2xl font-semibold"}>{simple ? "Lo que vendí" : "Ventas"}</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Ganancia = precio de venta − costo − descuentos − comisiones.</p>
         </div>
         {allowed && <Link href="/ventas/nueva" className={primaryButton}>Nueva</Link>}

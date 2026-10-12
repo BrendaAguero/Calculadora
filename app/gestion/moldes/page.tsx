@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
 import { createClient } from '@/lib/supabase/server';
 import { UndoNotice } from '@/components/undo-notice';
 import { restoreMold } from './actions';
@@ -23,11 +24,11 @@ export default async function MoldesPage({ searchParams }: { searchParams: Promi
     .order('name', { ascending: true });
 
   return (
-    <main className={pageClass}>
+    <AppShell>
+      <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Moldes</h1>
+          <h1 className="text-3xl">Mis moldes</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Guardá la medición de referencia, el costo y los usos de cada molde.</p>
         </div>
         <Link href="/gestion/moldes/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nuevo</Link>
@@ -59,6 +60,7 @@ export default async function MoldesPage({ searchParams }: { searchParams: Promi
               </Link>
             ))}
           </section>}
-    </main>
+      </div>
+    </AppShell>
   );
 }

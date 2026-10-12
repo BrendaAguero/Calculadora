@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
+import { ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
 
 // Menú de la app: el mismo en la barra del costado (computadora), la barra de abajo y «Más» (celular).
 export type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -16,6 +16,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/stock", label: "Stock", icon: Package },
     { href: "/compras", label: "Compras", icon: ShoppingCart },
     { href: "/resumen", label: "Resumen", icon: BarChart3 },
+    { href: "/lista-precios", label: "Lista de precios", icon: ClipboardList },
   ] },
   { title: "Mis datos", items: [
     { href: "/materials", label: "Materiales", icon: Layers },
@@ -29,6 +30,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/profile", label: "Mi perfil", icon: User },
     { href: "/revendedora", label: "Revendedora", icon: Store },
     { href: "/preferences", label: "Preferencias", icon: Settings },
+    { href: "/exportar", label: "Bajar mis datos", icon: Download },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
   ] },
 ];
@@ -52,6 +54,7 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/stock", label: "Lo que tengo", icon: Package },
     { href: "/materials", label: "Mis materiales", icon: Layers },
     { href: "/gestion/productos", label: "Mis productos", icon: Gem },
+    { href: "/lista-precios", label: "Lista de precios", icon: ClipboardList },
   ] },
   { title: null, items: [
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
