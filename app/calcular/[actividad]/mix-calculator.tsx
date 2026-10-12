@@ -7,6 +7,8 @@ import { RotateCcw, Save, SlidersHorizontal } from 'lucide-react';
 import { computeMix, mixByCode, type MixCode, type MixInput, type MixSettings, type PriceMethod } from '@/lib/mixes';
 import { resetMixSettings, saveMixCalculation, saveMixSettings } from '../mix-actions';
 import { enqueue, isOffline, offlineEnabled } from '@/lib/outbox';
+import { MoldVolume } from '@/components/mold-volume';
+import { mixSteps } from '@/lib/mix-steps';
 
 const inputClass = 'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-neutral-900 focus:border-orange-600 focus:bg-white dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const cardClass = 'mt-4 rounded-3xl bg-white p-5 dark:bg-neutral-900';
@@ -82,7 +84,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
               ))}
               <label className="text-sm font-medium">Pigmento (%)<input type="number" min="0" step="any" value={settings.pigmentPercent} onChange={e => setS({ pigmentPercent: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Sobre el peso total de la mezcla.</span></label>
               <label className="text-sm font-medium">Merma (%)<input type="number" min="0" step="any" value={settings.wastePercent} onChange={e => setS({ wastePercent: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Lo que queda en el vaso y los utensilios.</span></label>
-              <label className="text-sm font-medium">Densidad (g por ml)<input type="number" min="0" step="any" value={settings.density} onChange={e => setS({ density: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Para pasar del agua del molde a gramos.</span></label>
+              <label className="text-sm font-medium">Densidad (g por ml)<input type="number" min="0" step="any" value={settings.density} onChange={e => setS({ density: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Cuántos gramos pesa 1 ml de mezcla (el agua pesa 1). Sirve para pasar del tamaño del molde a gramos.</span></label>
             </div>
             {code === 'RESINA' && (
               <label className="mt-3 flex items-center gap-3 text-sm"><input type="checkbox" checked={settings.byVolume} onChange={e => setS({ byVolume: e.target.checked })} className="h-5 w-5 accent-orange-800" />Mi marca indica la proporción por volumen (ml), no por peso</label>
@@ -107,8 +109,8 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
         <h2 className="text-lg">1. ¿Cuánto preparo?</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="text-sm font-medium">Cantidad de piezas<input {...field('quantity')} type="number" min="1" step="1" className={inputClass} /></label>
-          <label className="text-sm font-medium">Agua que entra en el molde (ml)<input {...field('moldMl')} type="number" min="0" step="any" className={inputClass} /><span className={hintClass}>Llená el molde con agua y medila.</span></label>
-          <label className="text-sm font-medium">O gramos por pieza<input {...field('gramsPerPiece')} type="number" min="0" step="any" className={inputClass} placeholder={result.perPiece ? fmt(result.perPiece, 'g') : 'Si ya lo sabés'} /><span className={hintClass}>Si lo dejás vacío, se calcula con el agua × {settings.density}.</span></label>
+          <div className="sm:col-span-3"><MoldVolume value={input.moldMl} onChange={(ml) => set({ moldMl: ml })} inputClass={inputClass} /></div>
+          <label className="text-sm font-medium">O gramos por pieza<input {...field('gramsPerPiece')} type="number" min="0" step="any" className={inputClass} placeholder={result.perPiece ? fmt(result.perPiece, 'g') : 'Si ya lo sabés'} /><span className={hintClass}>Si ya sabés cuántos gramos de mezcla lleva cada pieza. Si no, se calcula con el tamaño del molde.</span></label>
         </div>
         {result.total > 0 && (
           <div className="mt-4 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
@@ -119,6 +121,12 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
               ))}
               {result.pigment > 0 && <li className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>Pigmento</span><strong className="font-display text-2xl">{fmt(result.pigment, 'g')}</strong></li>}
             </ul>
+            {!Number(input.gramsPerPiece) && (
+              <details open className="mt-3 text-sm">
+                <summary className="cursor-pointer font-semibold">¿Cómo se calcula?</summary>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-neutral-700 dark:text-neutral-300">{mixSteps(def.name, settings, Number(input.moldMl) || 0, result.pieces).map(line => <li key={line}>{line}</li>)}</ol>
+              </details>
+            )}
           </div>
         )}
       </section>

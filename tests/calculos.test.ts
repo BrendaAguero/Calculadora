@@ -124,3 +124,11 @@ test('yeso: «otros materiales» suma en todos los modos', () => {
   close(easy.totalCost, 200 + 300);
   close(easy.unitCost, 250);
 });
+
+import { moldVolumeMl } from '../lib/volume.ts';
+
+test('volumen del molde por medidas', () => {
+  close(moldVolumeMl('rect', { length: 10, width: 5, height: 2 }), 100);
+  close(moldVolumeMl('round', { diameter: 10, height: 4 }), Math.PI * 25 * 4);
+  assert.equal(moldVolumeMl('rect', { length: 10, width: 5 }), 0);
+});
