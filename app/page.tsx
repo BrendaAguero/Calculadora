@@ -18,6 +18,7 @@ import { ProfitToggle } from "@/components/profit-toggle";
 import { PROFIT_COOKIE } from "@/lib/profit";
 import { OLD_PRICE_DAYS } from "@/lib/price-age";
 import { MIXES } from "@/lib/mixes";
+import { QuickCalc } from "@/components/quick-calc";
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pesos = (value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -120,7 +121,10 @@ export default async function Home() {
           ))}
           {!calculators.length && <Link href="/calcular" className={`flex items-center justify-between rounded-2xl bg-resina px-4 py-4 font-bold text-resina-dark ${big}`}>Calcular<ChevronRight size={20} aria-hidden="true" /></Link>}
         </div>
+        <Link href="/herramientas" className="mt-3 inline-block text-sm font-semibold text-white/90 underline underline-offset-4">Herramientas: vender online, cuántas piezas salen, kits y tu tiempo →</Link>
       </section>
+
+      <QuickCalc />
 
       {nextStep && (
         <Link href={nextStep[1]} className="mt-4 flex items-center gap-4 rounded-3xl border-2 border-resina bg-amber-50 p-4 dark:bg-amber-950/30">

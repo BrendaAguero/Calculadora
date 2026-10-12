@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
+import { Ruler, ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
 
 // Menú de la app: el mismo en la barra del costado (computadora), la barra de abajo y «Más» (celular).
 export type NavItem = { href: string; label: string; icon: LucideIcon; section?: MenuSection };
@@ -20,6 +20,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
     { href: "/", label: "Inicio", icon: House },
     { href: "/calcular", label: "Calcular", icon: Calculator },
+    { href: "/herramientas", label: "Herramientas", icon: Ruler },
     { href: "/historial", label: "Historial", icon: History },
   ] },
   { title: "Negocio", items: [
@@ -61,6 +62,7 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
     { href: "/", label: "Inicio", icon: House },
     { href: "/calcular", label: "Calcular un precio", icon: Calculator },
+    { href: "/herramientas", label: "Herramientas", icon: Ruler },
     { href: "/ventas/nueva", label: "Registrar una venta", icon: Receipt },
     { href: "/ventas", label: "Lo que vendí", icon: Wallet },
     { href: "/stock", label: "Lo que tengo", icon: Package },

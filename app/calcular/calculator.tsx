@@ -36,12 +36,12 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
   const [input, setInput] = useState<CalcInput>(() => {
     const defaults: CalcInput = {
       mode: 'easy', quantity: '1', moldWater: '', plasterPerPiece: '', waterPercentage: '75', plasterPriceKg: '', waste: '0',
-      moldCost: '', packaging: '', labor: '', electricity: '', gas: '', commissions: '', other: '',
+      moldCost: '', packaging: '', labor: '', electricity: '', gas: '', commissions: '', other: '', supplies: '',
       priceMethod: 'percentage', profitPercentage: '30', fixedProfit: '', manualPrice: '',
     };
     if (!initial) return defaults;
-    const { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice } = { ...defaults, ...initial };
-    return { mode: !allowPersonalized && mode === 'personalized' ? 'standard' : mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, priceMethod, profitPercentage, fixedProfit, manualPrice };
+    const { mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, supplies, priceMethod, profitPercentage, fixedProfit, manualPrice } = { ...defaults, ...initial };
+    return { mode: !allowPersonalized && mode === 'personalized' ? 'standard' : mode, quantity, moldWater, plasterPerPiece, waterPercentage, plasterPriceKg, waste, moldCost, packaging, labor, electricity, gas, commissions, other, supplies: supplies ?? '', priceMethod, profitPercentage, fixedProfit, manualPrice };
   });
   const [moldId, setMoldId] = useState(() => keep(initial?.moldId, molds));
   const [formulaId, setFormulaId] = useState(() => keep(initial?.formulaId, formulas));
@@ -199,6 +199,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
             {material && <span className={hintClass}>Precio actual de {material.name}.</span>}
           </label>
           <label className="text-sm font-medium">Merma (%)<input {...field('waste')} type="number" min="0" step="any" className={inputClass} /><span className={hintClass}>Yeso que se pierde al preparar la mezcla.</span></label>
+          <label className="text-sm font-medium">Otros materiales (para esta tanda)<input {...field('supplies')} value={input.supplies ?? ''} type="number" min="0" step="any" placeholder="0" className={inputClass} /><span className={hintClass}>Pigmento, argollas, mechas, esencia… lo que pagaste por lo que usás en estas piezas.</span></label>
           {showStandard && (
             <label className="text-sm font-medium">Molde (para esta tanda)
               <input value={moldCostAuto && moldPerUse != null ? String(Math.round(moldPerUse * result.pieces * 100) / 100) : input.moldCost} onChange={e => { setMoldCostAuto(false); set({ moldCost: e.target.value }); }} type="number" min="0" step="any" className={inputClass} />

@@ -91,3 +91,36 @@ test('precio mayorista: descuento y redondeo', () => {
   assert.equal(wholesalePrice(1000, 15, 100), 900);
   close(wholesalePrice(1000, 200, 0), 100); // el descuento se limita a 90 %
 });
+
+import { hourlyFromMonthly, kitPrice, laborPerPiece, marketplacePrice, piecesFrom } from '../lib/tools.ts';
+
+test('tienda online: precio para recibir lo mismo', () => {
+  // Para recibir $1000 con 15 % de comisión, $100 de cargo fijo y $0 de envío: (1000 + 100) / 0,85.
+  close(marketplacePrice(1000, 15, 100, 0), 1100 / 0.85);
+  const price = marketplacePrice(5000, 13, 0, 800);
+  close(price - price * 0.13 - 800, 5000);
+  assert.equal(marketplacePrice(0, 15), 0);
+});
+
+test('cuántas piezas salen', () => {
+  assert.deepEqual(piecesFrom(5000, 200, 0), { pieces: 25, leftover: 0 });
+  // Con 10 % de merma cada pieza usa 220 g: 5000 / 220 = 22 piezas y sobran 160 g.
+  const r = piecesFrom(5000, 200, 10);
+  assert.equal(r.pieces, 22);
+  close(r.leftover, 160);
+  assert.equal(piecesFrom(100, 0).pieces, 0);
+});
+
+test('tu tiempo y kits', () => {
+  close(laborPerPiece(3000, 20), 1000);
+  close(hourlyFromMonthly(480000, 160), 3000);
+  const kit = kitPrice([{ cost: 1000, qty: 3 }, { cost: 500, qty: 1 }], 300, 50);
+  close(kit.cost, 3800);
+  close(kit.price, 5700);
+});
+
+test('yeso: «otros materiales» suma en todos los modos', () => {
+  const easy = compute(yeso({ quantity: '2', moldWater: '100', plasterPriceKg: '1000', supplies: '300' }));
+  close(easy.totalCost, 200 + 300);
+  close(easy.unitCost, 250);
+});

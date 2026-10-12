@@ -12,6 +12,8 @@ const hint = 'text-sm text-neutral-500 dark:text-neutral-400';
 function money(value: number | string | null) {
   return Number(value ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
 }
+// Gramos por unidad del material (el precio se guarda por su unidad).
+const PER_GRAM: Record<string, number> = { mg: 0.001, g: 1, kg: 1000 };
 const qty = (value: number | null, unit: string | null) => (value == null ? '' : `${Number(value).toLocaleString('es-AR', { maximumFractionDigits: 1 })} ${unit ?? ''}`);
 
 export default async function CalculationDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; recalculado?: string }> }) {
@@ -41,6 +43,22 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
   const meta = plaster?.metadata ?? {};
   const unitCost = Number(calculation.unit_cost);
 
+  // Cuánto costaría hoy: si el yeso salió de un material guardado, se compara su precio de ese día con el actual.
+  let today: { unitCost: number; price: number; change: number } | null = null;
+  if (plaster?.material_id && Number(plaster.unit_cost_snapshot) > 0) {
+    const { data: material } = await supabase.from('materials').select('default_unit,current_price_id').eq('id', plaster.material_id).eq('user_id', user.id).maybeSingle();
+    const { data: price } = material?.current_price_id ? await supabase.from('material_prices').select('unit_cost').eq('id', material.current_price_id).maybeSingle() : { data: null };
+    const perGram = price ? Number(price.unit_cost) / (PER_GRAM[material!.default_unit] ?? NaN) : NaN;
+    if (Number.isFinite(perGram) && perGram > 0) {
+      const ratio = perGram / Number(plaster.unit_cost_snapshot);
+      const waste = items.find(item => item.cost_type === 'waste');
+      const affected = Number(plaster.total_cost) + Number(waste?.total_cost ?? 0);
+      const newUnit = (Number(calculation.total_cost) - affected + affected * ratio) / Math.max(Number(calculation.quantity), 1);
+      const keepMarkup = unitCost > 0 ? Number(calculation.suggested_price) / unitCost : 1;
+      if (Math.abs(ratio - 1) > 0.005) today = { unitCost: newUnit, price: newUnit * keepMarkup, change: unitCost > 0 ? (newUnit / unitCost - 1) * 100 : 0 };
+    }
+  }
+
   return (
     <main className={pageClass}>
       <header>
@@ -69,6 +87,14 @@ export default async function CalculationDetailPage({ params, searchParams }: { 
           <div><span className="opacity-60">Margen</span><strong className="mt-1 block text-lg">{Number(calculation.margin_percentage ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 1 })} %</strong></div>
         </div>
       </section>
+
+      {today && (
+        <section className={`rounded-3xl border p-5 ${today.change > 0 ? 'border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100' : 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100'}`}>
+          <h2 className="font-semibold">Con los precios de hoy</h2>
+          <p className="mt-1">Cada pieza te costaría <strong>{money(today.unitCost)}</strong> ({today.change > 0 ? '+' : ''}{today.change.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %). Para ganar lo mismo en proporción, cobrá <strong>{money(today.price)}</strong>.</p>
+          {!mixDef && <form action={recalculate} className="mt-3"><input type="hidden" name="calculation_id" value={id} /><button type="submit" className="rounded-xl bg-orange-800 px-4 py-2.5 text-sm font-semibold text-white dark:bg-orange-600">Guardar el cálculo con los precios de hoy</button></form>}
+        </section>
+      )}
 
       <section className={cardClass}>
         <h2 className="font-semibold">Detalle (precios congelados de ese día)</h2>
