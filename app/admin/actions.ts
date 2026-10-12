@@ -152,6 +152,15 @@ export async function setPrices(formData: FormData) {
   await rpc('/admin/precios', 'admin_set_prices', { p_online: n('online'), p_transfer: n('transfer'), p_mercadolibre: n('mercadolibre'), p_monthly: n('monthly'), p_extra_device: n('extra_device') }, 'Precios guardados.');
 }
 
+export async function setPackPrices(formData: FormData) {
+  const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/precios', 'admin_set_pack_prices', { p_pack: n('pack'), p_with_personal: n('with_personal') }, 'Precios del pack guardados.');
+}
+
+export async function givePack(formData: FormData) {
+  await rpc('/admin/emails', 'admin_give_pack', { p_id: text(formData, 'id') }, 'Pack Ventas y Stock sumado.');
+}
+
 export async function setActivityPrices(formData: FormData) {
   const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
   await rpc('/admin/precios', 'admin_set_activity_prices', { p_secondary: n('extra') / 2, p_extra: n('extra') }, 'Precios de las actividades guardados.');

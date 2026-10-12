@@ -29,7 +29,7 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
       <main className={pageClass}>
         <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
         <h1 className="text-2xl font-semibold">Resumen del negocio</h1>
-        <FeatureLocked title="El resumen es parte de la Edición Personal.">Ventas, costos, ganancias, producción y stock de un vistazo, por período.</FeatureLocked>
+        <FeatureLocked title="El resumen es parte del Pack Ventas y Stock.">Ventas, costos, ganancias, producción y stock de un vistazo, por período.</FeatureLocked>
       </main>
     );
   }

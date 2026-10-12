@@ -33,7 +33,7 @@ export default async function ProductionsPage() {
       <HelpTip guide="produccion"><p>Al registrar lo que fabricaste se descuentan los materiales del stock y se suman las piezas terminadas.</p><p>El costo queda guardado y se usa para la ganancia de tus ventas.</p></HelpTip>
 
       {!allowed ? (
-        <FeatureLocked title="Producción es parte de la Edición Personal.">Calcula los materiales de cada tanda, comprueba el stock y suma los productos terminados.</FeatureLocked>
+        <FeatureLocked title="Producción es parte del Pack Ventas y Stock.">Calcula los materiales de cada tanda, comprueba el stock y suma los productos terminados.</FeatureLocked>
       ) : error ? (
         <div role="alert" className={errorBox}>No se pudieron cargar las producciones: {error.message}</div>
       ) : !productions?.length ? (
