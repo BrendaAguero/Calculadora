@@ -7,6 +7,7 @@ import { isLeakedPassword, weakPasswordReason } from "@/lib/password";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEVICE_LIMIT_MESSAGE, registerCurrentDevice } from "@/lib/devices";
 import { hashKey, normalizeKey } from "@/lib/access-key";
+import { allowAttempt, TOO_MANY } from "@/lib/rate-limit";
 
 export type ActionState = { error?: string; success?: boolean; email?: string };
 
@@ -26,9 +27,11 @@ export async function requestLoginCode(_prevState: ActionState, formData: FormDa
   const email = String(formData.get("email") || "").trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Revisá que el email esté bien escrito." };
   if (formData.get("terms_accepted") !== "on") return { error: "Tenés que aceptar los términos para continuar." };
+  if (!(await allowAttempt("login-code", 5, 600))) return { error: TOO_MANY };
 
   const admin = createAdminClient();
   if (admin) {
+
     const { data: allowed } = await admin.rpc("login_allowed", { p_email: email });
     if (!allowed) return { error: "Ese email todavía no tiene la Edición Personal. Podés comprarla o, si ya pagaste por transferencia o MercadoLibre, escribinos para que la aprobemos." };
   }
@@ -46,6 +49,7 @@ export async function verifyLoginCode(_prevState: ActionState, formData: FormDat
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const token = String(formData.get("code") || "").replace(/\D/g, "");
   if (token.length < 6) return { error: "Escribí el código que te llegó por correo.", email };
+  if (!(await allowAttempt("login-verify", 10, 600))) return { error: TOO_MANY, email };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
@@ -60,6 +64,7 @@ export async function redeemAccessKey(_prevState: ActionState, formData: FormDat
   const raw = String(formData.get("key") || "");
   if (normalizeKey(raw).length !== 12) return { error: "La clave tiene 12 letras y números (por ejemplo, K7MP-Q2XD-9HTR). Revisala." };
   if (formData.get("terms_accepted") !== "on") return { error: "Tenés que aceptar los términos para continuar." };
+  if (!(await allowAttempt("access-key", 10, 600))) return { error: TOO_MANY };
 
   const admin = createAdminClient();
   if (!admin) return { error: "El ingreso no está disponible en este momento. Escribinos." };
@@ -91,6 +96,7 @@ export async function redeemAccessKey(_prevState: ActionState, formData: FormDat
 export async function requestPasswordReset(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim();
   if (!email) return { error: "Ingresá tu email." };
+  if (!(await allowAttempt("password-reset", 5, 600))) return { error: TOO_MANY };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -104,6 +110,7 @@ export async function signInWithPassword(_prevState: ActionState, formData: Form
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
   if (!email || !password) return { error: "Ingresá tu email y contraseña." };
+  if (!(await allowAttempt("password-login", 10, 600))) return { error: TOO_MANY };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });

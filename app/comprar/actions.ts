@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createPreference, mercadoPagoReady } from '@/lib/mercadopago';
 import { siteOrigin } from '@/lib/origin';
 import { createClient } from '@/lib/supabase/server';
+import { allowAttempt, TOO_MANY } from '@/lib/rate-limit';
 
 const back = (message: string): never => redirect(`/comprar?error=${encodeURIComponent(message.slice(0, 300))}`);
 
@@ -13,6 +14,7 @@ export async function buyPersonal(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const fullName = String(formData.get('full_name') ?? '').trim();
   if (formData.get('terms') !== 'on') back('Tenés que aceptar los términos y condiciones.');
+  if (!(await allowAttempt('comprar', 10, 3600))) back(TOO_MANY);
   if (!mercadoPagoReady()) back('La compra online no está disponible en este momento. Escribinos y te ayudamos.');
 
   const supabase = await createClient();

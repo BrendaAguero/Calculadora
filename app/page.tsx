@@ -40,18 +40,25 @@ type Calc = { id: string; created_at: string; quantity: number; unit_cost: numbe
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const snapshot = user ? await getAccessSnapshot() : null;
-  // Edición Personal recién activada: primero elige su actividad principal.
-  if (user && snapshot?.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester) {
-    const { count } = await supabase.from("user_activities").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active");
-    if (count === 0) redirect("/bienvenida");
-  }
   const month = resolvePeriod({ periodo: "mes" });
   const monthName = MONTHS[new Date(month.from!.getTime() + 12 * 3_600_000).getUTCMonth()];
-  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
+
+  // Precios de materiales viejos (con la inflación conviene revisarlos).
+  const countOldPrices = async (userId: string) => {
+    const { data: mats } = await supabase.from("materials").select("current_price_id").eq("user_id", userId).eq("status", "active").not("current_price_id", "is", null);
+    const ids = (mats ?? []).map((m) => m.current_price_id as string);
+    if (!ids.length) return 0;
+    const { count } = await supabase.from("material_prices").select("id", { count: "exact", head: true }).in("id", ids).lt("valid_from", daysAgo(OLD_PRICE_DAYS));
+    return count ?? 0;
+  };
 
   const count = async (table: string) => user ? (await supabase.from(table).select("id", { count: "exact", head: true }).eq("user_id", user.id)).count ?? 0 : 0;
-  const [[materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore, prefsRes] = await Promise.all([
+  // Todo se pide a la vez (antes iba de a una consulta y el Inicio tardaba más).
+  const [snapshot, activitiesCount, oldPrices, settingsRes, [materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore, prefsRes] = await Promise.all([
+    user ? getAccessSnapshot() : Promise.resolve(null),
+    user ? supabase.from("user_activities").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active").then((r) => r.count) : Promise.resolve(null),
+    user ? countOldPrices(user.id) : Promise.resolve(0),
+    user ? supabase.from("activity_settings").select("activity_code,settings").eq("user_id", user.id) : Promise.resolve({ data: [] }),
     Promise.all(["materials", "formulas", "molds", "calculations"].map(count)),
     user ? supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     user ? supabase.from("sales").select("total,net_income,quantity").eq("user_id", user.id).is("voided_at", null).gte("sale_date", month.from!.toISOString()).limit(5000) : Promise.resolve({ data: [] }),
@@ -64,18 +71,13 @@ export default async function Home() {
     cookies(),
     user ? supabase.from("user_preferences").select("home_widgets").eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  // Edición Personal recién activada: primero elige su actividad principal.
+  if (user && snapshot?.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester && activitiesCount === 0) redirect("/bienvenida");
+  const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
+  const savedSettings = settingsRes.data;
   // Primera vez: elegir el modo y qué ver.
   if (user && !prefsRes.data?.home_widgets) redirect("/empezar");
   const show = widgetSet(prefsRes.data?.home_widgets);
-
-  // Precios de materiales viejos (con la inflación conviene revisarlos).
-  const oldPrices = user ? await (async () => {
-    const { data: mats } = await supabase.from("materials").select("current_price_id").eq("user_id", user.id).eq("status", "active").not("current_price_id", "is", null);
-    const ids = (mats ?? []).map((m) => m.current_price_id as string);
-    if (!ids.length) return 0;
-    const { count } = await supabase.from("material_prices").select("id", { count: "exact", head: true }).in("id", ids).lt("valid_from", daysAgo(OLD_PRICE_DAYS));
-    return count ?? 0;
-  })() : 0;
 
   const steps: [boolean, string, string][] = [
     [materials > 0, "/materials/new", "Cargá tu primer material con su precio"],
@@ -89,7 +91,6 @@ export default async function Home() {
   const ownedCodes = owned.activities.map((a) => a.code);
   const calculators = CALCULATORS.filter((c) => plus || ownedCodes.includes(c.code));
   // Recetas guardadas de cada mezcla (si no hay, las de fábrica).
-  const { data: savedSettings } = user ? await supabase.from("activity_settings").select("activity_code,settings").eq("user_id", user.id) : { data: [] };
   const quickOptions: QuickOption[] = (calculators.length ? calculators : CALCULATORS.slice(0, 1)).map((c) => {
     const def = mixByCode(c.code);
     return { code: c.code, name: c.name, href: c.href, settings: def ? mergeSettings(def, (savedSettings ?? []).find((s) => s.activity_code === c.code)?.settings) : null };

@@ -25,7 +25,7 @@ export default async function RegretPage({ searchParams }: { searchParams: Promi
       {codigo ? (
         <div role="status" className={`mt-6 ${okBox}`}>
           <p className="font-semibold">Recibimos tu pedido.</p>
-          <p className="mt-1">Tu código de trámite es <strong className="font-mono text-base">{codigo}</strong>. Guardalo.</p>
+          <p className="mt-1">Tu código de trámite es <strong className="font-mono text-base">{codigo}</strong>. Guardalo: también te mandamos una copia por correo (revisá spam).</p>
           <p className="mt-1">Vamos a revisar la compra y procesar la devolución. Si necesitamos algo, te escribimos al email que dejaste. Consultas: <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
         </div>
       ) : (

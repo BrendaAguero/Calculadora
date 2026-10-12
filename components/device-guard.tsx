@@ -57,6 +57,7 @@ export function DeviceGuard() {
       const data = (await response.json()) as { state: string; alert?: Alert | null; plus?: boolean; userId?: string };
       rememberConnection(data);
       if (data.state === "released") router.replace("/login?ok=" + encodeURIComponent("Este aparato fue liberado. Entrá de nuevo con tu clave."));
+      else if (data.state === "device_limit") router.replace("/login?error=device_limit");
       else setAlert(data.alert ?? null);
     } catch {}
   }, [isOpenPage, router]);

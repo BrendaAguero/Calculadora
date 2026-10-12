@@ -35,7 +35,7 @@ export async function registerCurrentDevice(): Promise<boolean> {
     return true;
   }
   if (data === "limit") {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" }); // solo este aparato: los otros siguen abiertos
     return false;
   }
   return true;
