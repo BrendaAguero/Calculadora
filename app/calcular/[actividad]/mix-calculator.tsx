@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import Link from 'next/link';
 import { PriceExtras } from '@/components/price-extras';
 import { useMemo, useState, useTransition } from 'react';
@@ -31,7 +32,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
   const set = (patch: Partial<MixInput>) => { setInput(c => ({ ...c, ...patch })); setStatus(null); };
   const field = (key: keyof MixInput) => ({ value: input[key], onChange: (e: React.ChangeEvent<HTMLInputElement>) => set({ [key]: e.target.value }) });
   const setS = (patch: Partial<MixSettings>) => { setSettings(c => ({ ...c, ...patch })); setSettingsStatus(null); };
-  const setPart = (key: string, value: string) => setS({ components: settings.components.map(c => c.key === key ? { ...c, parts: Number(value.replace(',', '.')) || 0 } : c) });
+  const setPart = (key: string, value: string) => setS({ components: settings.components.map(c => c.key === key ? { ...c, parts: parseAR(value) || 0 } : c) });
   const setPrice = (key: string, value: string) => setS({ prices: { ...settings.prices, [key]: value } });
   const ratio = settings.components.map(c => c.parts.toLocaleString('es-AR', { maximumFractionDigits: 2 })).join(' : ');
 
@@ -177,7 +178,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
 function Calibrate({ onUse }: { onUse: (density: number) => void }) {
   const [ml, setMl] = useState('');
   const [grams, setGrams] = useState('');
-  const density = (Number(grams.replace(',', '.')) || 0) / (Number(ml.replace(',', '.')) || 0);
+  const density = (parseAR(grams) || 0) / (parseAR(ml) || 0);
   const ok = Number.isFinite(density) && density > 0.3 && density < 5;
   return (
     <div className="mt-4 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">

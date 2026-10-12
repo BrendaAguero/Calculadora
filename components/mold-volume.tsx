@@ -1,9 +1,10 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useState } from 'react';
 import { moldVolumeMl, type MoldShape } from '@/lib/volume';
 
-const n = (value: string) => { const v = Number(String(value).replace(',', '.')); return Number.isFinite(v) && v > 0 ? v : 0; };
+const n = (value: string) => { const v = parseAR(String(value)); return Number.isFinite(v) && v > 0 ? v : 0; };
 
 // Cuánto entra en el molde: llenándolo con agua (ml) o con sus medidas (cm).
 // onChange recibe siempre los ml del molde.

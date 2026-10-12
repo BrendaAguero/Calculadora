@@ -1,5 +1,6 @@
 'use server';
 
+import { parseAR } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -8,7 +9,7 @@ import { MOVEMENT_KINDS, convert } from './constants';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const number = (value: string) => {
-  const parsed = Number(value.replace(',', '.'));
+  const parsed = parseAR(value);
   return Number.isFinite(parsed) ? parsed : NaN;
 };
 

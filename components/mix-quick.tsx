@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
@@ -9,7 +10,7 @@ import { mixSteps, yesoSteps } from '@/lib/mix-steps';
 
 export type QuickOption = { code: string; name: string; href: string; settings: MixSettings | null; waterPercentage?: number };
 
-const n = (value: string) => { const v = Number(String(value).replace(',', '.')); return Number.isFinite(v) && v > 0 ? v : 0; };
+const n = (value: string) => { const v = parseAR(String(value)); return Number.isFinite(v) && v > 0 ? v : 0; };
 const fmt = (value: number, unit: string) => `${value.toLocaleString('es-AR', { maximumFractionDigits: value < 10 ? 1 : 0 })} ${unit}`;
 const input = 'w-full rounded-xl border border-white/30 bg-white/10 px-3 py-2.5 text-lg text-white placeholder:text-white/50 focus:border-white focus:outline-none';
 

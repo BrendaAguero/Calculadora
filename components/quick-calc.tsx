@@ -1,10 +1,11 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useState } from 'react';
 import Link from 'next/link';
 import { roundPrice } from '@/lib/pricing';
 
-const n = (value: string) => { const v = Number(String(value).replace(',', '.')); return Number.isFinite(v) && v > 0 ? v : 0; };
+const n = (value: string) => { const v = parseAR(String(value)); return Number.isFinite(v) && v > 0 ? v : 0; };
 const money = (value: number) => value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const input = 'w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 

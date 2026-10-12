@@ -1,5 +1,6 @@
 'use server';
 
+import { parseAR } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -12,7 +13,7 @@ const text = (formData: FormData, key: string) => String(formData.get(key) ?? ''
 export async function registerProduction(formData: FormData) {
   const productId = text(formData, 'product_id');
   const formulaId = text(formData, 'formula_id') || null;
-  const quantity = Number(text(formData, 'quantity').replace(',', '.'));
+  const quantity = parseAR(text(formData, 'quantity'));
   const deduct = text(formData, 'deduct') === '1';
   const addOutput = formData.get('add_output') === 'on';
   const notes = text(formData, 'notes');

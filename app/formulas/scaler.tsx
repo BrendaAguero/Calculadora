@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useState } from 'react';
 
 type Item = { label: string; quantity: number; unit: string };
@@ -11,7 +12,7 @@ function format(value: number) {
 // Escalado normal: multiplica cada ingrediente por (piezas deseadas / rendimiento de la versión).
 export function Scaler({ yieldQuantity, items }: { yieldQuantity: number; items: Item[] }) {
   const [pieces, setPieces] = useState(String(yieldQuantity));
-  const target = Number(pieces.replace(',', '.'));
+  const target = parseAR(pieces);
   const factor = target > 0 && yieldQuantity > 0 ? target / yieldQuantity : null;
 
   if (!items.length) return null;
