@@ -6,7 +6,7 @@ import { CopyButton } from '@/components/copy-button';
 import { decryptKey } from '@/lib/access-key';
 import { mailReady } from '@/lib/mail';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { adminReleaseDevice, approveEmail, newAccessKey, resendAccessKey, revokeEmail } from '../actions';
+import { adminReleaseDevice, approveEmail, decideResellerClient, newAccessKey, resendAccessKey, revokeEmail } from '../actions';
 
 const SOURCES: Record<string, string> = { transferencia: 'Transferencia', mercadolibre: 'MercadoLibre', online: 'Online (Mercado Pago)', revendedora: 'Revendedora', cortesia: 'Cortesía' };
 const btn = 'rounded-lg border border-neutral-300 px-3 py-1.5 text-xs dark:border-neutral-700';
@@ -18,13 +18,17 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
   if (q) query = query.ilike('email', `%${q.replace(/[%_]/g, '')}%`);
   // Las claves se leen con el cliente del servidor (la columna cifrada no es visible para nadie más).
   const admin = createAdminClient();
-  const [{ data: emails }, { data: devices }, { data: orders }, { data: keys }, { data: alerts }] = await Promise.all([
+  const [{ data: emails }, { data: devices }, { data: orders }, { data: keys }, { data: alerts }, { data: resellerRequests }] = await Promise.all([
     query,
     supabase.from('user_devices').select('id,user_id,label,last_seen_at').is('released_at', null),
     supabase.from('personal_orders').select('id,email,total,status,created_at').order('created_at', { ascending: false }).limit(20),
     admin ? admin.from('approved_emails').select('id,key_cipher') : Promise.resolve({ data: [] as { id: string; key_cipher: string | null }[] }),
     supabase.from('session_alerts').select('id,user_id,place_a,place_b,distance_km,status,created_at').order('created_at', { ascending: false }).limit(20),
+    supabase.from('reseller_clients').select('id,reseller_id,email,full_name,created_at').eq('status', 'pending').order('created_at').limit(100),
   ]);
+  const resellerIds = [...new Set((resellerRequests ?? []).map((r) => r.reseller_id))];
+  const { data: resellers } = resellerIds.length ? await supabase.from('profiles').select('id,email,full_name').in('id', resellerIds) : { data: [] as { id: string; email: string | null; full_name: string | null }[] };
+  const resellerName = (id: string) => { const r = resellers?.find((x) => x.id === id); return r?.full_name || r?.email || 'Revendedora'; };
   const emailOf = (userId: string) => emails?.find((e) => e.user_id === userId)?.email ?? 'Cuenta sin email aprobado';
   const ALERT_STATUS: Record<string, string> = { open: 'Sin responder', mine: 'Dijo «fui yo»', not_mine: 'Dijo «no fui yo» (se cerró todo y se cambió la clave)' };
   const keyOf = (id: string) => decryptKey(keys?.find((k) => k.id === id)?.key_cipher);
@@ -38,6 +42,24 @@ export default async function AdminEmailsPage({ searchParams }: { searchParams: 
       </header>
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {error && <div role="alert" className={errorBox}>{error}</div>}
+
+      {(resellerRequests ?? []).length > 0 && (
+        <section className={cardClass}>
+          <h2 className="font-semibold">Pedidos de revendedoras ({resellerRequests!.length})</h2>
+          <p className="mt-1 text-xs text-neutral-500">Al aprobar, el email queda habilitado, se le manda la clave y se descuenta una licencia del saldo de la revendedora. Al rechazar, la licencia vuelve a su saldo.</p>
+          <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+            {resellerRequests!.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span><strong>{r.email}</strong>{r.full_name ? ` (${r.full_name})` : ''}<span className="block text-xs text-neutral-500">De {resellerName(r.reseller_id)} · {dateTime(r.created_at)}</span></span>
+                <span className="flex gap-2">
+                  <form action={decideResellerClient}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="approve" value="1" /><SubmitButton className={primaryButton}>Aprobar</SubmitButton></form>
+                  <form action={decideResellerClient}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="approve" value="0" /><SubmitButton className={btn}>Rechazar</SubmitButton></form>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <form action={approveEmail} className={`${cardClass} grid gap-3 sm:grid-cols-3`}>
         <h2 className="font-semibold sm:col-span-3">Aprobar un email</h2>

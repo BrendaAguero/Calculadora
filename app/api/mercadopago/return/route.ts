@@ -18,6 +18,9 @@ export async function GET(request: Request) {
     if (admin && /^[0-9a-f-]{36}$/i.test(reference) && (await admin.from("personal_orders").select("id").eq("id", reference).maybeSingle()).data) {
       return Response.redirect(`${origin}/comprar?error=${encodeURIComponent("No se completó el pago. Podés intentar de nuevo cuando quieras.")}`, 303);
     }
+    if (admin && /^[0-9a-f-]{36}$/i.test(reference) && (await admin.from("reseller_orders").select("id").eq("id", reference).maybeSingle()).data) {
+      return Response.redirect(`${origin}/revendedora?error=${encodeURIComponent("No se completó el pago. Podés intentar de nuevo cuando quieras.")}`, 303);
+    }
     return go("error", "No se completó el pago. Podés intentar de nuevo cuando quieras.");
   }
   try {
@@ -28,6 +31,13 @@ export async function GET(request: Request) {
       if (result === "personal_activated" || result === "personal_already_approved") return login("ok", "¡Gracias por tu compra! Te mandamos tu clave de acceso por correo: escribila acá para entrar.");
       if (result === "personal_recorded_pending" || result === "personal_recorded_in_process") return login("ok", "Tu pago quedó pendiente en Mercado Pago. Cuando se acredite, te mandamos tu clave de acceso por correo.");
       return login("error", "No pudimos confirmar el pago todavía. Si se cobró, en unos minutos vas a poder entrar con tu email.");
+    }
+    // Paquete de licencias de revendedora.
+    if (result.startsWith("reseller_")) {
+      const panel = (key: "ok" | "error", message: string) => Response.redirect(`${origin}/revendedora?${key}=${encodeURIComponent(message)}`, 303);
+      if (result === "reseller_activated" || result === "reseller_already_approved") return panel("ok", "¡Pago aprobado! Ya podés cargar a tus clientas.");
+      if (result === "reseller_recorded_pending" || result === "reseller_recorded_in_process") return panel("ok", "Tu pago quedó pendiente en Mercado Pago. Las licencias se suman cuando se acredite.");
+      return panel("error", "No pudimos confirmar el pago todavía. Si se cobró, las licencias se suman solas en unos minutos.");
     }
     if (result === "activated" || result === "already_approved") return go("ok", "¡Pago aprobado! Tu compra ya está activa.");
     if (result === "already_has_license") return go("error", "Ya tenías una licencia activa, así que este pago no se aplicó. Escribinos y te devolvemos el dinero.");

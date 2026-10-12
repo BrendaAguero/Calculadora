@@ -84,6 +84,38 @@ export async function approveEmail(formData: FormData) {
   back('/admin/emails', 'ok', sent ? `Email aprobado. Le mandamos ${which} por correo (también la ves abajo).` : `Email aprobado. Copiá ${which} de abajo y mandásela (el correo automático no está configurado o falló).`);
 }
 
+// Solicitud de una revendedora: al aprobar, el email queda habilitado y se manda la clave (la de siempre si ya tenía).
+export async function decideResellerClient(formData: FormData) {
+  const supabase = await createClient();
+  const approve = text(formData, 'approve') === '1';
+  const { data: id, error } = await supabase.rpc('admin_decide_reseller_client', { p_id: text(formData, 'id'), p_approve: approve, p_note: text(formData, 'note') || null });
+  if (error) back('/admin/emails', 'error', error.message);
+  if (!approve) { revalidatePath('/admin/emails'); back('/admin/emails', 'ok', 'Solicitud rechazada. La licencia volvió al saldo de la revendedora.'); }
+  let sent = false;
+  try {
+    const admin = createAdminClient();
+    const { data: row } = admin ? await admin.from('approved_emails').select('email,key_cipher').eq('id', id as string).maybeSingle() : { data: null };
+    const key = decryptKey(row?.key_cipher) ?? await issueKey(supabase, id as string);
+    if (row?.email) sent = await sendKeyEmail(row.email, key, await siteOrigin());
+  } catch (e) {
+    back('/admin/emails', 'error', `Aprobada, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
+  }
+  revalidatePath('/admin/emails');
+  back('/admin/emails', 'ok', sent ? 'Clienta aprobada. Le mandamos la clave por correo.' : 'Clienta aprobada. Copiá la clave de abajo y mandásela (el correo automático falló).');
+}
+
+export async function setResellerPrices(formData: FormData) {
+  const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/revendedoras', 'admin_set_reseller_prices', { p_unit: n('unit'), p_d5: n('d5'), p_d10: n('d10'), p_d20: n('d20') }, 'Precios de revendedoras guardados.');
+}
+
+export async function saveResellerResources(formData: FormData) {
+  await rpc('/admin/revendedoras', 'admin_save_reseller_resources', { p: {
+    whatsapp: text(formData, 'whatsapp'), group_link: text(formData, 'group_link'), wait_time: text(formData, 'wait_time'),
+    client_message: text(formData, 'client_message'), tips: text(formData, 'tips'), materials: text(formData, 'materials'),
+  } }, 'Recursos guardados.');
+}
+
 export async function newAccessKey(formData: FormData) {
   const supabase = await createClient();
   try {
