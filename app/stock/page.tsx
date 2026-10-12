@@ -22,7 +22,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   if (!snapshot || !hasFeature(snapshot, 'STOCK_BASICO')) {
     return (
       <main className={pageClass}>
-        <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+        <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
         <h1 className="text-2xl font-semibold">Stock</h1>
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <p className="font-medium">Stock es parte de la Edición Personal.</p>
@@ -49,7 +49,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   return (
     <main className={pageClass}>
       <header>
-        <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+        <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
         <h1 className="text-2xl font-semibold">Stock</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cantidades, mínimos y valor de tus materias primas y productos terminados. Cada cambio queda en el historial.</p>
       </header>

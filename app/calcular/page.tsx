@@ -7,6 +7,7 @@ import { MIXES } from '@/lib/mixes';
 import { createClient } from '@/lib/supabase/server';
 import { canUseActivity, getOwnedActivities } from '@/lib/access/activities';
 import { getAccessSnapshot } from '@/lib/access/permissions';
+import { getSimpleMode } from '@/lib/simple-mode-server';
 import { inputsFromCalculation, loadCalculation } from '@/app/historial/data';
 import { Calculator, type SavedFormula, type SavedMaterial, type SavedMold, type SavedProduct } from './calculator';
 
@@ -94,7 +95,7 @@ export default async function CalcularPage({ searchParams }: { searchParams: Pro
       {initial && <div role="status" className="mb-4 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">Copia de un cálculo del historial. Al guardar se crea uno nuevo; el original no cambia.</div>}
       {loadError && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">No se pudieron cargar todos tus datos guardados: {loadError}</div>}
       <div className="mb-4"><HelpTip guide="calcular"><p>Elegí el modo, cuántas piezas y los gramos por pieza. ¿No sabés cuánto lleva el molde? Llenalo con agua y pesala.</p><p>El precio sugerido es una referencia: vos decidís el precio final.</p></HelpTip></div>
-      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} initial={initial} allowPersonalized={!snapshot?.isFree} />
+      <Calculator molds={molds} formulas={formulas} materials={materials} products={products} initial={initial} allowPersonalized={!snapshot?.isFree} simple={await getSimpleMode()} />
     </AppShell>
   );
 }

@@ -24,7 +24,7 @@ export default async function ProductionsPage() {
     <main className={pageClass}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
           <h1 className="text-2xl font-semibold">Producción</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Registrá lo que fabricaste: calcula los materiales, revisa el stock y lo descuenta si querés.</p>
         </div>

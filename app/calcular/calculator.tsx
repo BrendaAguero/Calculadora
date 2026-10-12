@@ -28,7 +28,7 @@ function grams(value: number) {
 }
 
 // allowPersonalized: el modo Personalizado es de los planes pagos (la versión gratis tiene Fácil y Estándar).
-export function Calculator({ molds, formulas, materials, products, initial, allowPersonalized = true }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null; allowPersonalized?: boolean }) {
+export function Calculator({ molds, formulas, materials, products, initial, allowPersonalized = true, simple = false }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null; allowPersonalized?: boolean; simple?: boolean }) {
   // Al duplicar desde el historial se arranca con los datos de ese cálculo; los vínculos que ya no existen se descartan.
   const keep = (id: string | undefined, list: { id: string }[]) => (id && list.some(item => item.id === id) ? id : '');
   // Un solo estado para los tres modos: cambiar de modo no borra lo cargado.
@@ -50,6 +50,8 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
   const [moldCostAuto, setMoldCostAuto] = useState(() => Boolean(initial?.moldCostAuto && keep(initial.moldId, molds)));
   const [status, setStatus] = useState<{ ok: boolean; message: string; id?: string } | null>(null);
   const [saving, startSaving] = useTransition();
+  // Modo simple: arranca en Fácil y los otros modos quedan detrás de «Más opciones».
+  const [showModes, setShowModes] = useState(() => !simple || (initial?.mode ?? 'easy') !== 'easy');
 
   const mold = molds.find(m => m.id === moldId);
   const formula = formulas.find(f => f.id === formulaId);
@@ -118,14 +120,15 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
       <header>
         <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Calculadora de Yeso</p>
         <h1 className="mt-1 text-3xl font-bold">Calcular</h1>
-        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Elegí un modo. Podés cambiar de modo sin perder lo que cargaste.</p>
+        <p className={`mt-2 text-neutral-500 dark:text-neutral-400 ${simple ? 'text-base' : 'text-sm'}`}>{showModes ? 'Elegí un modo. Podés cambiar de modo sin perder lo que cargaste.' : 'Poné cuántas piezas, los gramos y el precio del yeso. Abajo ves cuánto cobrar.'}</p>
       </header>
 
-      <section className="mt-6 grid grid-cols-3 gap-2" aria-label="Modo de cálculo">
+      {!showModes && <button type="button" onClick={() => setShowModes(true)} className="mt-4 text-sm font-semibold text-orange-800 underline underline-offset-4 dark:text-orange-300">Más opciones (otros modos de cálculo)</button>}
+      {showModes && <section className="mt-6 grid grid-cols-3 gap-2" aria-label="Modo de cálculo">
         {([['easy', 'Fácil'], ['standard', 'Estándar'], ['personalized', 'Personalizado']] as const).map(([value, label]) => (
           <button key={value} type="button" aria-pressed={input.mode === value} disabled={value === 'personalized' && !allowPersonalized} title={value === 'personalized' && !allowPersonalized ? 'Disponible con la Edición Personal' : undefined} onClick={() => set({ mode: value as Mode })} className={`rounded-xl border px-2 py-3 text-sm font-semibold ${input.mode === value ? 'border-orange-700 bg-orange-700 text-white' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'} disabled:cursor-not-allowed disabled:opacity-50`}>{label}{value === 'personalized' && !allowPersonalized ? ' 🔒' : ''}</button>
         ))}
-      </section>
+      </section>}
 
       {(molds.length > 0 || formulas.length > 0 || products.length > 0) && (
         <section className={cardClass}>
@@ -234,6 +237,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
         <div className="mt-4 rounded-2xl bg-white/10 p-3 text-sm dark:bg-black/10">Margen: <strong data-testid="margin">{result.margin.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %</strong>. El precio sugerido es una referencia: vos decidís el precio final.</div>
         <button type="button" onClick={save} disabled={saving} className="mt-4 min-h-11 w-full rounded-xl bg-orange-500 px-4 font-semibold text-white disabled:opacity-50">{saving ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className={`mt-3 rounded-xl p-3 text-sm ${status.ok ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
+        {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold dark:bg-black/10">¿Ya lo vendiste? Registrá la venta →</Link>}
       </section>
     </>
   );
