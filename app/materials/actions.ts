@@ -153,5 +153,15 @@ export async function archiveMaterial(formData: FormData) {
   const { error } = await supabase.from('materials').update({ status: 'archived' }).eq('id', materialId).eq('user_id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/materials');
+  redirect(`/materials?archivado=${materialId}`);
+}
+
+// «Deshacer» después de archivar un material.
+export async function restoreMaterial(formData: FormData) {
+  const { supabase, id } = await userId();
+  const materialId = String(formData.get('material_id') ?? '');
+  const { error } = await supabase.from('materials').update({ status: 'active' }).eq('id', materialId).eq('user_id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/materials');
   redirect('/materials');
 }

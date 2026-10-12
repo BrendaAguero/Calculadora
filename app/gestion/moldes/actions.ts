@@ -151,7 +151,7 @@ async function setMoldStatus(formData: FormData, status: 'active' | 'archived') 
 
   revalidatePath('/gestion/moldes');
   revalidatePath(`/gestion/moldes/${moldId}`);
-  redirect('/gestion/moldes');
+  redirect(status === 'archived' ? `/gestion/moldes?archivado=${moldId}` : '/gestion/moldes');
 }
 
 export async function archiveMold(formData: FormData) {

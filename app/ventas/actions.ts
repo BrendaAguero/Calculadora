@@ -41,5 +41,16 @@ export async function voidSale(formData: FormData) {
   if (error) redirect(`/ventas?error=${encodeURIComponent(error.message)}`);
   revalidatePath('/ventas');
   revalidatePath('/stock');
-  redirect(`/ventas?ok=${encodeURIComponent('Venta anulada. Si había descontado stock, se devolvió.')}`);
+  redirect(`/ventas?anulada=${id}`);
+}
+
+// «Deshacer» después de anular: la venta vuelve a contar y, si había devuelto stock, lo descuenta de nuevo.
+export async function unvoidSale(formData: FormData) {
+  const id = text(formData, 'sale_id');
+  const { supabase } = await auth();
+  const { error } = await supabase.rpc('unvoid_sale', { p_sale_id: id });
+  if (error) redirect(`/ventas?error=${encodeURIComponent(error.message)}`);
+  revalidatePath('/ventas');
+  revalidatePath('/stock');
+  redirect(`/ventas?ok=${encodeURIComponent('Listo, la venta volvió a contar.')}`);
 }

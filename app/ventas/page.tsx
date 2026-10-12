@@ -9,12 +9,13 @@ import { PeriodFilter } from '@/components/period-filter';
 import { resolvePeriod } from '@/lib/period';
 import { money, qty } from '@/app/stock/constants';
 import { cardClass, dateOnly, errorBox, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { voidSale } from './actions';
+import { unvoidSale, voidSale } from './actions';
+import { UndoNotice } from '@/components/undo-notice';
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pct = (value: number) => `${value.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %`;
 
-type Params = { periodo?: string; desde?: string; hasta?: string; ok?: string; error?: string; anuladas?: string };
+type Params = { periodo?: string; desde?: string; hasta?: string; ok?: string; error?: string; anuladas?: string; anulada?: string };
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
@@ -52,6 +53,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         <FeatureLocked title="Ventas es parte de la Edición Personal.">Registrá cada venta con su precio, descuento y comisión, y conocé tu ganancia y margen reales.</FeatureLocked>
       ) : (
         <>
+          {params.anulada && <UndoNotice message="Venta anulada. Si había descontado stock, se devolvió." action={unvoidSale} field="sale_id" id={params.anulada} />}
           {params.ok && <div role="status" className={okBox}>{params.ok}</div>}
           {(params.error || error) && <div role="alert" className={errorBox}>{params.error ?? `No se pudieron cargar las ventas: ${error!.message}`}</div>}
           <PeriodFilter basePath="/ventas" period={period} desde={params.desde} hasta={params.hasta} />

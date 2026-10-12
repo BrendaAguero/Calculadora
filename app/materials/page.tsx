@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { HelpTip } from '@/components/help-tip';
 import { createClient } from '@/lib/supabase/server';
+import { UndoNotice } from '@/components/undo-notice';
+import { restoreMaterial } from './actions';
 
-export default async function MaterialsPage() {
+export default async function MaterialsPage({ searchParams }: { searchParams: Promise<{ archivado?: string }> }) {
+  const { archivado } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className="p-6">Iniciá sesión para ver tus materiales.</main>;
@@ -30,6 +33,7 @@ export default async function MaterialsPage() {
         </div>
         <Link href="/materials/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white">Nuevo</Link>
       </header>
+      {archivado && <UndoNotice message="Material archivado. Ya no aparece en la calculadora." action={restoreMaterial} field="material_id" id={archivado} />}
       <HelpTip guide="empezar"><p>Cargá cada material con lo que pagaste y la cantidad: la aplicación calcula el costo por gramo, mililitro o unidad.</p><p>Si cambia el precio, actualizalo: el anterior queda en el historial.</p></HelpTip>
 
       <section className="grid gap-3">

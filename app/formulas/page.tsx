@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { HelpTip } from '@/components/help-tip';
 import { createClient } from '@/lib/supabase/server';
+import { UndoNotice } from '@/components/undo-notice';
+import { restoreFormula } from './actions';
 
 const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
 
-export default async function FormulasPage() {
+export default async function FormulasPage({ searchParams }: { searchParams: Promise<{ archivada?: string }> }) {
+  const { archivada } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className={pageClass}>Iniciá sesión para ver tus fórmulas.</main>;
@@ -26,6 +29,7 @@ export default async function FormulasPage() {
         </div>
         <Link href="/formulas/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nueva</Link>
       </header>
+      {archivada && <UndoNotice message="Fórmula archivada. Ya no aparece en la calculadora." action={restoreFormula} field="formula_id" id={archivada} />}
       <HelpTip guide="empezar"><p>Una fórmula guarda tu mezcla (por ejemplo, yeso con 75 % de agua) para usarla en la calculadora y en tus productos.</p><p>Cada cambio crea una versión nueva.</p></HelpTip>
 
       {/* Un error de consulta nunca debe verse como "no tenés fórmulas". */}
