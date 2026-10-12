@@ -104,7 +104,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
       </section>
 
       <section className={cardClass}>
-        <h2 className="text-lg">1. Cantidad</h2>
+        <h2 className="text-lg">1. ¿Cuánto preparo?</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="text-sm font-medium">Cantidad de piezas<input {...field('quantity')} type="number" min="1" step="1" className={inputClass} /></label>
           <label className="text-sm font-medium">Agua que entra en el molde (ml)<input {...field('moldMl')} type="number" min="0" step="any" className={inputClass} /><span className={hintClass}>Llená el molde con agua y medila.</span></label>
@@ -115,9 +115,9 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
             <p className="text-sm text-neutral-600 dark:text-neutral-300">Prepará <strong className="text-neutral-900 dark:text-white">{fmt(result.total, 'g')}</strong> de mezcla{result.waste > 0 ? ` (incluye ${fmt(result.waste, 'g')} de merma)` : ''}:</p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {result.amounts.map(a => (
-                <li key={a.key} className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>{a.label}</span><strong className="font-display text-lg">{settings.byVolume ? fmt(a.ml, 'ml') : a.key === 'agua' ? fmt(a.grams, 'ml') : fmt(a.grams, 'g')}</strong></li>
+                <li key={a.key} className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>{a.label}</span><strong className="font-display text-2xl">{settings.byVolume ? fmt(a.ml, 'ml') : a.key === 'agua' ? fmt(a.grams, 'ml') : fmt(a.grams, 'g')}</strong></li>
               ))}
-              {result.pigment > 0 && <li className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>Pigmento</span><strong className="font-display text-lg">{fmt(result.pigment, 'g')}</strong></li>}
+              {result.pigment > 0 && <li className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>Pigmento</span><strong className="font-display text-2xl">{fmt(result.pigment, 'g')}</strong></li>}
             </ul>
           </div>
         )}

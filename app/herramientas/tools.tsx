@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, Package, Store, Weight } from 'lucide-react';
+import { Calculator, Clock, Package, Store, Weight } from 'lucide-react';
+import { QuickCalc } from '@/components/quick-calc';
 import { hourlyFromMonthly, kitPrice, laborPerPiece, marketplacePrice, piecesFrom } from '@/lib/tools';
 import { roundPrice } from '@/lib/pricing';
 import { cardClass, inputClass } from '@/lib/ui';
@@ -12,6 +13,7 @@ const label = 'grid gap-1 text-sm font-medium';
 const result = 'mt-4 rounded-2xl bg-orange-800 p-4 text-white dark:bg-orange-900';
 
 const TABS = [
+  { key: 'precio', label: 'Precio rápido', icon: Calculator },
   { key: 'online', label: 'Vender online', icon: Store },
   { key: 'piezas', label: '¿Cuántas salen?', icon: Weight },
   { key: 'kit', label: 'Kits y combos', icon: Package },
@@ -19,10 +21,10 @@ const TABS = [
 ] as const;
 
 export function Tools({ net: initialNet, cost: initialCost }: { net: string; cost: string }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]['key']>(initialNet ? 'online' : initialCost ? 'kit' : 'online');
+  const [tab, setTab] = useState<(typeof TABS)[number]['key']>(initialNet ? 'online' : initialCost ? 'kit' : 'precio');
   return (
     <div className="mt-5">
-      <div role="tablist" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div role="tablist" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         {TABS.map(({ key, label: text, icon: Icon }) => (
           <button key={key} role="tab" type="button" aria-selected={tab === key} onClick={() => setTab(key)}
             className={`flex items-center gap-2 rounded-2xl px-3 py-3 text-left text-sm font-semibold ${tab === key ? 'bg-orange-800 text-white dark:bg-orange-600' : 'bg-white dark:bg-neutral-900'}`}>
@@ -31,6 +33,7 @@ export function Tools({ net: initialNet, cost: initialCost }: { net: string; cos
         ))}
       </div>
       <div className="mt-4">
+        {tab === 'precio' && <QuickCalc />}
         {tab === 'online' && <Online initialNet={initialNet} />}
         {tab === 'piezas' && <Pieces />}
         {tab === 'kit' && <Kit initialCost={initialCost} />}

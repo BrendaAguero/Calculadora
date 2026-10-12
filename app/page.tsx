@@ -17,8 +17,8 @@ import { SimpleModeToggle } from "@/components/simple-mode-toggle";
 import { ProfitToggle } from "@/components/profit-toggle";
 import { PROFIT_COOKIE } from "@/lib/profit";
 import { OLD_PRICE_DAYS } from "@/lib/price-age";
-import { MIXES } from "@/lib/mixes";
-import { QuickCalc } from "@/components/quick-calc";
+import { MIXES, mergeSettings, mixByCode } from "@/lib/mixes";
+import { MixQuick, type QuickOption } from "@/components/mix-quick";
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pesos = (value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -83,6 +83,12 @@ export default async function Home() {
 
   const ownedCodes = owned.activities.map((a) => a.code);
   const calculators = CALCULATORS.filter((c) => plus || ownedCodes.includes(c.code));
+  // Recetas guardadas de cada mezcla (si no hay, las de fábrica).
+  const { data: savedSettings } = user ? await supabase.from("activity_settings").select("activity_code,settings").eq("user_id", user.id) : { data: [] };
+  const quickOptions: QuickOption[] = (calculators.length ? calculators : CALCULATORS.slice(0, 1)).map((c) => {
+    const def = mixByCode(c.code);
+    return { code: c.code, name: c.name, href: c.href, settings: def ? mergeSettings(def, (savedSettings ?? []).find((s) => s.activity_code === c.code)?.settings) : null };
+  });
   const recentCalcs = (calcsRes.data ?? []) as unknown as Calc[];
   const sales = (salesRes.data ?? []) as { total: number; net_income: number; quantity: number }[];
   const sold = sales.reduce((acc, s) => acc + Number(s.total), 0);
@@ -110,21 +116,15 @@ export default async function Home() {
         </div>
       </header>
 
-      {/* La calculadora, lo primero. */}
-      <section aria-label="Calcular un precio" className="terrazo mt-5 rounded-4xl bg-orange-800 p-5 text-white dark:bg-orange-900 lg:p-6">
-        <p className="text-base text-white/85">Calculá cuánto cobrar una pieza</p>
-        <div className={`mt-3 grid gap-2.5 ${calculators.length > 1 ? "grid-cols-2" : ""}`}>
-          {calculators.map((c, i) => (
-            <Link key={c.code} href={c.href} className={`flex items-center justify-between gap-2 rounded-2xl px-4 py-4 font-bold ${big} ${i === 0 ? "bg-resina text-resina-dark" : "bg-white/15 hover:bg-white/25"}`}>
-              {c.name}<ChevronRight size={20} aria-hidden="true" />
-            </Link>
-          ))}
-          {!calculators.length && <Link href="/calcular" className={`flex items-center justify-between rounded-2xl bg-resina px-4 py-4 font-bold text-resina-dark ${big}`}>Calcular<ChevronRight size={20} aria-hidden="true" /></Link>}
-        </div>
-        <Link href="/herramientas" className="mt-3 inline-block text-sm font-semibold text-white/90 underline underline-offset-4">Herramientas: vender online, cuántas piezas salen, kits y tu tiempo →</Link>
-      </section>
+      {/* Lo principal: cuánto material y cuánto líquido preparar. */}
+      <MixQuick options={quickOptions} />
 
-      <QuickCalc />
+      <nav aria-label="Calcular el precio" className="mt-3 flex flex-wrap gap-2">
+        {calculators.length > 1 && calculators.map((c) => (
+          <Link key={c.code} href={c.href} className={`rounded-full bg-white px-4 py-2 font-semibold dark:bg-neutral-900 ${big === "text-xl" ? "text-base" : "text-sm"}`}>Precio de {c.name.toLowerCase()} →</Link>
+        ))}
+        <Link href="/herramientas" className={`rounded-full bg-white px-4 py-2 font-semibold dark:bg-neutral-900 ${big === "text-xl" ? "text-base" : "text-sm"}`}>Herramientas →</Link>
+      </nav>
 
       {nextStep && (
         <Link href={nextStep[1]} className="mt-4 flex items-center gap-4 rounded-3xl border-2 border-resina bg-amber-50 p-4 dark:bg-amber-950/30">

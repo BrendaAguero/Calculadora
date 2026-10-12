@@ -167,7 +167,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
       )}
 
       <section className={cardClass}>
-        <h2 className="font-semibold">1. Cantidad y yeso</h2>
+        <h2 className="font-semibold">1. ¿Cuánto preparo?</h2>
         {input.mode === 'easy' && <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm text-neutral-900 dark:bg-orange-950/30 dark:text-neutral-100"><strong>¿No sabés cuánto yeso lleva el molde?</strong><p className="mt-1">Llená el molde con agua y pesala. Esos gramos se toman como los gramos de yeso por pieza.</p></div>}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-sm font-medium">Cantidad de piezas<input {...field('quantity')} type="number" min="1" step="1" className={inputClass} /></label>
@@ -177,9 +177,12 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
         </div>
         <div className="mt-3 flex flex-wrap gap-2">{WATER_REFERENCES.map(value => <button type="button" key={value} onClick={() => set({ waterPercentage: String(value) })} className="rounded-full border border-neutral-300 px-3 py-1 text-xs dark:border-neutral-700">Usar {value} %</button>)}</div>
         <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">70 %, 75 % y 80 % son referencias iniciales, no reglas universales. Si elegís una fórmula guardada, se usa su porcentaje.</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-2xl bg-neutral-50 p-3 dark:bg-neutral-950"><span className="text-neutral-500 dark:text-neutral-400">Yeso total</span><strong className="mt-1 block">{grams(result.plasterTotal + result.wasteAmount)}</strong>{result.wasteAmount > 0 && <span className="text-xs text-neutral-500 dark:text-neutral-400">incluye {grams(result.wasteAmount)} de merma</span>}</div>
-          <div className="rounded-2xl bg-neutral-50 p-3 dark:bg-neutral-950"><span className="text-neutral-500 dark:text-neutral-400">Agua total</span><strong className="mt-1 block">{grams(result.waterTotal)}</strong></div>
+        <div className="mt-4 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">Prepará{result.pieces > 1 ? ` para ${result.pieces} piezas` : ''}:</p>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span className="text-neutral-500 dark:text-neutral-400">Yeso</span><strong className="mt-1 block font-display text-3xl">{grams(result.plasterTotal + result.wasteAmount)}</strong>{result.wasteAmount > 0 && <span className="text-xs text-neutral-500 dark:text-neutral-400">incluye {grams(result.wasteAmount)} de merma</span>}</div>
+            <div className="rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span className="text-neutral-500 dark:text-neutral-400">Agua</span><strong className="mt-1 block font-display text-3xl">{result.waterTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })} ml</strong></div>
+          </div>
         </div>
       </section>
 

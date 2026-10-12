@@ -17,7 +17,7 @@ export function QuickCalc() {
   const cost = (n(grams) / 1000) * n(kg) + n(extra);
   const price = roundPrice(cost * (1 + n(profit) / 100), 100);
   return (
-    <section aria-labelledby="calculo-rapido" className="mt-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
+    <section aria-labelledby="calculo-rapido" className="rounded-3xl bg-white p-5 dark:bg-neutral-900">
       <h2 id="calculo-rapido" className="text-lg">Cálculo rápido</h2>
       <p className="text-sm text-neutral-500 dark:text-neutral-400">Para una pieza. No se guarda.</p>
       <div className="mt-3 grid grid-cols-2 gap-2.5">
