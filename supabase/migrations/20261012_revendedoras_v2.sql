@@ -1,5 +1,6 @@
 -- Revendedoras v2 (pedido del 11/10/2026):
 -- - Compran la cantidad de licencias que quieran (1, 2, 3...). Desde 5, 10 y 20 tienen descuento.
+-- (Los recursos se guardan como content_entries de tipo «affiliate_material», slug «revendedoras», porque el tipo de contenido tiene una lista cerrada.)
 -- - En el panel tienen contacto con la administración (email, WhatsApp, grupo) y recursos de venta,
 --   que la administración edita.
 alter table public.reseller_orders drop constraint if exists reseller_orders_quantity_check;
@@ -79,7 +80,7 @@ begin
   if not public.is_admin() then raise exception 'Solo la administración puede hacer esto.'; end if;
   if v_group is not null and v_group !~ '^https://' then raise exception 'El enlace del grupo tiene que empezar con https://.'; end if;
   insert into content_entries (content_type, slug, title, content, status, updated_by)
-  values ('revendedoras', 'recursos', 'Recursos para revendedoras', jsonb_build_object(
+  values ('affiliate_material', 'revendedoras', 'Recursos para revendedoras', jsonb_build_object(
       'whatsapp', left(regexp_replace(coalesce(p->>'whatsapp', ''), '[^0-9+]', '', 'g'), 20),
       'group_link', v_group,
       'wait_time', left(btrim(coalesce(p->>'wait_time', '')), 120),

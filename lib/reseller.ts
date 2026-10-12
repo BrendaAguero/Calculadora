@@ -15,7 +15,7 @@ export const DEFAULT_RESOURCES: ResellerResources = {
 };
 
 export async function getResellerResources(supabase: Supabase): Promise<ResellerResources> {
-  const { data } = await supabase.from("content_entries").select("content").eq("content_type", "revendedoras").eq("slug", "recursos").maybeSingle();
+  const { data } = await supabase.from("content_entries").select("content").eq("content_type", "affiliate_material").eq("slug", "revendedoras").maybeSingle();
   if (!data?.content) return DEFAULT_RESOURCES;
   let c: Record<string, string | null> = {};
   try { c = JSON.parse(data.content); } catch { c = {}; }
