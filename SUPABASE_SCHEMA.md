@@ -777,7 +777,7 @@ Después de aprobación:
 ### Revendedoras (20261012_revendedoras)
 - `reseller_accounts(user_id, status)`, `reseller_orders(id, user_id, quantity 5|10|20, unit_price, total, status, payment_reference)`, `reseller_clients(id, reseller_id, email, full_name, status pending|approved|rejected, approved_email_id, note)`. RLS: cada revendedora ve lo suyo; la administración ve todo.
 - Saldo = licencias de paquetes aprobados − clientas pendientes o aprobadas (`reseller_balance`, `my_reseller_balance`).
-- v2: se compran de 1 a 100 licencias; precio por licencia `reseller_unit_price_for(cantidad)` = precio de a una con descuento desde 5, 10 y 20 (`reseller_discount_5/10/20`); `admin_set_reseller_prices`. Contacto y recursos de venta en `content_entries` (revendedoras/recursos), con `admin_save_reseller_resources`.
+- v2: se compran de 1 a 100 licencias; precio por licencia `reseller_unit_price_for(cantidad)` = precio de a una con descuento desde 5, 10 y 20 (`reseller_discount_5/10/20`); `admin_set_reseller_prices`. Contacto y recursos de venta en `content_entries` (affiliate_material/revendedoras), con `admin_save_reseller_resources`.
 - `become_reseller`, `request_reseller_order`, `mp_record_reseller_order` (service_role), `reseller_add_client`, `reseller_cancel_client`, `admin_decide_reseller_client` (aprueba el email con origen «revendedora»), `admin_set_reseller_price`. Precio en `pricing_config.reseller_unit_price`.
 
 ### Actividades (20261012_actividad_principal)
