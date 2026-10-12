@@ -19,6 +19,7 @@ import { PROFIT_COOKIE } from "@/lib/profit";
 import { OLD_PRICE_DAYS } from "@/lib/price-age";
 import { MIXES, mergeSettings, mixByCode } from "@/lib/mixes";
 import { MixQuick, type QuickOption } from "@/components/mix-quick";
+import { widgetSet } from "@/lib/home-widgets";
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pesos = (value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -50,7 +51,7 @@ export default async function Home() {
   const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
 
   const count = async (table: string) => user ? (await supabase.from(table).select("id", { count: "exact", head: true }).eq("user_id", user.id)).count ?? 0 : 0;
-  const [[materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore] = await Promise.all([
+  const [[materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore, prefsRes] = await Promise.all([
     Promise.all(["materials", "formulas", "molds", "calculations"].map(count)),
     user ? supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     user ? supabase.from("sales").select("total,net_income,quantity").eq("user_id", user.id).is("voided_at", null).gte("sale_date", month.from!.toISOString()).limit(5000) : Promise.resolve({ data: [] }),
@@ -61,7 +62,11 @@ export default async function Home() {
     getSimpleMode(),
     getHiddenSections(),
     cookies(),
+    user ? supabase.from("user_preferences").select("home_widgets").eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  // Primera vez: elegir el modo y qué ver.
+  if (user && !prefsRes.data?.home_widgets) redirect("/empezar");
+  const show = widgetSet(prefsRes.data?.home_widgets);
 
   // Precios de materiales viejos (con la inflación conviene revisarlos).
   const oldPrices = user ? await (async () => {
@@ -117,7 +122,7 @@ export default async function Home() {
       </header>
 
       {/* Lo principal: cuánto material y cuánto líquido preparar. */}
-      <MixQuick options={quickOptions} />
+      {show.has("preparo") && <MixQuick options={quickOptions} />}
 
       <nav aria-label="Calcular el precio" className="mt-3 flex flex-wrap gap-2">
         {calculators.length > 1 && calculators.map((c) => (
@@ -126,7 +131,7 @@ export default async function Home() {
         <Link href="/herramientas" className={`rounded-full bg-white px-4 py-2 font-semibold dark:bg-neutral-900 ${big === "text-xl" ? "text-base" : "text-sm"}`}>Herramientas →</Link>
       </nav>
 
-      {nextStep && (
+      {show.has("pasos") && nextStep && (
         <Link href={nextStep[1]} className="mt-4 flex items-center gap-4 rounded-3xl border-2 border-resina bg-amber-50 p-4 dark:bg-amber-950/30">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-resina font-display text-lg font-bold text-resina-dark">{done + 1}</span>
           <span className="min-w-0">
@@ -137,7 +142,7 @@ export default async function Home() {
         </Link>
       )}
 
-      {recentCalcs.length > 0 && (
+      {show.has("calculos") && recentCalcs.length > 0 && (
         <section aria-labelledby="ultimos-calculos" className="mt-5">
           <div className="mb-2 flex items-baseline justify-between px-1">
             <h2 id="ultimos-calculos" className="text-lg">Tus últimos cálculos</h2>
@@ -158,23 +163,23 @@ export default async function Home() {
         </section>
       )}
 
-      {oldPrices > 0 && (
+      {show.has("avisos") && oldPrices > 0 && (
         <Link href="/materials" className="mt-4 flex items-center gap-3 rounded-3xl border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <TriangleAlert size={22} aria-hidden="true" className="shrink-0 text-amber-700" />
           <span>{oldPrices === 1 ? "1 material tiene" : `${oldPrices} materiales tienen`} el precio de hace más de 2 meses. <strong>Actualizalos</strong> para que tus cálculos no queden cortos.</span>
         </Link>
       )}
 
-      <nav aria-label="Otras acciones" className={`mt-4 grid gap-2.5 ${quick.length > 1 ? "sm:grid-cols-3" : ""}`}>
+      {show.has("acciones") && <nav aria-label="Otras acciones" className={`mt-4 grid gap-2.5 ${quick.length > 1 ? "sm:grid-cols-3" : ""}`}>
         {quick.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className="flex items-center gap-3 rounded-3xl bg-white px-4 py-3.5 font-semibold hover:ring-2 hover:ring-orange-200 dark:bg-neutral-900 dark:hover:ring-orange-900">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300"><Icon size={20} aria-hidden="true" /></span>
             {label}
           </Link>
         ))}
-      </nav>
+      </nav>}
 
-      {low.length > 0 && (
+      {show.has("avisos") && low.length > 0 && (
         <Link href="/stock" className="mt-4 flex items-center gap-3 rounded-3xl border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <TriangleAlert size={20} aria-hidden="true" className="shrink-0 text-amber-700" />
           <span><strong>{low[0].name}</strong> se está terminando: quedan {amount(low[0].quantity, low[0].unit)}.{low.length > 1 ? ` Y ${low.length - 1} más.` : ""}</span>
@@ -182,7 +187,7 @@ export default async function Home() {
       )}
 
       {/* Ganancias: solo si ya hay ventas, y se pueden ocultar. */}
-      {hasSales && !profitHidden && (
+      {show.has("ganancias") && hasSales && !profitHidden && (
         <section aria-label={`Ganancia de ${monthName}`} className="mt-5 rounded-3xl bg-white p-5 dark:bg-neutral-900">
           <div className="flex items-start justify-between gap-3">
             <div>
