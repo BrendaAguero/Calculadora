@@ -23,6 +23,7 @@ export default async function AdminHome() {
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],
     ['/admin/arrepentimiento', 'Arrepentimiento y bajas', 'Pedidos para revocar una compra (10 días) o dar de baja la suscripción.', regrets],
     ['/admin/banner', 'Banner de publicidad', 'El aviso que ve quien no tiene Mensualidad Plus: tus planes o un sponsor.'],
+    ['/admin/uso', 'Uso de la app', 'Qué pantallas se usan más y cuáles nadie abre (sin datos personales).'],
     ['/admin/auditoria', 'Auditoría', 'Todo lo que se hizo desde la administración.'],
   ];
 

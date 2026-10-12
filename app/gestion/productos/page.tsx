@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
 import { createClient } from '@/lib/supabase/server';
 import { priceTypeLabel, statusLabel } from './constants';
 
@@ -22,14 +23,17 @@ export default async function ProductsPage() {
   const now = new Date();
 
   return (
-    <main className={pageClass}>
+    <AppShell>
+      <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Productos</h1>
+          <h1 className="text-3xl">Mis productos</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Lo que vendés: con sus fórmulas, moldes y precios con historial.</p>
         </div>
-        <Link href="/gestion/productos/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nuevo</Link>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Link href="/lista-precios" className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium dark:border-neutral-700">Lista de precios</Link>
+          <Link href="/gestion/productos/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nuevo</Link>
+        </div>
       </header>
 
       {error
@@ -58,6 +62,7 @@ export default async function ProductsPage() {
               );
             })}
           </section>}
-    </main>
+      </div>
+    </AppShell>
   );
 }

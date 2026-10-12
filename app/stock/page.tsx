@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getSimpleMode } from '@/lib/simple-mode-server';
 import { OfflineForm } from '@/components/offline-form';
 import { HelpTip } from '@/components/help-tip';
 import { SubmitButton } from '@/components/submit-button';
@@ -14,6 +15,7 @@ const inputClass = 'w-full rounded-xl border border-neutral-300 bg-white px-3 py
 const labelClass = 'grid gap-1 text-xs text-neutral-500 dark:text-neutral-400';
 
 export default async function StockPage({ searchParams }: { searchParams: Promise<{ tipo?: string; error?: string }> }) {
+  const simple = await getSimpleMode();
   const { tipo, error } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +26,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
     return (
       <main className={pageClass}>
         <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-        <h1 className="text-2xl font-semibold">Stock</h1>
+        <h1 className={simple ? "text-3xl" : "text-2xl font-semibold"}>{simple ? "Lo que tengo" : "Stock"}</h1>
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <p className="font-medium">Stock es parte de la Edición Personal.</p>
           <p className="mt-1">Te permite llevar la cantidad de materias primas y productos terminados, con mínimos, alertas y valor.</p>
@@ -51,7 +53,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
     <main className={pageClass}>
       <header>
         <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-        <h1 className="text-2xl font-semibold">Stock</h1>
+        <h1 className={simple ? "text-3xl" : "text-2xl font-semibold"}>{simple ? "Lo que tengo" : "Stock"}</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cantidades, mínimos y valor de tus materias primas y productos terminados. Cada cambio queda en el historial.</p>
       </header>
       <HelpTip guide="stock"><p>El stock se mueve solo al registrar producción, compras y ventas. Para corregirlo, abrí el ítem y hacé un ajuste.</p><p>Si ponés un mínimo, te avisamos cuando quede poco.</p></HelpTip>

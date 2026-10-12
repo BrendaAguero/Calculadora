@@ -11,6 +11,7 @@ import { isLow, loadStock } from "@/app/stock/data";
 import { amount } from "@/app/stock/constants";
 import { getSimpleMode } from "@/lib/simple-mode-server";
 import { SimpleModeToggle } from "@/components/simple-mode-toggle";
+import { OLD_PRICE_DAYS } from "@/lib/price-age";
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pesos = (value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -24,6 +25,7 @@ const saleDay = (iso: string) => {
   if (value === yesterday) return "Ayer";
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short", timeZone: "America/Argentina/Buenos_Aires" });
 };
+const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 const greeting = () => {
   const hour = new Date(Date.now() - 3 * 3_600_000).getUTCHours();
   return hour < 12 ? "Buen día" : hour < 20 ? "Buenas tardes" : "Buenas noches";
@@ -66,6 +68,20 @@ export default async function Home() {
     user ? supabase.from("productions").select("quantity").eq("user_id", user.id).gte("produced_at", month.from!.toISOString()).limit(5000) : Promise.resolve({ data: [] }),
     user ? loadStock(supabase, user.id) : Promise.resolve({ rows: [], error: null }),
   ]);
+  // Precios de materiales viejos (con la inflación conviene revisarlos).
+  const oldPrices = user ? await (async () => {
+    const { data: mats } = await supabase.from("materials").select("current_price_id").eq("user_id", user.id).eq("status", "active").not("current_price_id", "is", null);
+    const ids = (mats ?? []).map((m) => m.current_price_id as string);
+    if (!ids.length) return 0;
+    const { count } = await supabase.from("material_prices").select("id", { count: "exact", head: true }).in("id", ids).lt("valid_from", daysAgo(OLD_PRICE_DAYS));
+    return count ?? 0;
+  })() : 0;
+  const oldNotice = oldPrices > 0 && (
+    <Link href="/materials" className="mt-4 flex items-center gap-3 rounded-3xl border border-amber-300 bg-amber-50 p-4 text-base text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+      <TriangleAlert size={22} aria-hidden="true" className="shrink-0 text-amber-700" />
+      <span>{oldPrices === 1 ? "1 material tiene" : `${oldPrices} materiales tienen`} el precio de hace más de 2 meses. <strong>Actualizalos</strong> para que tus precios no queden cortos.</span>
+    </Link>
+  );
   const steps: [boolean, string, string][] = [
     [materials > 0, "/materials/new", "Cargá tu primer material con su precio"],
     [formulas > 0, "/formulas/new", "Guardá tu fórmula (por ejemplo, yeso con 75 % de agua)"],
@@ -131,6 +147,7 @@ export default async function Home() {
           </Link>
         )}
 
+        {oldNotice}
         <div className="mt-4"><InstallApp /></div>
         <div className="mt-4"><SimpleModeToggle initial /></div>
         <LegalLinks className="mt-8" />
@@ -176,6 +193,7 @@ export default async function Home() {
         ))}
       </nav>
 
+      {oldNotice}
       <div className="mt-4"><InstallApp /></div>
 
       {done < steps.length && (

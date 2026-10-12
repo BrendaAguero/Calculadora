@@ -41,13 +41,14 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
     return r;
   };
 
-  const [salesRes, productionsRes, purchasesRes, stockRes] = await Promise.all([
+  const [salesRes, productionsRes, purchasesRes, stockRes, activeRes] = await Promise.all([
     range(supabase.from('sales').select('product_id,quantity,total,net_income,total_cost_snapshot,commission,discount,sale_date,products(name)').eq('user_id', user.id).is('voided_at', null), 'sale_date').limit(5000),
     range(supabase.from('productions').select('quantity,total_cost,produced_at').eq('user_id', user.id), 'produced_at').limit(5000),
     range(supabase.from('supplier_purchases').select('total,purchase_date').eq('user_id', user.id), 'purchase_date').limit(5000),
     loadStock(supabase, user.id),
+    supabase.from('products').select('id,name').eq('user_id', user.id).eq('status', 'active'),
   ]);
-  const loadError = salesRes.error?.message ?? productionsRes.error?.message ?? purchasesRes.error?.message ?? stockRes.error;
+  const loadError = salesRes.error?.message ?? productionsRes.error?.message ?? purchasesRes.error?.message ?? stockRes.error ?? activeRes.error?.message;
 
   const sales = salesRes.data ?? [];
   const sum = <K extends string>(rows: Record<K, unknown>[], key: K) => rows.reduce((acc, r) => acc + Number(r[key] ?? 0), 0);
@@ -69,6 +70,13 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
     byProduct.set(s.product_id, row);
   }
   const products = [...byProduct.values()].sort((a, b) => b.profit - a.profit);
+
+  // Mejores productos: cuál deja más ganancia, cuál tiene mejor margen y cuáles conviene revisar.
+  const marginOf = (p: { sold: number; profit: number }) => (p.sold > 0 ? (p.profit / p.sold) * 100 : 0);
+  const best = products.find((p) => p.profit > 0);
+  const bestMargin = [...products].filter((p) => p.profit > 0 && p.units >= 2).sort((a, b) => marginOf(b) - marginOf(a))[0];
+  const weak = products.filter((p) => marginOf(p) < 15);
+  const unsold = (activeRes.data ?? []).filter((p) => !byProduct.has(p.id)).map((p) => p.name);
 
   // Ventas por día (una sola serie).
   const byDay = new Map<string, number>();
@@ -121,6 +129,18 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
           </>
         )}
       </section>
+
+      {products.length > 0 && (
+        <section className={cardClass}>
+          <h2 className="font-semibold">Tus mejores productos</h2>
+          <ul className="mt-3 grid gap-3 text-sm">
+            {best && <li className="rounded-2xl bg-emerald-50 p-3 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">🏆 <strong>{best.name}</strong> es el que más ganancia te dejó: {money(best.profit)} ({money(best.profit / Math.max(best.units, 1))} por unidad).</li>}
+            {bestMargin && bestMargin !== best && <li className="rounded-2xl bg-emerald-50 p-3 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100">💡 <strong>{bestMargin.name}</strong> tiene el mejor margen ({pct(marginOf(bestMargin))}). Conviene ofrecerlo más.</li>}
+            {weak.length > 0 && <li className="rounded-2xl bg-amber-50 p-3 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">⚠️ {weak.length === 1 ? <><strong>{weak[0].name}</strong> deja</> : <><strong>{weak.map((w) => w.name).join(', ')}</strong> dejan</>} poca ganancia (menos de 15 %). Revisá el precio con la calculadora o pensá si conviene seguir haciéndolo.</li>}
+            {unsold.length > 0 && <li className="rounded-2xl bg-neutral-100 p-3 dark:bg-neutral-800">💤 Sin ventas en este período: {unsold.slice(0, 8).join(', ')}{unsold.length > 8 ? ` y ${unsold.length - 8} más` : ''}.</li>}
+          </ul>
+        </section>
+      )}
 
       <section className={cardClass}>
         <h2 className="font-semibold">Productos</h2>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PriceExtras } from '@/components/price-extras';
 import { useMemo, useState, useTransition } from 'react';
 import { saveCalculation, type SaveInput } from './actions';
 import { compute, num, type CalcInput, type Mode, type PriceMethod } from './compute';
@@ -235,6 +236,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
           <div><span className="opacity-60">Ganancia por unidad</span><strong className="mt-1 block text-xl" data-testid="profit">{money(result.profit)}</strong></div>
         </div>
         <div className="mt-4 rounded-2xl bg-white/10 p-3 text-sm dark:bg-black/10">Margen: <strong data-testid="margin">{result.margin.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %</strong>. El precio sugerido es una referencia: vos decidís el precio final.</div>
+        <PriceExtras price={result.price} unitCost={result.unitCost} />
         <button type="button" onClick={save} disabled={saving} className="mt-4 min-h-11 w-full rounded-xl bg-orange-500 px-4 font-semibold text-white disabled:opacity-50">{saving ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className={`mt-3 rounded-xl p-3 text-sm ${status.ok ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
         {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold dark:bg-black/10">¿Ya lo vendiste? Registrá la venta →</Link>}

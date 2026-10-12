@@ -1,5 +1,6 @@
 'use server';
 
+import { isOldPrice } from '@/lib/price-age';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -153,5 +154,53 @@ export async function archiveMaterial(formData: FormData) {
   const { error } = await supabase.from('materials').update({ status: 'archived' }).eq('id', materialId).eq('user_id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/materials');
+  redirect(`/materials?archivado=${materialId}`);
+}
+
+// «Deshacer» después de archivar un material.
+export async function restoreMaterial(formData: FormData) {
+  const { supabase, id } = await userId();
+  const materialId = String(formData.get('material_id') ?? '');
+  const { error } = await supabase.from('materials').update({ status: 'active' }).eq('id', materialId).eq('user_id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/materials');
   redirect('/materials');
+}
+
+// Sube un porcentaje el precio actual de los materiales (todos o solo los de precio viejo).
+// No modifica los precios anteriores: crea uno nuevo, marcado como estimado, y el anterior queda en el historial.
+export async function raiseMaterialPrices(formData: FormData) {
+  const { supabase, id } = await userId();
+  const percent = number(formData.get('percent'));
+  const onlyOld = formData.get('only_old') === 'on';
+  if (!Number.isFinite(percent) || percent <= 0 || percent > 300) redirect(`/materials?error=${encodeURIComponent('Escribí un aumento entre 1 y 300 %.')}`);
+
+  const { data: materials, error } = await supabase.from('materials').select('id,current_price_id').eq('user_id', id).eq('status', 'active').not('current_price_id', 'is', null);
+  if (error) redirect(`/materials?error=${encodeURIComponent(error.message)}`);
+  const priceIds = (materials ?? []).map(m => m.current_price_id as string);
+  const { data: prices } = priceIds.length
+    ? await supabase.from('material_prices').select('id,material_id,purchase_price,purchase_quantity,purchase_unit,unit_cost,currency,valid_from').in('id', priceIds)
+    : { data: [] };
+  const now = new Date();
+  const factor = 1 + percent / 100;
+  let changed = 0;
+  for (const price of prices ?? []) {
+    if (onlyOld && !isOldPrice(price.valid_from, now.getTime())) continue;
+    const { data: created, error: insertError } = await supabase.from('material_prices').insert({
+      material_id: price.material_id,
+      purchase_price: Math.round(Number(price.purchase_price) * factor * 100) / 100,
+      purchase_quantity: price.purchase_quantity,
+      purchase_unit: price.purchase_unit,
+      unit_cost: Number(price.unit_cost) * factor,
+      currency: price.currency ?? 'ARS',
+      is_estimated: true,
+      valid_from: now.toISOString(),
+    }).select('id').single();
+    if (insertError) redirect(`/materials?error=${encodeURIComponent(`Se actualizaron ${changed}; después falló: ${insertError.message}`)}`);
+    await supabase.from('materials').update({ current_price_id: created!.id }).eq('id', price.material_id).eq('user_id', id);
+    await supabase.from('material_prices').update({ valid_until: now.toISOString() }).eq('id', price.id).is('valid_until', null);
+    changed++;
+  }
+  revalidatePath('/materials');
+  redirect(`/materials?ok=${encodeURIComponent(changed ? `Listo: subiste ${percent} % el precio de ${changed} ${changed === 1 ? 'material' : 'materiales'}. Los cálculos guardados no cambian.` : 'No había precios para subir.')}`);
 }

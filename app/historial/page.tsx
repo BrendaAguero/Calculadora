@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getSimpleMode } from '@/lib/simple-mode-server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { MODE_LABELS } from './data';
@@ -14,6 +15,7 @@ const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : va
 type Filters = { producto?: string; modo?: string; desde?: string; hasta?: string };
 
 export default async function HistoryPage({ searchParams }: { searchParams: Promise<Filters> }) {
+  const simple = await getSimpleMode();
   const filters = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +45,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       <header className="flex items-center justify-between gap-4">
         <div>
           <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Historial de cálculos</h1>
+          <h1 className={simple ? "text-3xl" : "text-2xl font-semibold"}>{simple ? "Mis cálculos guardados" : "Historial de cálculos"}</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cada cálculo conserva los precios del día en que se hizo.</p>
         </div>
         <Link href="/calcular" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Calcular</Link>

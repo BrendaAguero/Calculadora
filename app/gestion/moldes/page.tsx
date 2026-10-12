@@ -1,5 +1,8 @@
 import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
 import { createClient } from '@/lib/supabase/server';
+import { UndoNotice } from '@/components/undo-notice';
+import { restoreMold } from './actions';
 
 const pageClass = 'mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-6 pb-10 text-neutral-900 dark:text-white lg:py-10';
 
@@ -7,8 +10,8 @@ function money(value: number | string | null) {
   return Number(value ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function MoldesPage({ searchParams }: { searchParams: Promise<{ guardado?: string }> }) {
-  const { guardado } = await searchParams;
+export default async function MoldesPage({ searchParams }: { searchParams: Promise<{ guardado?: string; archivado?: string }> }) {
+  const { guardado, archivado } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return <main className={pageClass}>Iniciá sesión para ver tus moldes.</main>;
@@ -21,17 +24,18 @@ export default async function MoldesPage({ searchParams }: { searchParams: Promi
     .order('name', { ascending: true });
 
   return (
-    <main className={pageClass}>
+    <AppShell>
+      <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
-          <h1 className="text-2xl font-semibold">Moldes</h1>
+          <h1 className="text-3xl">Mis moldes</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Guardá la medición de referencia, el costo y los usos de cada molde.</p>
         </div>
         <Link href="/gestion/moldes/new" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Nuevo</Link>
       </header>
 
       {guardado && !error && <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">Molde guardado.</div>}
+      {archivado && <UndoNotice message="Molde archivado. Ya no aparece en la calculadora." action={restoreMold} field="mold_id" id={archivado} />}
 
       {/* Un error de consulta nunca debe verse como "no tenés moldes". */}
       {error
@@ -56,6 +60,7 @@ export default async function MoldesPage({ searchParams }: { searchParams: Promi
               </Link>
             ))}
           </section>}
-    </main>
+      </div>
+    </AppShell>
   );
 }

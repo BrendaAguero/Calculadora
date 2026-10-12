@@ -231,7 +231,7 @@ async function setFormulaStatus(formData: FormData, status: 'active' | 'archived
   if (failure) redirect(`/formulas/${formulaId}?error=${encodeURIComponent(failure.slice(0, 300))}`);
   revalidatePath('/formulas');
   revalidatePath(`/formulas/${formulaId}`);
-  redirect(status === 'archived' ? '/formulas' : `/formulas/${formulaId}`);
+  redirect(status === 'archived' ? `/formulas?archivada=${formulaId}` : `/formulas/${formulaId}`);
 }
 
 export async function archiveFormula(formData: FormData) {
