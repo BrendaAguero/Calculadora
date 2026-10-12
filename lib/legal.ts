@@ -2,8 +2,8 @@
 export const OWNER_NAME = 'Brenda Agüero';
 export const OWNER_CUIT = '27-41713100-6';
 // Domicilio que se muestra en los términos (ciudad y provincia, o el domicilio fiscal). Vacío = solo «República Argentina».
-export const OWNER_ADDRESS = '';
+export const OWNER_ADDRESS = 'Villa Luzuriaga, Provincia de Buenos Aires';
 export const CONTACT_EMAIL = 'calculadoraemprender.app@gmail.com';
 export const APP_NAME = 'Calculadora Emprender';
 // Fecha de la última actualización de los textos legales (mostrar en cada página).
-export const LEGAL_UPDATED = '11/10/2026';
+export const LEGAL_UPDATED = '12/10/2026';
