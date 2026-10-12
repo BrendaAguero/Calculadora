@@ -2,10 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { notifyAdmin, sendRequestReceipt } from '@/lib/notify';
+import { allowAttempt, TOO_MANY } from '@/lib/rate-limit';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 
 export async function submitRegret(formData: FormData) {
+  if (!(await allowAttempt('arrepentimiento', 5, 3600))) redirect(`/arrepentimiento?error=${encodeURIComponent(TOO_MANY)}`);
   const supabase = await createClient();
   const date = text(formData, 'purchase_date');
   const { data, error } = await supabase.rpc('submit_regret_request', {
@@ -16,5 +19,10 @@ export async function submitRegret(formData: FormData) {
     p_details: text(formData, 'details') || null,
   });
   if (error || !data) redirect(`/arrepentimiento?error=${encodeURIComponent(error?.message ?? 'No se pudo enviar el pedido. Probá de nuevo.')}`);
+  const email = text(formData, 'email');
+  await Promise.all([
+    sendRequestReceipt(email, 'arrepentimiento', String(data)),
+    notifyAdmin(`Arrepentimiento ${data}`, [`Nuevo pedido de arrepentimiento: ${data}`, `Nombre: ${text(formData, 'full_name')}`, `Email: ${email}`, `Compra: ${text(formData, 'purchase_reference') || '-'} (${text(formData, 'purchase_date') || 'sin fecha'})`, `Detalle: ${text(formData, 'details') || '-'}`, 'Revisalo en Administración.']),
+  ]);
   redirect(`/arrepentimiento?codigo=${encodeURIComponent(data)}`);
 }

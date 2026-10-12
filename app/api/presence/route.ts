@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { currentDeviceId } from "@/lib/devices";
+import { currentDeviceId, registerCurrentDevice } from "@/lib/devices";
 import { getAccessSnapshot } from "@/lib/access/permissions";
 import { sendMail } from "@/lib/mail";
 import { CONTACT_EMAIL } from "@/lib/legal";
@@ -14,6 +14,10 @@ export async function POST() {
   if (!user) return Response.json({ state: "signed_out" }, { status: 401 });
   const admin = createAdminClient();
   const deviceId = await currentDeviceId();
+
+  // Aparato sin registrar (por ejemplo, una sesión abierta antes del control): se registra ahora.
+  // Si la persona ya usa todos sus aparatos, se cierra la sesión solo en este.
+  if (admin && !deviceId && !(await registerCurrentDevice())) return Response.json({ state: "device_limit" });
 
   if (admin && deviceId) {
     const h = await headers();
@@ -35,6 +39,7 @@ export async function POST() {
       await supabase.auth.signOut({ scope: "local" });
       return Response.json({ state: "released" });
     }
+    if (result?.state === "unknown" && !(await registerCurrentDevice())) return Response.json({ state: "device_limit" });
     // Aviso nuevo: también por correo, por si la persona no está mirando la app.
     if (result?.alert && user.email) {
       const { data: alert } = await admin.from("session_alerts").select("place_a,place_b").eq("id", result.alert).maybeSingle();

@@ -30,7 +30,7 @@ export default async function CancellationPage({ searchParams }: { searchParams:
       {codigo && (
         <div role="status" className={`mt-6 ${okBox}`}>
           <p className="font-semibold">Listo, recibimos tu baja.</p>
-          <p className="mt-1">Tu código de baja es <strong className="font-mono text-base">{codigo}</strong>. Guardalo.</p>
+          <p className="mt-1">Tu código de baja es <strong className="font-mono text-base">{codigo}</strong>. Guardalo: también te mandamos una copia por correo (revisá spam).</p>
           <p className="mt-1">Consultas: <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
         </div>
       )}
