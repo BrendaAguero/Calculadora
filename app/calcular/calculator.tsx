@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { PriceExtras } from '@/components/price-extras';
+import { MoldVolume } from '@/components/mold-volume';
+import { yesoSteps } from '@/lib/mix-steps';
 import { useMemo, useState, useTransition } from 'react';
 import { saveCalculation, type SaveInput } from './actions';
 import { compute, num, type CalcInput, type Mode, type PriceMethod } from './compute';
@@ -168,10 +170,9 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
 
       <section className={cardClass}>
         <h2 className="font-semibold">1. ¿Cuánto preparo?</h2>
-        {input.mode === 'easy' && <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm text-neutral-900 dark:bg-orange-950/30 dark:text-neutral-100"><strong>¿No sabés cuánto yeso lleva el molde?</strong><p className="mt-1">Llená el molde con agua y pesala. Esos gramos se toman como los gramos de yeso por pieza.</p></div>}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-sm font-medium">Cantidad de piezas<input {...field('quantity')} type="number" min="1" step="1" className={inputClass} /></label>
-          <label className="text-sm font-medium">Agua que entra en el molde (g)<input {...field('moldWater')} type="number" min="0" step="any" className={inputClass} /></label>
+          <div className="sm:col-span-2"><MoldVolume value={input.moldWater} onChange={(ml) => set({ moldWater: ml })} inputClass={inputClass} /></div>
           {showStandard && <label className="text-sm font-medium">Yeso por pieza (g)<input {...field('plasterPerPiece')} type="number" min="0" step="any" placeholder={result.plaster ? String(result.plaster) : 'Igual al agua del molde'} className={inputClass} /><span className={hintClass}>Si lo dejás vacío, se usa el agua del molde.</span></label>}
           <label className="text-sm font-medium">% de agua<input {...field('waterPercentage')} type="number" min="0" step="any" className={inputClass} /></label>
         </div>
@@ -183,6 +184,12 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
             <div className="rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span className="text-neutral-500 dark:text-neutral-400">Yeso</span><strong className="mt-1 block font-display text-3xl">{grams(result.plasterTotal + result.wasteAmount)}</strong>{result.wasteAmount > 0 && <span className="text-xs text-neutral-500 dark:text-neutral-400">incluye {grams(result.wasteAmount)} de merma</span>}</div>
             <div className="rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span className="text-neutral-500 dark:text-neutral-400">Agua</span><strong className="mt-1 block font-display text-3xl">{result.waterTotal.toLocaleString('es-AR', { maximumFractionDigits: 0 })} ml</strong></div>
           </div>
+          {!num(input.plasterPerPiece) && num(input.moldWater) > 0 && (
+            <details open className="mt-3 text-sm">
+              <summary className="cursor-pointer font-semibold">¿Cómo se calcula?</summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-neutral-700 dark:text-neutral-300">{yesoSteps(num(input.moldWater), result.pieces, result.waterPercentage, result.wastePercentage).map(line => <li key={line}>{line}</li>)}</ol>
+            </details>
+          )}
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { SubmitButton } from '@/components/submit-button';
 import { useState } from 'react';
 import { registerSale } from '../actions';
@@ -10,7 +11,7 @@ import { isOffline, offlineEnabled } from '@/lib/outbox';
 const inputClass = 'w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const labelClass = 'grid gap-1 text-xs text-neutral-500 dark:text-neutral-400';
 const money = (value: number) => value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
-const num = (value: string) => { const n = Number(value.replace(',', '.')); return Number.isFinite(n) ? n : 0; };
+const num = (value: string) => { const n = parseAR(value); return Number.isFinite(n) ? n : 0; };
 
 type Props = {
   productId: string;

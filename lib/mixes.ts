@@ -3,6 +3,15 @@
 // Los valores de fábrica salen de las fichas de los fabricantes y de la práctica habitual;
 // cada usuaria puede cambiarlos y guardar los suyos (tabla activity_settings).
 
+// Números como se escriben en Argentina (misma regla que lib/num.ts; acá se repite para que las pruebas carguen este archivo solo).
+function parseAR(value: unknown): number {
+  let text = String(value ?? '').trim().replace(/[\s$]/g, '');
+  if (!text) return NaN;
+  if (text.includes(',')) text = text.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, '');
+  return Number(text);
+}
+
 export type MixCode = "RESINA" | "JESMONITE" | "CEMENTO_DECORATIVO";
 
 export type MixComponent = { key: string; label: string; parts: number; priced: boolean };
@@ -64,7 +73,7 @@ export const mixBySlug = (slug: string) => MIXES.find((m) => m.slug === slug) ??
 export const mixByCode = (code: string) => MIXES.find((m) => m.code === code) ?? null;
 
 export function num(value: string | number | null | undefined) {
-  const parsed = Number(String(value ?? "").replace(",", "."));
+  const parsed = parseAR(String(value ?? ""));
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 

@@ -12,7 +12,7 @@ const units = ['g', 'kg', 'ml', 'l', 'unidad'];
 
 export default async function NewMaterialPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; error?: string }> }) {
   const params = await searchParams;
-  const returnTo = params.returnTo || '/materials';
+  const returnTo = params.returnTo && /^\/(?![\/\\])/.test(params.returnTo) ? params.returnTo : '/materials';
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');

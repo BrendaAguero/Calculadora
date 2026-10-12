@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Seguridad: la app no se puede mostrar dentro de otra página (evita engaños con clics) y el navegador no adivina tipos de archivo.
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+      {
         // El service worker siempre se busca actualizado.
         source: "/sw.js",
         headers: [

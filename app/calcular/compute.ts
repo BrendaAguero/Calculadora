@@ -1,5 +1,14 @@
 // Cálculo de Yeso. Lo usan la pantalla (resultado en vivo) y el servidor (al guardar), para que den lo mismo.
 
+// Números como se escriben en Argentina (misma regla que lib/num.ts; acá se repite para que las pruebas carguen este archivo solo).
+function parseAR(value: unknown): number {
+  let text = String(value ?? '').trim().replace(/[\s$]/g, '');
+  if (!text) return NaN;
+  if (text.includes(',')) text = text.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, '');
+  return Number(text);
+}
+
 export type Mode = 'easy' | 'standard' | 'personalized';
 export type PriceMethod = 'percentage' | 'fixed' | 'manual';
 
@@ -41,7 +50,7 @@ export const EXTRA_COSTS: { key: keyof CalcInput; type: CostType; label: string;
 ];
 
 export function num(value: string) {
-  const parsed = Number(String(value ?? '').replace(',', '.'));
+  const parsed = parseAR(String(value ?? ''));
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import Link from 'next/link';
 import { PriceExtras } from '@/components/price-extras';
 import { useMemo, useState, useTransition } from 'react';
@@ -7,6 +8,8 @@ import { RotateCcw, Save, SlidersHorizontal } from 'lucide-react';
 import { computeMix, mixByCode, type MixCode, type MixInput, type MixSettings, type PriceMethod } from '@/lib/mixes';
 import { resetMixSettings, saveMixCalculation, saveMixSettings } from '../mix-actions';
 import { enqueue, isOffline, offlineEnabled } from '@/lib/outbox';
+import { MoldVolume } from '@/components/mold-volume';
+import { mixSteps } from '@/lib/mix-steps';
 
 const inputClass = 'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-neutral-900 focus:border-orange-600 focus:bg-white dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const cardClass = 'mt-4 rounded-3xl bg-white p-5 dark:bg-neutral-900';
@@ -29,7 +32,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
   const set = (patch: Partial<MixInput>) => { setInput(c => ({ ...c, ...patch })); setStatus(null); };
   const field = (key: keyof MixInput) => ({ value: input[key], onChange: (e: React.ChangeEvent<HTMLInputElement>) => set({ [key]: e.target.value }) });
   const setS = (patch: Partial<MixSettings>) => { setSettings(c => ({ ...c, ...patch })); setSettingsStatus(null); };
-  const setPart = (key: string, value: string) => setS({ components: settings.components.map(c => c.key === key ? { ...c, parts: Number(value.replace(',', '.')) || 0 } : c) });
+  const setPart = (key: string, value: string) => setS({ components: settings.components.map(c => c.key === key ? { ...c, parts: parseAR(value) || 0 } : c) });
   const setPrice = (key: string, value: string) => setS({ prices: { ...settings.prices, [key]: value } });
   const ratio = settings.components.map(c => c.parts.toLocaleString('es-AR', { maximumFractionDigits: 2 })).join(' : ');
 
@@ -82,8 +85,9 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
               ))}
               <label className="text-sm font-medium">Pigmento (%)<input type="number" min="0" step="any" value={settings.pigmentPercent} onChange={e => setS({ pigmentPercent: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Sobre el peso total de la mezcla.</span></label>
               <label className="text-sm font-medium">Merma (%)<input type="number" min="0" step="any" value={settings.wastePercent} onChange={e => setS({ wastePercent: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Lo que queda en el vaso y los utensilios.</span></label>
-              <label className="text-sm font-medium">Densidad (g por ml)<input type="number" min="0" step="any" value={settings.density} onChange={e => setS({ density: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Para pasar del agua del molde a gramos.</span></label>
+              <label className="text-sm font-medium">Densidad (g por ml)<input type="number" min="0" step="any" value={settings.density} onChange={e => setS({ density: Number(e.target.value) || 0 })} className={inputClass} /><span className={hintClass}>Cuántos gramos pesa 1 ml de mezcla (el agua pesa 1). Sirve para pasar del tamaño del molde a gramos.</span></label>
             </div>
+            <Calibrate onUse={(density) => { setS({ density }); setSettingsStatus({ ok: true, message: `Listo: ahora cada ml de mezcla pesa ${density.toLocaleString('es-AR')} g. Tocá «Guardar como mis valores» para que quede guardado.` }); }} />
             {code === 'RESINA' && (
               <label className="mt-3 flex items-center gap-3 text-sm"><input type="checkbox" checked={settings.byVolume} onChange={e => setS({ byVolume: e.target.checked })} className="h-5 w-5 accent-orange-800" />Mi marca indica la proporción por volumen (ml), no por peso</label>
             )}
@@ -107,8 +111,8 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
         <h2 className="text-lg">1. ¿Cuánto preparo?</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="text-sm font-medium">Cantidad de piezas<input {...field('quantity')} type="number" min="1" step="1" className={inputClass} /></label>
-          <label className="text-sm font-medium">Agua que entra en el molde (ml)<input {...field('moldMl')} type="number" min="0" step="any" className={inputClass} /><span className={hintClass}>Llená el molde con agua y medila.</span></label>
-          <label className="text-sm font-medium">O gramos por pieza<input {...field('gramsPerPiece')} type="number" min="0" step="any" className={inputClass} placeholder={result.perPiece ? fmt(result.perPiece, 'g') : 'Si ya lo sabés'} /><span className={hintClass}>Si lo dejás vacío, se calcula con el agua × {settings.density}.</span></label>
+          <div className="sm:col-span-3"><MoldVolume value={input.moldMl} onChange={(ml) => set({ moldMl: ml })} inputClass={inputClass} /></div>
+          <label className="text-sm font-medium">O gramos por pieza<input {...field('gramsPerPiece')} type="number" min="0" step="any" className={inputClass} placeholder={result.perPiece ? fmt(result.perPiece, 'g') : 'Si ya lo sabés'} /><span className={hintClass}>Si ya sabés cuántos gramos de mezcla lleva cada pieza. Si no, se calcula con el tamaño del molde.</span></label>
         </div>
         {result.total > 0 && (
           <div className="mt-4 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
@@ -119,6 +123,12 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
               ))}
               {result.pigment > 0 && <li className="flex items-baseline justify-between rounded-xl bg-white px-4 py-3 dark:bg-neutral-900"><span>Pigmento</span><strong className="font-display text-2xl">{fmt(result.pigment, 'g')}</strong></li>}
             </ul>
+            {!Number(input.gramsPerPiece) && (
+              <details open className="mt-3 text-sm">
+                <summary className="cursor-pointer font-semibold">¿Cómo se calcula?</summary>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-neutral-700 dark:text-neutral-300">{mixSteps(def.name, settings, Number(input.moldMl) || 0, result.pieces).map(line => <li key={line}>{line}</li>)}</ol>
+              </details>
+            )}
           </div>
         )}
       </section>
@@ -160,5 +170,31 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
         {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold">¿Ya lo vendiste? Registrá la venta →</Link>}
       </section>
     </>
+  );
+}
+
+// «Ajustar con una pieza real»: con los ml del molde y lo que pesa la pieza terminada, la app calcula
+// cuánto pesa cada ml de mezcla (la densidad) para que las cantidades den justo.
+function Calibrate({ onUse }: { onUse: (density: number) => void }) {
+  const [ml, setMl] = useState('');
+  const [grams, setGrams] = useState('');
+  const density = (parseAR(grams) || 0) / (parseAR(ml) || 0);
+  const ok = Number.isFinite(density) && density > 0.3 && density < 5;
+  return (
+    <div className="mt-4 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
+      <p className="font-semibold">¿Te sobra o te falta mezcla? Ajustalo con una pieza real</p>
+      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">Pesá una pieza ya hecha y escribí cuánta agua entra en su molde. La app corrige sola cuánto pesa cada ml de mezcla.</p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <label className="text-sm font-medium">Agua que entra en el molde (ml)<input value={ml} onChange={e => setMl(e.target.value)} inputMode="decimal" className={inputClass} /></label>
+        <label className="text-sm font-medium">Peso de la pieza terminada (g)<input value={grams} onChange={e => setGrams(e.target.value)} inputMode="decimal" className={inputClass} /></label>
+      </div>
+      {ok && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <p className="text-sm">Cada ml de tu mezcla pesa <strong>{density.toLocaleString('es-AR', { maximumFractionDigits: 2 })} g</strong>.</p>
+          <button type="button" onClick={() => onUse(Math.round(density * 100) / 100)} className="rounded-xl bg-orange-800 px-4 py-2 text-sm font-semibold text-white">Usar este valor</button>
+        </div>
+      )}
+      {!ok && Number(ml) > 0 && Number(grams) > 0 && <p className="mt-3 text-sm text-red-700 dark:text-red-300">Esos números no parecen bien: revisá los ml y los gramos.</p>}
+    </div>
   );
 }

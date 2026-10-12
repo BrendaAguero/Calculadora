@@ -8,7 +8,7 @@ const day = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDat
 const cell = (value: unknown) => {
   let text = String(value ?? "");
   // Evita que Excel interprete un texto como fórmula.
-  if (/^[=+\-@]/.test(text) && !/^-?\d/.test(text)) text = `'${text}`;
+  if (/^[=+@\t\r]/.test(text) || (/^-/.test(text) && !/^-?\d+([.,]\d+)?$/.test(text))) text = `'${text}`;
   return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 const csv = (header: string[], rows: unknown[][]) => "﻿" + [header, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");

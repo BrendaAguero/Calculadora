@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useState } from 'react';
 import { Calculator, Clock, Package, Store, Weight } from 'lucide-react';
 import { QuickCalc } from '@/components/quick-calc';
@@ -7,7 +8,7 @@ import { hourlyFromMonthly, kitPrice, laborPerPiece, marketplacePrice, piecesFro
 import { roundPrice } from '@/lib/pricing';
 import { cardClass, inputClass } from '@/lib/ui';
 
-const n = (value: string) => { const v = Number(String(value).replace(',', '.')); return Number.isFinite(v) ? v : 0; };
+const n = (value: string) => { const v = parseAR(String(value)); return Number.isFinite(v) ? v : 0; };
 const money = (value: number) => value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const label = 'grid gap-1 text-sm font-medium';
 const result = 'mt-4 rounded-2xl bg-orange-800 p-4 text-white dark:bg-orange-900';

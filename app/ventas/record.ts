@@ -1,3 +1,4 @@
+import { parseAR } from '@/lib/num';
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { PAYMENT_METHODS, productUnitCost, saleTotals } from './compute';
@@ -16,7 +17,7 @@ export type SaleInput = {
   deduct: boolean;
 };
 
-const number = (value: string) => Number((value || '0').replace(',', '.'));
+const number = (value: string) => parseAR((value || '0'));
 
 // Registra una venta (la usan el formulario y la subida de ventas hechas sin conexión).
 // El costo se vuelve a leer en el servidor; precio, descuento y comisión son los que escribió la persona.

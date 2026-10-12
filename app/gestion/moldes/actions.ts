@@ -1,5 +1,6 @@
 'use server';
 
+import { parseAR } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -22,7 +23,7 @@ export type MoldFormState = { error: string | null; values: MoldFormValues | nul
 const MEASUREMENT_UNITS = ['g', 'kg', 'ml', 'l'];
 
 function number(value: string) {
-  const parsed = Number(value.replace(',', '.'));
+  const parsed = parseAR(value);
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 

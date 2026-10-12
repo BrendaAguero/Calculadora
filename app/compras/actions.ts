@@ -1,5 +1,6 @@
 'use server';
 
+import { parseAR } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -8,7 +9,7 @@ import { convert } from '@/app/stock/constants';
 import { MAX_ROWS } from './constants';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
-const number = (value: string) => Number(value.replace(',', '.'));
+const number = (value: string) => parseAR(value);
 
 // Compra a un proveedor: guarda la compra, opcionalmente actualiza el precio de cada material y suma al stock.
 // Las conversiones a la unidad del material se hacen acá; la base guarda todo en una sola transacción.

@@ -42,6 +42,9 @@ export async function answerSessionAlert(formData: FormData) {
   const id = String(formData.get('id') || '');
   const mine = formData.get('mine') === '1';
   const supabase = await createClient();
+  // Solo si de verdad hay un aviso abierto (si no, no se cambia la clave ni se manda correo).
+  const { data: alert } = await supabase.from('session_alerts').select('id').eq('id', id).eq('status', 'open').maybeSingle();
+  if (!alert) redirect('/');
   await supabase.rpc('resolve_session_alert', { p_id: id, p_mine: mine });
   if (mine) redirect('/');
   const sent = await closeEverywhere(true);

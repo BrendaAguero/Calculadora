@@ -124,3 +124,25 @@ test('yeso: «otros materiales» suma en todos los modos', () => {
   close(easy.totalCost, 200 + 300);
   close(easy.unitCost, 250);
 });
+
+import { moldVolumeMl } from '../lib/volume.ts';
+
+test('volumen del molde por medidas', () => {
+  close(moldVolumeMl('rect', { length: 10, width: 5, height: 2 }), 100);
+  close(moldVolumeMl('round', { diameter: 10, height: 4 }), Math.PI * 25 * 4);
+  assert.equal(moldVolumeMl('rect', { length: 10, width: 5 }), 0);
+});
+
+import { parseAR } from '../lib/num.ts';
+
+test('números como se escriben en Argentina', () => {
+  assert.equal(parseAR('12.500'), 12500);
+  assert.equal(parseAR('12.500,50'), 12500.5);
+  assert.equal(parseAR('1,5'), 1.5);
+  assert.equal(parseAR('1.5'), 1.5);
+  assert.equal(parseAR('$ 3.000'), 3000);
+  assert.equal(parseAR('1500'), 1500);
+  assert.equal(parseAR('1.250.000'), 1250000);
+  assert.ok(Number.isNaN(parseAR('abc')));
+  assert.ok(Number.isNaN(parseAR('')));
+});

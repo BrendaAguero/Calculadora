@@ -1,13 +1,16 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { computeMix, type MixSettings } from '@/lib/mixes';
+import { MoldVolume } from '@/components/mold-volume';
+import { mixSteps, yesoSteps } from '@/lib/mix-steps';
 
 export type QuickOption = { code: string; name: string; href: string; settings: MixSettings | null; waterPercentage?: number };
 
-const n = (value: string) => { const v = Number(String(value).replace(',', '.')); return Number.isFinite(v) && v > 0 ? v : 0; };
+const n = (value: string) => { const v = parseAR(String(value)); return Number.isFinite(v) && v > 0 ? v : 0; };
 const fmt = (value: number, unit: string) => `${value.toLocaleString('es-AR', { maximumFractionDigits: value < 10 ? 1 : 0 })} ${unit}`;
 const input = 'w-full rounded-xl border border-white/30 bg-white/10 px-3 py-2.5 text-lg text-white placeholder:text-white/50 focus:border-white focus:outline-none';
 
@@ -17,7 +20,11 @@ export function MixQuick({ options }: { options: QuickOption[] }) {
   const [pieces, setPieces] = useState('1');
   const [water, setWater] = useState('');
   const [yesoPct, setYesoPct] = useState(String(options.find((o) => o.code === 'YESO')?.waterPercentage ?? 75));
-  const option = options.find((o) => o.code === code) ?? options[0];
+  const [partsOverride, setPartsOverride] = useState<Record<string, Record<string, string>>>({});
+  const base = options.find((o) => o.code === code) ?? options[0];
+  // La proporción se puede cambiar acá mismo (solo para este cálculo).
+  const option = useMemo(() => (base?.settings ? { ...base, settings: { ...base.settings, components: base.settings.components.map((c) => ({ ...c, parts: n(partsOverride[base.code]?.[c.key] ?? '') || c.parts })) } } : base), [base, partsOverride]);
+  const setPart = (key: string, value: string) => setPartsOverride({ ...partsOverride, [code]: { ...partsOverride[code], [key]: value } });
   const qty = Math.max(1, Math.floor(n(pieces)) || 1);
 
   // Cada fila: qué poner y cuánto.
@@ -50,12 +57,23 @@ export function MixQuick({ options }: { options: QuickOption[] }) {
           ))}
         </div>
       )}
-      <div className="mt-4 grid grid-cols-2 items-end gap-3">
-        <label className="grid gap-1 text-sm font-medium text-white/85">Agua que entra en el molde (ml)<input value={water} onChange={(e) => setWater(e.target.value)} inputMode="decimal" placeholder="Ej.: 250" className={input} /></label>
-        <label className="grid gap-1 text-sm font-medium text-white/85">Piezas<input value={pieces} onChange={(e) => setPieces(e.target.value)} inputMode="numeric" className={input} /></label>
+      <div className="mt-4"><MoldVolume value={water} onChange={setWater} dark inputClass={input} /></div>
+      <div className="mt-3 grid grid-cols-2 items-end gap-3">
+        <label className="grid gap-1 text-sm font-medium text-white/85">¿Cuántas piezas?<input value={pieces} onChange={(e) => setPieces(e.target.value)} inputMode="numeric" className={input} /></label>
+        {mix && (
+          <div className="col-span-2 grid gap-1 text-sm font-medium text-white/85">Proporción {mix.byVolume ? 'por volumen' : 'por peso'} (la de tu marca)
+            <div className="flex flex-wrap items-center gap-2">
+              {mix.components.map((c, i) => (
+                <span key={c.key} className="flex items-center gap-2">{i > 0 && <span className="text-xl">:</span>}
+                  <input value={partsOverride[code]?.[c.key] ?? String(c.parts).replace('.', ',')} onChange={(e) => setPart(c.key, e.target.value)} inputMode="decimal" aria-label={`Partes de ${c.label}`} className={input.replace('w-full', 'w-16')} />
+                </span>
+              ))}
+              <span className="text-xs text-white/75">{mix.components.map((c) => c.label.toLowerCase()).join(' : ')}</span>
+            </div>
+          </div>
+        )}
         {!mix && <label className="col-span-2 grid gap-1 text-sm font-medium text-white/85">% de agua<span className="flex flex-wrap items-center gap-2"><input value={yesoPct} onChange={(e) => setYesoPct(e.target.value)} inputMode="decimal" className={input.replace('w-full', 'w-24')} />{['70', '75', '80'].map((v) => <button key={v} type="button" onClick={() => setYesoPct(v)} className="rounded-full bg-white/15 px-3 py-1 text-sm">{v} %</button>)}</span></label>}
       </div>
-      <p className="mt-2 text-sm text-white/75">¿No sabés cuánto entra? Llená el molde con agua y medila (o pesala: 1 g = 1 ml).</p>
 
       {rows.length > 0 && (
         <div className="mt-4 rounded-3xl bg-white p-4 text-neutral-900 dark:bg-neutral-950 dark:text-white">
@@ -63,10 +81,16 @@ export function MixQuick({ options }: { options: QuickOption[] }) {
           <ul className="mt-2 grid gap-2">
             {rows.map((r) => (
               <li key={r.label} className="flex items-baseline justify-between gap-3 rounded-2xl bg-orange-50 px-4 py-3 dark:bg-orange-950/40">
-                <span className="text-lg">{r.label}</span><strong className="font-display text-3xl">{r.value}</strong>
+                <span className="min-w-0 text-base sm:text-lg">{r.label}</span><strong className="shrink-0 font-display text-2xl sm:text-3xl">{r.value}</strong>
               </li>
             ))}
           </ul>
+          <details open className="mt-3 text-sm">
+            <summary className="cursor-pointer font-semibold">¿Cómo se calcula?</summary>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-neutral-700 dark:text-neutral-300">
+              {(mix ? mixSteps(option.name, mix, n(water), qty) : yesoSteps(n(water), qty, n(yesoPct))).map((line) => <li key={line}>{line}</li>)}
+            </ol>
+          </details>
           {note && <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">{note} La cambiás en Calcular → Mi receta.</p>}
         </div>
       )}

@@ -42,7 +42,16 @@ export async function GET(request: Request) {
     return fail("missing_code");
   }
 
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  // Solo direcciones de esta misma app (se descartan «//otro.sitio», «/\\otro.sitio» y caracteres raros).
+  const safeNext = (() => {
+    if (!next.startsWith("/") || /[\\\s\u0000-\u001f]/.test(next)) return "/";
+    try {
+      const url = new URL(next, requestUrl.origin);
+      return url.origin === requestUrl.origin ? url.pathname + url.search + url.hash : "/";
+    } catch {
+      return "/";
+    }
+  })();
 
   // Edición Personal: cada cuenta se usa en una cantidad limitada de aparatos.
   if (!(await registerCurrentDevice())) return fail("device_limit");

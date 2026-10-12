@@ -1,5 +1,6 @@
 'use client';
 
+import { parseAR } from '@/lib/num';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ROUND_STEPS, roundPrice, wholesalePrice } from '@/lib/pricing';
@@ -25,7 +26,7 @@ export function PriceExtras({ price, unitCost }: { price: number; unitCost: numb
   if (!(price > 0)) return null;
 
   const rounded = roundPrice(price, step);
-  const wholesale = wholesalePrice(price, Number(discount.replace(',', '.')) || 0, step);
+  const wholesale = wholesalePrice(price, parseAR(discount) || 0, step);
   const below = wholesale < unitCost;
 
   return (

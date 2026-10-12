@@ -1,3 +1,4 @@
+import { parseAR } from '@/lib/num';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -18,7 +19,7 @@ export default async function NewSalePage({ searchParams }: { searchParams: Prom
   if (!snapshot || !hasFeature(snapshot, 'VENTAS')) redirect('/ventas');
 
   const { data: products } = await supabase.from('products').select('id,name').eq('user_id', user.id).neq('status', 'archived').order('name');
-  const quantity = Number((params.cantidad ?? '').replace(',', '.'));
+  const quantity = parseAR((params.cantidad ?? ''));
   const product = (products ?? []).find((p) => p.id === params.producto);
   const ready = Boolean(product) && Number.isFinite(quantity) && quantity > 0;
 

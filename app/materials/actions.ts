@@ -1,5 +1,6 @@
 'use server';
 
+import { parseAR } from '@/lib/num';
 import { isOldPrice } from '@/lib/price-age';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -18,8 +19,8 @@ const UNIT_FACTORS: Record<string, { group: string; factor: number }> = {
 };
 
 function number(value: FormDataEntryValue | null) {
-  const parsed = Number(String(value ?? '').replace(',', '.'));
-  return Number.isFinite(parsed) ? parsed : 0;
+  // NaN si no es un número: así un precio mal escrito no se guarda como $0.
+  return parseAR(String(value ?? ''));
 }
 
 function unitCost(purchasePrice: number, purchaseQuantity: number, purchaseUnit: string, targetUnit: string) {
@@ -33,6 +34,13 @@ function unitCost(purchasePrice: number, purchaseQuantity: number, purchaseUnit:
   const quantityInTarget = (purchaseQuantity * from.factor) / to.factor;
   return purchasePrice / quantityInTarget;
 }
+
+// Vuelve al formulario con un mensaje claro (y deja el error técnico en el registro del servidor).
+function fail(path: string, message: string, detail?: string): never {
+  if (detail) console.error(`[materiales] ${detail}`);
+  redirect(`${path}${path.includes('?') ? '&' : '?'}error=${encodeURIComponent(message)}`);
+}
+const DB_ERROR = 'No se pudo guardar. Probá de nuevo en un momento.';
 
 async function userId() {
   const supabase = await createClient();
@@ -56,7 +64,9 @@ export async function createMaterial(formData: FormData) {
   const purchaseQuantity = number(formData.get('purchase_quantity'));
   const purchaseUnit = String(formData.get('purchase_unit') ?? defaultUnit);
 
-  if (!name || purchaseQuantity <= 0 || purchasePrice < 0) throw new Error('Datos de material inválidos.');
+  if (!name) fail('/materials/new', 'Escribí el nombre del material.');
+  if (!(purchaseQuantity > 0)) fail('/materials/new', 'Escribí cuánto material compraste (por ejemplo, 1 kg).');
+  if (!(purchasePrice >= 0)) fail('/materials/new', 'Escribí cuánto pagaste, solo con números (por ejemplo, 12.500).');
   const invalidActivity = await activityError(supabase, id, activityId);
   if (invalidActivity) redirect(`/materials/new?error=${encodeURIComponent(invalidActivity)}`);
   const limitError = await createLimitError(supabase, id, 'materials');
@@ -67,7 +77,7 @@ export async function createMaterial(formData: FormData) {
     .insert({ user_id: id, activity_id: activityId, name, default_unit: defaultUnit, status: 'active' })
     .select('id')
     .single();
-  if (error) throw new Error(error.message);
+  if (error) fail('/materials/new', DB_ERROR, error.message);
 
   const cost = unitCost(purchasePrice, purchaseQuantity, purchaseUnit, defaultUnit);
   const { data: price, error: priceError } = await supabase
@@ -84,10 +94,10 @@ export async function createMaterial(formData: FormData) {
     })
     .select('id')
     .single();
-  if (priceError) throw new Error(priceError.message);
+  if (priceError) fail(`/materials/${material.id}`, 'Se creó el material pero no se pudo guardar el precio. Agregalo acá abajo.', priceError.message);
 
   const { error: updateError } = await supabase.from('materials').update({ current_price_id: price.id }).eq('id', material.id).eq('user_id', id);
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) fail(`/materials/${material.id}`, 'Se creó el material pero no se pudo guardar el precio. Agregalo acá abajo.', updateError.message);
 
   revalidatePath('/materials');
   redirect('/materials');
@@ -100,14 +110,14 @@ export async function updateMaterial(formData: FormData) {
   const defaultUnit = String(formData.get('default_unit') ?? 'g');
   const activityId = String(formData.get('activity_id') ?? '').trim() || null;
 
-  if (!materialId || !name) throw new Error('Datos de material inválidos.');
+  if (!materialId || !name) fail(`/materials/${materialId}`, 'Escribí el nombre del material.');
   // Se acepta la actividad que el material ya tenía aunque la usuaria ya no la tenga, para no perderla al guardar.
   const { data: existing } = await supabase.from('materials').select('activity_id').eq('id', materialId).eq('user_id', id).maybeSingle();
   const invalidActivity = activityId === existing?.activity_id ? null : await activityError(supabase, id, activityId);
   if (invalidActivity) redirect(`/materials/${materialId}?error=${encodeURIComponent(invalidActivity)}`);
 
   const { error } = await supabase.from('materials').update({ name, default_unit: defaultUnit, activity_id: activityId }).eq('id', materialId).eq('user_id', id);
-  if (error) throw new Error(error.message);
+  if (error) fail(`/materials/${materialId}`, DB_ERROR, error.message);
   revalidatePath('/materials');
   redirect('/materials');
 }
@@ -121,7 +131,9 @@ export async function addMaterialPrice(formData: FormData) {
   const defaultUnit = String(formData.get('default_unit') ?? 'g');
 
   const { data: material } = await supabase.from('materials').select('id,current_price_id').eq('id', materialId).eq('user_id', id).single();
-  if (!material || purchaseQuantity <= 0 || purchasePrice < 0) throw new Error('Datos de precio inválidos.');
+  if (!material) fail('/materials', 'No se encontró el material.');
+  if (!(purchaseQuantity > 0)) fail(`/materials/${materialId}`, 'Escribí cuánto material compraste (por ejemplo, 1 kg).');
+  if (!(purchasePrice >= 0)) fail(`/materials/${materialId}`, 'Escribí cuánto pagaste, solo con números (por ejemplo, 12.500).');
 
   const now = new Date().toISOString();
   const { data: price, error } = await supabase.from('material_prices').insert({
@@ -134,11 +146,11 @@ export async function addMaterialPrice(formData: FormData) {
     is_estimated: false,
     valid_from: now,
   }).select('id').single();
-  if (error) throw new Error(error.message);
+  if (error) fail(`/materials/${materialId}`, DB_ERROR, error.message);
 
   // El precio nuevo pasa a ser el actual; el anterior se cierra y queda en el historial (nunca se borra ni se modifica su valor).
   const { error: currentError } = await supabase.from('materials').update({ current_price_id: price.id }).eq('id', materialId).eq('user_id', id);
-  if (currentError) throw new Error(currentError.message);
+  if (currentError) fail(`/materials/${materialId}`, DB_ERROR, currentError.message);
   if (material.current_price_id) {
     await supabase.from('material_prices').update({ valid_until: now }).eq('id', material.current_price_id).eq('material_id', materialId).is('valid_until', null);
   }
@@ -152,7 +164,7 @@ export async function archiveMaterial(formData: FormData) {
   const { supabase, id } = await userId();
   const materialId = String(formData.get('material_id') ?? '');
   const { error } = await supabase.from('materials').update({ status: 'archived' }).eq('id', materialId).eq('user_id', id);
-  if (error) throw new Error(error.message);
+  if (error) fail('/materials', DB_ERROR, error.message);
   revalidatePath('/materials');
   redirect(`/materials?archivado=${materialId}`);
 }
@@ -162,7 +174,7 @@ export async function restoreMaterial(formData: FormData) {
   const { supabase, id } = await userId();
   const materialId = String(formData.get('material_id') ?? '');
   const { error } = await supabase.from('materials').update({ status: 'active' }).eq('id', materialId).eq('user_id', id);
-  if (error) throw new Error(error.message);
+  if (error) fail('/materials', DB_ERROR, error.message);
   revalidatePath('/materials');
   redirect('/materials');
 }

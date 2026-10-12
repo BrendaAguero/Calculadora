@@ -1,3 +1,4 @@
+import { parseAR } from '@/lib/num';
 import Link from 'next/link';
 import { OfflineForm } from '@/components/offline-form';
 import { SubmitButton } from '@/components/submit-button';
@@ -25,7 +26,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
     supabase.from('user_preferences').select('auto_deduct_stock').eq('user_id', user.id).maybeSingle(),
   ]);
 
-  const quantity = Number((params.cantidad ?? '').replace(',', '.'));
+  const quantity = parseAR((params.cantidad ?? ''));
   const ready = Boolean(params.producto) && Number.isFinite(quantity) && quantity > 0;
   const { plan, error: planError } = ready ? await planProduction(supabase, user.id, params.producto!, params.formula || null, quantity) : { plan: null, error: null };
   const product = (products ?? []).find((p) => p.id === params.producto);
