@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineForm } from '@/components/offline-form';
 import { HelpTip } from '@/components/help-tip';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
@@ -97,7 +98,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         {!options.length
           ? <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">{products ? <>No hay productos sin agregar. <Link href="/gestion/productos/new" className="underline">Crear un producto</Link></> : <>No hay materiales sin agregar. <Link href="/materials/new" className="underline">Crear un material</Link></>}</p>
           : (
-            <form action={addStockItem} className="mt-3 grid gap-3 sm:grid-cols-3">
+            <OfflineForm kind="stock_item" label={products ? 'Producto agregado al stock' : 'Material agregado al stock'} action={addStockItem} className="mt-3 grid gap-3 sm:grid-cols-3">
               <input type="hidden" name="kind" value={products ? 'product' : 'material'} />
               <label className={`${labelClass} sm:col-span-3`}>{products ? 'Producto' : 'Material'}
                 <select name="target_id" required className={inputClass}>
@@ -108,7 +109,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
               <label className={labelClass}>Mínimo (opcional)<input name="minimum" inputMode="decimal" placeholder="Avisar al llegar a…" className={inputClass} /></label>
               <div className="flex items-end"><SubmitButton className="w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Agregar</SubmitButton></div>
               <p className="text-xs text-neutral-500 sm:col-span-3">{products ? 'Los productos se cuentan en unidades.' : 'La cantidad va en la unidad del material (la que figura entre paréntesis).'}</p>
-            </form>
+            </OfflineForm>
           )}
       </section>
     </main>

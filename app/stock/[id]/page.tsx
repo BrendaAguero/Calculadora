@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineForm } from '@/components/offline-form';
 import { SubmitButton } from '@/components/submit-button';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -54,7 +55,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
 
       <section className={cardClass}>
         <h2 className="font-semibold">Registrar un movimiento</h2>
-        <form action={registerMovement} className="mt-3 grid gap-3 sm:grid-cols-3">
+        <OfflineForm kind="stock_move" label={`Movimiento de ${row.name}: {quantity} {unit}`} action={registerMovement} className="mt-3 grid gap-3 sm:grid-cols-3">
           <input type="hidden" name="item_id" value={row.id} />
           <label className={`${labelClass} sm:col-span-3`}>Tipo
             <select name="kind" required className={inputClass}>
@@ -69,7 +70,7 @@ export default async function StockItemPage({ params, searchParams }: { params: 
           </label>
           <label className={labelClass}>Nota (opcional)<input name="notes" maxLength={200} className={inputClass} /></label>
           <div className="sm:col-span-3"><SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Registrar</SubmitButton></div>
-        </form>
+        </OfflineForm>
         <p className="mt-2 text-xs text-neutral-500">En «Corregir con un conteo» escribí la cantidad que contaste: se registra la diferencia como ajuste. Los movimientos no se borran; si te equivocás, corregí con otro movimiento.</p>
       </section>
 

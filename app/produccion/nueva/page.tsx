@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineForm } from '@/components/offline-form';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -44,7 +45,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
       {!products?.length ? (
         <div className={warnBox}>Primero creá un producto con su fórmula. <Link href="/gestion/productos/new" className="underline">Crear producto</Link></div>
       ) : (
-        <form method="get" className={`${cardClass} grid gap-3 sm:grid-cols-3`}>
+        <OfflineForm kind="production" label="Producción de {cantidad} piezas" again="/produccion/nueva" rename={{ producto: 'product_id', formula: 'formula_id', cantidad: 'quantity' }} extra={{ deduct: '1', add_output: 'on' }} method="get" className={`${cardClass} grid gap-3 sm:grid-cols-3`}>
           <label className={`${labelClass} sm:col-span-3`}>Producto
             <select name="producto" defaultValue={params.producto ?? ''} required className={inputClass}>
               <option value="" disabled>Elegí un producto</option>
@@ -59,7 +60,8 @@ export default async function NewProductionPage({ searchParams }: { searchParams
           </label>
           <label className={labelClass}>Piezas<input name="cantidad" inputMode="decimal" required defaultValue={params.cantidad ?? ''} placeholder="Ej.: 20" className={inputClass} /></label>
           <div className="sm:col-span-3"><SubmitButton className={secondaryButton}>Calcular materiales</SubmitButton></div>
-        </form>
+          <p className="text-xs text-neutral-500 sm:col-span-3">Sin conexión se registra directo y descuenta los materiales del stock cuando vuelve internet.</p>
+        </OfflineForm>
       )}
 
       {planError && <div role="alert" className={errorBox}>{planError}</div>}
@@ -101,7 +103,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
             </div>
           )}
 
-          <form action={registerProduction} className={`${cardClass} grid gap-3`}>
+          <OfflineForm kind="production" label={`Producción de ${plan.productName} ×${qty(plan.quantity)}`} again="/produccion/nueva" action={registerProduction} className={`${cardClass} grid gap-3`}>
             <input type="hidden" name="product_id" value={plan.productId} />
             <input type="hidden" name="formula_id" value={params.formula ?? ''} />
             <input type="hidden" name="quantity" value={params.cantidad} />
@@ -113,7 +115,7 @@ export default async function NewProductionPage({ searchParams }: { searchParams
               <Link href="/produccion" className="rounded-xl px-4 py-2 text-sm text-neutral-600 underline dark:text-neutral-400">Cancelar</Link>
             </div>
             <p className="text-xs text-neutral-500">Los materiales que no llevás en el stock se agregan solos al descontar. Podés cambiar cuál opción aparece primero en Preferencias.</p>
-          </form>
+          </OfflineForm>
         </>
       )}
     </main>

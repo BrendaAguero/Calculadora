@@ -12,7 +12,7 @@ const PLUS = new URL(self.location.href).searchParams.get("plus") === "1";
 // Pantallas que nunca se guardan (entrada, pagos, administración y datos de la API).
 const NEVER = ["/login", "/auth/", "/api/", "/admin", "/set-password", "/comprar", "/bienvenida"];
 // Pantallas principales que se guardan de antemano (Plus), para tenerlas aunque no se hayan abierto.
-const WARM = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas"];
+const WARM = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas", "/materials/new", "/produccion/nueva", "/compras/nueva"];
 
 async function warm(paths) {
   await Promise.all(paths.slice(0, 20).map(async (path) => {
@@ -24,6 +24,18 @@ async function warm(paths) {
       await savePage(request, response);
     } catch {}
   }));
+  // También cada cosa del stock, para poder anotar movimientos sin conexión.
+  if (paths.includes("/stock")) {
+    const saved = await (await caches.open(PAGES_CACHE)).match(new URL("/stock", self.location.origin).href);
+    const html = saved ? await saved.text() : "";
+    const items = [...new Set([...html.matchAll(/href="(\/stock\/[0-9a-f-]{36})"/g)].map((m) => m[1]))].slice(0, 40);
+    await Promise.all(items.map(async (path) => {
+      try {
+        const request = new Request(new URL(path, self.location.origin).href, { credentials: "same-origin" });
+        await savePage(request, await fetch(request));
+      } catch {}
+    }));
+  }
 }
 
 self.addEventListener("install", (event) => {
