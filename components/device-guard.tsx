@@ -12,7 +12,7 @@ import { HIDDEN_AT_KEY, RELOCK_AFTER_MS, UNLOCKED_KEY, UNLOCKED_PATHS, checkBiom
 
 type Alert = { id: string; place_a: string | null; place_b: string | null };
 // Pantallas que se guardan de antemano para usarlas sin conexión (Mensualidad Plus).
-const WARM_URLS = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/mas"];
+const WARM_URLS = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas"];
 let warmed = false;
 
 // Guarda en el aparato si tiene el modo sin conexión, quién es y cuándo se conectó por última vez.
@@ -26,7 +26,8 @@ function rememberConnection(data: { plus?: boolean; userId?: string }) {
   } catch {}
   if (data.plus && !warmed && "serviceWorker" in navigator) {
     warmed = true;
-    navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage({ type: "warm", urls: WARM_URLS })).catch(() => {});
+    // Al trabajador que controla la página (el de Plus, si ya se activó); el de Plus además guarda solo al activarse.
+    navigator.serviceWorker.ready.then((registration) => (navigator.serviceWorker.controller ?? registration.active)?.postMessage({ type: "warm", urls: WARM_URLS })).catch(() => {});
   }
 }
 
