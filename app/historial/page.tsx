@@ -42,7 +42,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
     <main className={pageClass}>
       <header className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
           <h1 className="text-2xl font-semibold">Historial de cálculos</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cada cálculo conserva los precios del día en que se hizo.</p>
         </div>

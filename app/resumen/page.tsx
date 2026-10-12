@@ -27,7 +27,7 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
   if (!allowed) {
     return (
       <main className={pageClass}>
-        <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+        <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
         <h1 className="text-2xl font-semibold">Resumen del negocio</h1>
         <FeatureLocked title="El resumen es parte de la Edición Personal.">Ventas, costos, ganancias, producción y stock de un vistazo, por período.</FeatureLocked>
       </main>
@@ -88,7 +88,7 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
   return (
     <main className={pageClass}>
       <header>
-        <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+        <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
         <h1 className="text-2xl font-semibold">Resumen del negocio</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{period.label}. Las ventas anuladas no cuentan.</p>
       </header>

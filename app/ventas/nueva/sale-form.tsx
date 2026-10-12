@@ -48,13 +48,18 @@ export function SaleForm({ productId, productName, quantity, suggestedPrice, pri
       <section className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:grid-cols-3 dark:border-neutral-800 dark:bg-neutral-900">
         <label className={labelClass}>Precio por unidad ($)<input name="unit_price" inputMode="decimal" required value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass} />
           {priceLabel && <span>Sugerido: {priceLabel}</span>}</label>
-        <label className={labelClass}>Descuento total ($)<input name="discount" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" className={inputClass} /></label>
-        <label className={labelClass}>Comisión (%)<input name="commission_pct" inputMode="decimal" value={commission} onChange={(e) => setCommission(e.target.value)} placeholder="Ej.: 15 en marketplace" className={inputClass} /></label>
         <label className={labelClass}>Fecha<input name="date" type="date" defaultValue={today} max={today} className={inputClass} /></label>
-        <label className={labelClass}>Cliente (opcional)<input name="customer_name" maxLength={120} className={inputClass} /></label>
-        <label className={labelClass}>Medio de pago
-          <select name="payment_method" defaultValue="" className={inputClass}><option value="">—</option>{paymentMethods.map((m) => <option key={m} value={m}>{m}</option>)}</select>
-        </label>
+        <details open={Boolean(discount || commission) || undefined} className="group sm:col-span-3">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-orange-800 underline underline-offset-4 dark:text-orange-300">Más opciones (descuento, comisión, cliente, medio de pago)</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className={labelClass}>Descuento total ($)<input name="discount" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" className={inputClass} /></label>
+            <label className={labelClass}>Comisión (%)<input name="commission_pct" inputMode="decimal" value={commission} onChange={(e) => setCommission(e.target.value)} placeholder="Ej.: 15 en marketplace" className={inputClass} /></label>
+            <label className={labelClass}>Cliente (opcional)<input name="customer_name" maxLength={120} className={inputClass} /></label>
+            <label className={labelClass}>Medio de pago
+              <select name="payment_method" defaultValue="" className={inputClass}><option value="">—</option>{paymentMethods.map((m) => <option key={m} value={m}>{m}</option>)}</select>
+            </label>
+          </div>
+        </details>
       </section>
 
       <section className="rounded-3xl bg-neutral-950 p-5 text-white dark:bg-white dark:text-neutral-950" aria-live="polite">

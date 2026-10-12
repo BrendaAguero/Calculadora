@@ -40,7 +40,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     <main className={pageClass}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
           <h1 className="text-2xl font-semibold">Ventas</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Ganancia = precio de venta − costo − descuentos − comisiones.</p>
         </div>

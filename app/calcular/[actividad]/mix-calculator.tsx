@@ -155,6 +155,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
         <p className="mt-4 text-xs text-white/70">El precio sugerido es una referencia: vos decidís el precio final.</p>
         <button type="button" onClick={saveCalc} disabled={pending} className="mt-4 min-h-12 w-full rounded-2xl bg-resina px-4 font-bold text-resina-dark disabled:opacity-60">{pending ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className="mt-3 rounded-xl bg-white/15 p-3 text-sm">{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
+        {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold">¿Ya lo vendiste? Registrá la venta →</Link>}
       </section>
     </>
   );

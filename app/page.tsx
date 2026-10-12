@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calculator, Factory, Plus, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
+import { Calculator, ChevronRight, Factory, Package, Plus, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessSnapshot } from "@/lib/access/permissions";
@@ -9,6 +9,8 @@ import { InstallApp } from "@/components/install-app";
 import { resolvePeriod } from "@/lib/period";
 import { isLow, loadStock } from "@/app/stock/data";
 import { amount } from "@/app/stock/constants";
+import { getSimpleMode } from "@/lib/simple-mode-server";
+import { SimpleModeToggle } from "@/components/simple-mode-toggle";
 
 const one = <T,>(value: T | T[] | null) => (Array.isArray(value) ? value[0] : value);
 const pesos = (value: number) => value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
@@ -26,6 +28,12 @@ const greeting = () => {
   const hour = new Date(Date.now() - 3 * 3_600_000).getUTCHours();
   return hour < 12 ? "Buen día" : hour < 20 ? "Buenas tardes" : "Buenas noches";
 };
+
+const SIMPLE_ACTIONS = [
+  { href: "/calcular", label: "Calcular un precio", hint: "Cuánto cobrar por una pieza", icon: Calculator, main: true },
+  { href: "/ventas/nueva", label: "Registrar una venta", hint: "Anotá lo que vendiste", icon: Receipt },
+  { href: "/stock", label: "Ver lo que tengo", hint: "Materiales y piezas en stock", icon: Package },
+];
 
 const ACTIONS = [
   { href: "/calcular", label: "Calcular", icon: Calculator, main: true },
@@ -76,6 +84,59 @@ export default async function Home() {
   const low = stock.rows.filter((r) => !r.archived && isLow(r)).slice(0, 4);
   const recent = (recentRes.data ?? []) as unknown as { id: string; total: number; quantity: number; sale_date: string; customer_name: string | null; products: { name: string } | { name: string }[] | null }[];
   const firstName = (profileRes.data?.full_name ?? "").trim().split(/\s+/)[0];
+  const nextStep = steps.find(([ok]) => !ok);
+
+  if (await getSimpleMode()) {
+    return (
+      <AppShell>
+        <header>
+          <p className="text-base text-neutral-500 dark:text-neutral-400">{greeting()}{firstName ? `, ${firstName}` : ""}</p>
+          <h1 className="text-[30px] leading-tight lg:text-4xl">¿Qué querés hacer hoy?</h1>
+        </header>
+
+        {nextStep && (
+          <Link href={nextStep[1]} className="mt-5 flex items-center gap-4 rounded-3xl border-2 border-resina bg-amber-50 p-5 dark:bg-amber-950/30">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-resina font-display text-lg font-bold text-resina-dark">{done + 1}</span>
+            <span className="min-w-0">
+              <span className="block text-sm text-neutral-600 dark:text-neutral-300">Paso {done + 1} de {steps.length} para empezar</span>
+              <span className="block text-lg font-semibold">{nextStep[2]}</span>
+            </span>
+            <ChevronRight size={22} aria-hidden="true" className="ml-auto shrink-0 text-neutral-500" />
+          </Link>
+        )}
+
+        <nav aria-label="Qué querés hacer" className="mt-5 grid gap-3 lg:grid-cols-3">
+          {SIMPLE_ACTIONS.map(({ href, label, hint, icon: Icon, main }) => (
+            <Link key={href} href={href} className="flex items-center gap-4 rounded-3xl bg-white p-5 hover:ring-2 hover:ring-orange-200 dark:bg-neutral-900 dark:hover:ring-orange-900">
+              <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${main ? "bg-resina text-resina-dark" : "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300"}`}><Icon size={28} aria-hidden="true" /></span>
+              <span className="min-w-0">
+                <span className="block text-xl font-bold">{label}</span>
+                <span className="block text-[15px] text-neutral-500 dark:text-neutral-400">{hint}</span>
+              </span>
+              <ChevronRight size={22} aria-hidden="true" className="ml-auto shrink-0 text-neutral-400" />
+            </Link>
+          ))}
+        </nav>
+
+        <Link href="/ventas" aria-label={`Ganancia de ${monthName}: ${pesos(profit)}. Ver lo que vendí`} className="terrazo mt-5 block rounded-4xl bg-orange-800 p-6 text-white dark:bg-orange-900">
+          <p className="text-base text-white/85">Lo que ganaste en {monthName}</p>
+          <p className="mt-1 font-display text-[42px] font-bold leading-none tracking-tight">{pesos(profit)}</p>
+          <p className="mt-3 text-base text-white/85">{sales.length === 0 ? "Cuando registres ventas, acá vas a ver tu ganancia." : `Vendiste ${pesos(sold)} en ${pieces.toLocaleString("es-AR")} ${pieces === 1 ? "pieza" : "piezas"}.`}</p>
+        </Link>
+
+        {low.length > 0 && (
+          <Link href="/stock" className="mt-4 flex items-center gap-3 rounded-3xl border border-amber-300 bg-amber-50 p-4 text-base text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+            <TriangleAlert size={22} aria-hidden="true" className="shrink-0 text-amber-700" />
+            <span><strong>{low[0].name}</strong> se está terminando: quedan {amount(low[0].quantity, low[0].unit)}.</span>
+          </Link>
+        )}
+
+        <div className="mt-4"><InstallApp /></div>
+        <div className="mt-4"><SimpleModeToggle initial /></div>
+        <LegalLinks className="mt-8" />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -84,7 +145,10 @@ export default async function Home() {
           <p className="text-sm text-neutral-500 dark:text-neutral-400">{greeting()}{firstName ? `, ${firstName}` : ""}</p>
           <h1 className="text-[28px] leading-tight lg:text-4xl">Tu taller hoy</h1>
         </div>
-        <Link href="/ventas/nueva" className="hidden items-center gap-2 rounded-2xl bg-resina px-4 py-2.5 text-sm font-bold text-resina-dark lg:inline-flex"><Plus size={18} aria-hidden="true" />Nueva venta</Link>
+        <div className="flex items-center gap-3">
+          <SimpleModeToggle initial={false} compact />
+          <Link href="/ventas/nueva" className="hidden items-center gap-2 rounded-2xl bg-resina px-4 py-2.5 text-sm font-bold text-resina-dark lg:inline-flex"><Plus size={18} aria-hidden="true" />Nueva venta</Link>
+        </div>
       </header>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.4fr_1fr]">

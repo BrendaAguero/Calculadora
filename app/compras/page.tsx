@@ -23,7 +23,7 @@ export default async function PurchasesPage() {
     <main className={pageClass}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/gestion" className="text-sm text-neutral-500 dark:text-neutral-400">← Gestión</Link>
+          <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Inicio</Link>
           <h1 className="text-2xl font-semibold">Compras de materiales</h1>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Cada compra puede actualizar el precio de los materiales y sumar al stock.</p>
         </div>
