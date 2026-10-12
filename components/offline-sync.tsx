@@ -88,7 +88,7 @@ export function OfflineSync() {
       <div className="mx-auto max-w-xl rounded-2xl bg-neutral-900 px-4 py-3 text-sm text-white shadow-lg dark:bg-neutral-800">
         {!online ? (
           <p className="flex items-start gap-2"><CloudOff size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-resina" />
-            <span>Sin conexión. Ves tus datos guardados; las ventas y los cálculos que cargues se suben solos al volver internet.{waiting > 0 ? ` Pendientes: ${waiting}.` : ""}</span></p>
+            <span>Sin conexión. Ves tus datos guardados; ventas, cálculos, materiales, stock, producción y compras que cargues se suben solos al volver internet.{waiting > 0 ? ` Pendientes: ${waiting}.` : ""}</span></p>
         ) : (
           <p className="flex items-center gap-2"><RefreshCw size={18} aria-hidden="true" className={`shrink-0 text-resina ${syncing ? "animate-spin" : ""}`} />
             <span>{syncing ? `Subiendo ${waiting} ${waiting === 1 ? "carga" : "cargas"} hechas sin conexión…` : waiting > 0 ? `${waiting} ${waiting === 1 ? "carga pendiente" : "cargas pendientes"} de subir.` : "Todo subido."}</span>

@@ -1,6 +1,9 @@
 // Bandeja de salida del modo sin conexión: lo que se carga sin internet queda guardado en el aparato
 // (IndexedDB) hasta que vuelve la conexión y se sube solo.
-export type OutboxType = "sale" | "yeso_calc" | "mix_calc";
+export type OutboxType = "sale" | "yeso_calc" | "mix_calc" | FormType;
+// Formularios que se guardan tal cual (los campos del formulario) y se mandan al servidor al volver internet.
+export const FORM_TYPES = ["material", "stock_item", "stock_move", "production", "purchase"] as const;
+export type FormType = (typeof FORM_TYPES)[number];
 export type OutboxItem = { id: string; userId: string | null; type: OutboxType; payload: unknown; label: string; createdAt: number; error?: string };
 
 export const OFFLINE_PLUS_KEY = "calculadora-sin-conexion";

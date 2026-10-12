@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineForm } from '@/components/offline-form';
 import { SubmitButton } from '@/components/submit-button';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -35,7 +36,7 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
       {!materials?.length ? (
         <div className={warnBox}>Primero creá tus materiales. <Link href="/materials/new" className="underline">Crear material</Link></div>
       ) : (
-        <form action={registerPurchase} className="grid gap-4">
+        <OfflineForm kind="purchase" label="Compra del {date}" again="/compras/nueva" action={registerPurchase} className="grid gap-4">
           <section className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
             <label className={labelClass}>Proveedor
               <select name="supplier_id" defaultValue={proveedor ?? ''} className={inputClass}>
@@ -76,7 +77,7 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
           </section>
 
           <div><SubmitButton className={primaryButton}>Registrar compra</SubmitButton></div>
-        </form>
+        </OfflineForm>
       )}
     </main>
   );

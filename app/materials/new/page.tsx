@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineForm } from '@/components/offline-form';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnedActivities } from '@/lib/access/activities';
@@ -25,7 +26,7 @@ export default async function NewMaterialPage({ searchParams }: { searchParams: 
 
       {params.error && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">{params.error}</div>}
       <MaterialTemplates formId="nuevo-material" />
-      <form id="nuevo-material" action={createMaterial} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
+      <OfflineForm kind="material" label="Material {name}" again="/materials/new" id="nuevo-material" action={createMaterial} className="grid gap-4 rounded-3xl bg-white p-5 dark:bg-neutral-900">
         <label className="grid gap-1 text-sm font-medium">Nombre<input name="name" required placeholder="Ej.: Yeso" className="rounded-xl border p-3 font-normal" /></label>
         <label className="grid gap-1 text-sm font-medium">Unidad de referencia<select name="default_unit" defaultValue="g" className="rounded-xl border p-3 font-normal">{units.map(unit => <option key={unit}>{unit}</option>)}</select></label>
         <label className="grid gap-1 text-sm font-medium">Precio de compra<input name="purchase_price" inputMode="decimal" required placeholder="0" className="rounded-xl border p-3 font-normal" /></label>
@@ -36,7 +37,7 @@ export default async function NewMaterialPage({ searchParams }: { searchParams: 
         <label className="grid gap-1 text-sm font-medium">Actividad<select name="activity_id" defaultValue="" className="rounded-xl border p-3 font-normal"><option value="">Compartido (todas mis actividades)</option>{activities.map(activity => <option key={activity.id} value={activity.id}>{activity.name}</option>)}</select><span className="text-xs font-normal text-neutral-500">Elegí «Compartido» si lo usás en más de una actividad, por ejemplo un pigmento.</span></label>
         <p className="text-xs text-neutral-500">El precio queda registrado como historial. Si comprás nuevamente el mismo material, agregá un nuevo precio en su ficha.</p>
         <button className="rounded-xl bg-neutral-900 px-4 py-3 font-medium text-white">Guardar material</button>
-      </form>
+      </OfflineForm>
     </main>
   );
 }
