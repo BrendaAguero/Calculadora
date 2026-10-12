@@ -782,3 +782,7 @@ Después de aprobación:
 
 ### Actividades (20261012_actividad_principal)
 - La principal la elige la usuaria (`choose_primary_activity`); la segunda sale a mitad de precio y las siguientes a precio normal (`activity_price_for`, `my_activity_price`, `request_activity_purchase`); `apply_purchase_activation` activa compras `activity`.
+
+### Sin conexión (20261012_sin_conexion)
+- `offline_sync_log(user_id, client_id, kind)`: cada venta o cálculo cargado sin conexión tiene un id propio; al subirlo (`/api/sync`, solo Plus) se registra para no repetirlo. RLS: cada una lo suyo.
+- El aparato guarda las pantallas visitadas (service worker `sw.js?plus=1`, caché `pantallas-v1`) y la bandeja de salida en IndexedDB (`calculadora` → `salida`). Al ir a /login se borran las pantallas guardadas.

@@ -7,6 +7,7 @@ import { money } from '@/app/stock/constants';
 import { cardClass, errorBox, inputClass, labelClass, pageClass, secondaryButton, warnBox } from '@/lib/ui';
 import { PAYMENT_METHODS, productUnitCost, suggestedPrice } from '../compute';
 import { SaleForm } from './sale-form';
+import { OfflineSaleForm } from './offline';
 
 export default async function NewSalePage({ searchParams }: { searchParams: Promise<{ producto?: string; cantidad?: string; error?: string }> }) {
   const params = await searchParams;
@@ -53,10 +54,13 @@ export default async function NewSalePage({ searchParams }: { searchParams: Prom
         </form>
       )}
 
+      {products?.length ? <OfflineSaleForm products={products} paymentMethods={PAYMENT_METHODS} today={today} /> : null}
+
       {ready && (
         <SaleForm
           key={`${product!.id}-${params.cantidad}`}
           productId={product!.id}
+          productName={product!.name}
           quantity={params.cantidad!}
           suggestedPrice={price?.price ?? null}
           priceLabel={price ? `${money(price.price)} (${priceTypeLabel(price.type).toLowerCase()})` : null}

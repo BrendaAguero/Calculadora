@@ -5,6 +5,7 @@ import { LOCK_INIT_SCRIPT } from "@/lib/app-lock";
 import { DeviceGuard } from "@/components/device-guard";
 import { AppFrame } from "@/components/app-nav";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { OfflineSync } from "@/components/offline-sync";
 import "./globals.css";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full"><AppFrame>{children}</AppFrame><DeviceGuard /><ServiceWorkerRegister /></body>
+      <body className="min-h-full"><AppFrame>{children}</AppFrame><DeviceGuard /><ServiceWorkerRegister /><OfflineSync /></body>
     </html>
   );
 }

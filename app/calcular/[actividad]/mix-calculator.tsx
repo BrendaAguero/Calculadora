@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { RotateCcw, Save, SlidersHorizontal } from 'lucide-react';
 import { computeMix, mixByCode, type MixCode, type MixInput, type MixSettings, type PriceMethod } from '@/lib/mixes';
 import { resetMixSettings, saveMixCalculation, saveMixSettings } from '../mix-actions';
+import { enqueue, isOffline, offlineEnabled } from '@/lib/outbox';
 
 const inputClass = 'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-neutral-900 focus:border-orange-600 focus:bg-white dark:border-neutral-700 dark:bg-neutral-950 dark:text-white';
 const cardClass = 'mt-4 rounded-3xl bg-white p-5 dark:bg-neutral-900';
@@ -31,7 +32,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
   const setPrice = (key: string, value: string) => setS({ prices: { ...settings.prices, [key]: value } });
   const ratio = settings.components.map(c => c.parts.toLocaleString('es-AR', { maximumFractionDigits: 2 })).join(' : ');
 
-  const saveSettings = () => start(async () => {
+  const saveSettings = () => isOffline() ? setSettingsStatus({ ok: false, message: 'Necesitás internet para guardar tus valores. Mientras tanto, los cambios valen para este cálculo.' }) : start(async () => {
     const r = await saveMixSettings(code, settings);
     setSettingsStatus(r.ok ? { ok: true, message: 'Listo: la próxima vez arranca con tus valores.' } : { ok: false, message: r.error });
   });
@@ -41,7 +42,16 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
     const r = await resetMixSettings(code, settings.prices);
     setSettingsStatus(r.ok ? { ok: true, message: 'Volviste a los valores de fábrica (tus precios se mantienen).' } : { ok: false, message: r.error });
   });
-  const saveCalc = () => start(async () => {
+  const saveCalc = () => {
+    if (isOffline() && offlineEnabled()) {
+      void enqueue('mix_calc', { code, settings, input }, `Cálculo de ${def.name}`)
+        .then(() => setStatus({ ok: true, message: 'Sin conexión: el cálculo quedó guardado en este aparato y se sube solo cuando vuelva internet.' }))
+        .catch(() => setStatus({ ok: false, message: 'No se pudo guardar en este aparato.' }));
+      return;
+    }
+    saveCalcOnline();
+  };
+  const saveCalcOnline = () => start(async () => {
     const r = await saveMixCalculation(code, settings, input);
     setStatus(r.ok ? { ok: true, message: 'Cálculo guardado. Los precios de hoy quedan congelados en él.', id: r.id } : { ok: false, message: r.error });
   });
