@@ -14,7 +14,7 @@ export default async function TimersPage({ searchParams }: { searchParams: Promi
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: timers } = await supabase.from('cure_timers').select('id,label,ends_at,done_at').eq('user_id', user.id).order('ends_at').limit(100);
+  const { data: timers } = await supabase.from('cure_timers').select('id,label,ends_at,done_at,created_at').eq('user_id', user.id).order('ends_at').limit(100);
   const finished = (timers ?? []).filter((t) => t.done_at).length;
 
   return (

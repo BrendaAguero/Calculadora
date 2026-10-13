@@ -21,6 +21,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/", label: "Inicio", icon: House },
     { href: "/calcular", label: "Calcular", icon: Calculator },
     { href: "/herramientas", label: "Herramientas", icon: Ruler },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/historial", label: "Historial", icon: History },
   ] },
   { title: "Negocio", items: [
@@ -34,7 +35,6 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: "Taller", items: [
     { href: "/colores", label: "Recetas de color", icon: Palette, section: "colores" },
     { href: "/cuaderno", label: "Cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
-    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
   ] },
   { title: "Mis datos", items: [
@@ -69,6 +69,7 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/", label: "Inicio", icon: House },
     { href: "/calcular", label: "Calcular un precio", icon: Calculator },
     { href: "/herramientas", label: "Herramientas", icon: Ruler },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/ventas/nueva", label: "Registrar una venta", icon: Receipt },
     { href: "/ventas", label: "Lo que vendí", icon: Wallet },
     { href: "/stock", label: "Lo que tengo", icon: Package },
@@ -79,7 +80,6 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
     { href: "/colores", label: "Mis colores", icon: Palette, section: "colores" },
     { href: "/cuaderno", label: "Mi cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
-    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
     { href: "/mas", label: "Más opciones", icon: MoreHorizontal },
