@@ -128,3 +128,30 @@ self.addEventListener("message", (event) => {
   // Plus: guardar de antemano las pantallas principales para tenerlas sin conexión.
   if (data.type === "warm" && PLUS) event.waitUntil(warm(Array.isArray(data.urls) ? data.urls : WARM));
 });
+
+// Avisos de los temporizadores: llegan aunque la app esté cerrada o el celular bloqueado.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch {}
+  const title = data.title || "Calculadora Emprender";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "",
+    tag: data.tag || undefined,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    vibrate: [300, 150, 300],
+    requireInteraction: true,
+    data: { url: data.url || "/temporizadores" },
+  }));
+});
+
+// Al tocar el aviso se abre la app (o se trae al frente si ya estaba abierta).
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || "/temporizadores", self.location.origin).href;
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+    const open = windows.find((w) => w.url.startsWith(self.location.origin));
+    if (open) return open.navigate(url).then((w) => (w || open).focus()).catch(() => open.focus());
+    return self.clients.openWindow(url);
+  }));
+});

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { formatCountdown, TIMERS_KEY, type StoredTimer } from '@/lib/timers';
 import { deleteTimer, finishTimer } from './actions';
 
@@ -26,17 +26,13 @@ const time = (iso: string) => new Date(iso).toLocaleString('es-AR', { weekday: '
 
 export function TimersBoard({ timers }: { timers: Timer[] }) {
   const [now, setNow] = useState<number | null>(null);
-  const [permission, setPermission] = useState<string>('granted');
 
   useEffect(() => {
     // Los activos quedan en el aparato para que el aviso funcione en cualquier pantalla de la app.
     try { localStorage.setItem(TIMERS_KEY, JSON.stringify(timers.filter((t) => !t.done_at).map(({ id, label, ends_at }) => ({ id, label, ends_at })))); } catch {}
   }, [timers]);
   useEffect(() => {
-    const tick = () => {
-      setNow(Date.now());
-      if (typeof Notification !== 'undefined') setPermission(Notification.permission);
-    };
+    const tick = () => setNow(Date.now());
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -45,11 +41,6 @@ export function TimersBoard({ timers }: { timers: Timer[] }) {
   const active = timers.filter((t) => !t.done_at);
   return (
     <div className="grid gap-3">
-      {permission === 'default' && (
-        <button type="button" onClick={async () => setPermission(await Notification.requestPermission())} className="flex w-fit items-center gap-2 rounded-xl border border-orange-300 bg-orange-50 px-4 py-2.5 text-sm font-medium text-orange-900 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-100">
-          <Bell size={16} aria-hidden="true" />Activar los avisos del celular o la compu
-        </button>
-      )}
       {!active.length && <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">No hay temporizadores en marcha.</div>}
       <div className="grid gap-3 sm:grid-cols-2">
       {active.map((t) => {

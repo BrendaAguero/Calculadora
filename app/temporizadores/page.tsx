@@ -6,6 +6,7 @@ import { cardClass, errorBox, okBox, pageClass } from '@/lib/ui';
 import { clearFinished, startTimers } from './actions';
 import { TimersBoard } from './board';
 import { NewTimers } from './new-timers';
+import { PushToggle } from './push-toggle';
 
 export const metadata = { title: 'Temporizadores · Calculadora Emprender' };
 
@@ -27,6 +28,7 @@ export default async function TimersPage({ searchParams }: { searchParams: Promi
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {error && <div role="alert" className={errorBox}>{error}</div>}
 
+      <PushToggle />
       <TimersBoard timers={timers ?? []} />
       {finished > 0 && <form action={clearFinished}><SubmitButton className="text-sm text-neutral-500 underline" pendingText="Limpiando…">Borrar los {finished} ya terminados</SubmitButton></form>}
 
@@ -34,7 +36,7 @@ export default async function TimersPage({ searchParams }: { searchParams: Promi
         <h2 className="mb-3 font-semibold">Nuevo temporizador</h2>
         <NewTimers action={startTimers} />
       </section>
-      <p className="text-xs text-neutral-500">El aviso suena mientras la app esté abierta (en cualquier pantalla). Con el celular bloqueado o la app cerrada puede no sonar: fijate la hora de cada aviso.</p>
+      <p className="text-xs text-neutral-500">Con los avisos activados te llega una notificación aunque la app esté cerrada o el celular bloqueado (puede tardar hasta 1 minuto). Activalos en cada aparato donde quieras recibirlos.</p>
     </main>
   );
 }

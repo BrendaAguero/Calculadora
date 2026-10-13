@@ -37,7 +37,7 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
       <>¿Te salió mal una pieza? En <Link href="/ayuda/problemas">¿Qué le pasó a mi pieza?</Link> ves por qué pasa y cómo evitarlo (burbujas, resina pegajosa, fisuras y más). Es gratis.</>,
       <>Con <Link href="/colores">Recetas de color</Link> guardás cuánto pigmento lleva cada color y la app te dice cuánto poner para otra cantidad de mezcla.</>,
       <>En el <Link href="/cuaderno">Cuaderno de pruebas</Link> anotás cada colada (material, proporción, color, temperatura) y cómo salió, con foto.</>,
-      <>Los <Link href="/temporizadores">Temporizadores</Link> te avisan cuándo desmoldar y cuándo está curada la pieza. Son gratis y suenan mientras la app esté abierta.</>,
+      <>Los <Link href="/temporizadores">Temporizadores</Link> te avisan cuándo desmoldar y cuándo está curada la pieza. Son gratis. Tocá «Activar avisos» y te llegan aunque la app esté cerrada o el celular bloqueado (en iPhone, primero agregá la app a la pantalla de inicio).</>,
       <>Recetas de color y Cuaderno de pruebas son módulos que se compran sueltos en <Link href="/access">Mi acceso</Link>, o vienen con la Mensualidad Plus.</>,
     ],
   },

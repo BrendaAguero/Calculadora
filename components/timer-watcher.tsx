@@ -7,13 +7,14 @@ import { FIRED_KEY, TIMERS_KEY, type StoredTimer } from '@/lib/timers';
 
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) ?? '') as T; } catch { return fallback; } };
 
-// Aviso del sistema (con el service worker si está, que es lo que funciona en celulares).
-async function systemNotice(title: string, body: string) {
+// Aviso del sistema (con el service worker si está, que es lo que funciona en celulares). Usa el mismo «tag»
+// que el aviso push, así si llegan los dos se ve uno solo.
+async function systemNotice(title: string, body: string, tag: string) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
     const registration = await navigator.serviceWorker?.getRegistration();
-    if (registration) await registration.showNotification(title, { body, tag: body, icon: '/icons/icon-192.png' });
-    else new Notification(title, { body });
+    if (registration) await registration.showNotification(title, { body, tag, icon: '/icons/icon-192.png' });
+    else new Notification(title, { body, tag });
   } catch {}
 }
 
@@ -27,7 +28,7 @@ export function TimerWatcher() {
       const now = Date.now();
       const fresh = timers.filter((t) => new Date(t.ends_at).getTime() <= now && !fired.has(t.id));
       if (!fresh.length) return;
-      fresh.forEach((t) => { fired.add(t.id); systemNotice('¡Tiempo cumplido!', t.label); });
+      fresh.forEach((t) => { fired.add(t.id); systemNotice('¡Tiempo cumplido!', t.label, t.id); });
       try { localStorage.setItem(FIRED_KEY, JSON.stringify([...fired].slice(-200))); } catch {}
       try { navigator.vibrate?.([300, 150, 300]); } catch {}
       setDue((d) => [...d, ...fresh]);
