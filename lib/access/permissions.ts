@@ -120,15 +120,18 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
   };
 }
 
-// Funciones de gestión incluidas en la Edición Personal (licencia base).
-const PERSONAL_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
+// Pack Ventas y Stock: ventas, resumen, stock, producción, compras y proveedores van juntos.
+// Se compra como extra de la Edición Personal; la Mensualidad Plus lo incluye.
+export const PACK_CODE = "PACK_VENTAS";
+const PACK_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
 
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   if (snapshot.isAdmin || snapshot.isTester) return true;
   if (snapshot.accountStatus !== "active" || !snapshot.baseLicenseActive) return false;
   // Mensualidad Plus (la suscripción mensual) desbloquea todos los módulos.
   if (snapshot.entrepreneurActive) return true;
-  return PERSONAL_FEATURES.has(feature) || snapshot.modules.includes(feature);
+  // Quien compró antes los módulos sueltos de stock o proveedores los conserva.
+  return snapshot.modules.includes(feature) || (PACK_FEATURES.has(feature) && snapshot.modules.includes(PACK_CODE));
 }
 
 // Publicidad: la ven todas las cuentas salvo las que tienen Mensualidad Plus (y administración / prueba).

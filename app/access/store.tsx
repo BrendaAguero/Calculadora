@@ -11,15 +11,11 @@ const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const dateTime = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires' });
 
 // Extras que ya funcionan; el resto se muestra como «Próximamente» (con Plus se incluyen al estar listos).
-const SELLABLE_MODULES = new Set(['EXTRA_DEVICE']);
+const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS']);
 const MODULE_HINTS: Record<string, string> = {
   EXTRA_DEVICE: 'Usá la app en un aparato más (podés comprar varios).',
-  CALCULO_INVERSO: 'Partir del precio de venta para saber cuánto podés gastar.',
-  ESCALADO_AVANZADO: 'Escalar fórmulas con más opciones.',
-  MOLDES_AVANZADOS: 'Más datos y cálculos para tus moldes.',
+  PACK_VENTAS: 'Para vender: ventas, resumen de ganancias, stock, producción, compras y proveedores.',
 };
-// Stock y Proveedores ya vienen en la Edición Personal: no se venden aparte.
-const INCLUDED_MODULES = new Set(['STOCK_BASICO', 'PROVEEDORES_BASICO']);
 const PURCHASE_LABELS: Record<string, string> = { license: 'Edición Personal', license_upgrade: 'Edición Personal', module: '' };
 
 export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot; userId: string; referral?: string }) {
@@ -67,7 +63,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
         )}
 
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
-          {(modules ?? []).filter((m) => !INCLUDED_MODULES.has(m.code)).map((module) => {
+          {(modules ?? []).map((module) => {
             const owned = module.code !== 'EXTRA_DEVICE' && (snapshot.modules.includes(module.code) || snapshot.entrepreneurActive);
             const sellable = SELLABLE_MODULES.has(module.code);
             return (
