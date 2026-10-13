@@ -21,6 +21,23 @@ export async function vapidKeys(admin: Admin) {
   return read();
 }
 
+// Aviso de prueba a un aparato puntual (botón «Probar aviso»). Devuelve el código del servicio de avisos si falla.
+export async function sendTestPush(admin: Admin, sub: { endpoint: string; p256dh: string; auth: string }) {
+  const keys = await vapidKeys(admin);
+  if (!keys) return { ok: false, status: 0 };
+  webpush.setVapidDetails(`mailto:${CONTACT_EMAIL}`, keys.publicKey, keys.privateKey);
+  try {
+    const res = await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      JSON.stringify({ title: "Aviso de prueba", body: "¡Los avisos funcionan en este aparato!", tag: "prueba", url: "/temporizadores" }),
+      { TTL: 600, urgency: "high" },
+    );
+    return { ok: true, status: res.statusCode };
+  } catch (error) {
+    return { ok: false, status: (error as { statusCode?: number }).statusCode ?? 0 };
+  }
+}
+
 // Manda los avisos de los temporizadores vencidos. Cada uno se «reserva» antes de enviarlo para no repetirlo.
 export async function sendDueTimerPushes(admin: Admin) {
   const keys = await vapidKeys(admin);

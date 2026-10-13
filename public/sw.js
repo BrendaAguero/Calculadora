@@ -137,6 +137,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, {
     body: data.body || "",
     tag: data.tag || undefined,
+    renotify: Boolean(data.tag),
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
     vibrate: [300, 150, 300],
