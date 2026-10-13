@@ -140,7 +140,7 @@ self.addEventListener("push", (event) => {
     renotify: Boolean(data.tag),
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    vibrate: [300, 150, 300],
+    vibrate: [500, 200, 500, 200, 500, 200, 1000],
     requireInteraction: true,
     data: { url: data.url || "/temporizadores" },
   }));

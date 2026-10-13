@@ -36,7 +36,7 @@ export default async function TimersPage({ searchParams }: { searchParams: Promi
         <h2 className="mb-3 font-semibold">Nuevo temporizador</h2>
         <NewTimers action={startTimers} />
       </section>
-      <p className="text-xs text-neutral-500">Con los avisos activados te llega una notificación aunque la app esté cerrada o el celular bloqueado (puede tardar hasta 1 minuto). Activalos en cada aparato donde quieras recibirlos.</p>
+      <p className="text-xs text-neutral-500">Con los avisos activados te llega una notificación aunque la app esté cerrada o el celular bloqueado (puede tardar hasta 1 minuto). Activalos en cada aparato donde quieras recibirlos. Con la app abierta, además suena una alarma hasta que la apagues. Para que la notificación suene más fuerte con la app cerrada, elegí un tono en Ajustes del celular → Apps → Chrome → Notificaciones → este sitio → Sonido.</p>
     </main>
   );
 }
