@@ -38,7 +38,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
           <li>✓ En {devices} aparatos (celular y computadora)</li>
           <li>✓ Incluye publicidad discreta</li>
         </ul>
-        <p className="mt-3 text-xs text-neutral-500">Opcional después: <strong>Mensualidad Plus</strong> ({money(Number(monthly?.price ?? 4900))} por mes): sin publicidad, todas las actividades, el Pack Ventas y Stock, sin límites y modo sin conexión.</p>
+        <p className="mt-3 text-xs text-neutral-500">Opcional después: <strong>Mensualidad Plus</strong> ({money(Number(monthly?.price ?? 4900))} por mes): sin publicidad, todas las actividades, el Pack Ventas y Stock y los módulos del taller, sin límites y modo sin conexión.</p>
 
         {error && <div role="alert" className={`mt-4 ${errorBox}`}>{error}</div>}
         <form action={buyPersonal} className="mt-4 grid gap-3">

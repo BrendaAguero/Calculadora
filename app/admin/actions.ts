@@ -157,6 +157,17 @@ export async function setPackPrices(formData: FormData) {
   await rpc('/admin/precios', 'admin_set_pack_prices', { p_pack: n('pack'), p_with_personal: n('with_personal') }, 'Precios del pack guardados.');
 }
 
+export async function setModulePrices(formData: FormData) {
+  const supabase = await createClient();
+  for (const code of ['COLORES', 'CUADERNO']) {
+    const price = Number(text(formData, code).replace(/\./g, '').replace(',', '.'));
+    const { error } = await supabase.rpc('admin_set_module_price', { p_code: code, p_price: price });
+    if (error) back('/admin/precios', 'error', error.message);
+  }
+  revalidatePath('/admin/precios');
+  back('/admin/precios', 'ok', 'Precios de los módulos del taller guardados.');
+}
+
 export async function givePack(formData: FormData) {
   await rpc('/admin/emails', 'admin_give_pack', { p_id: text(formData, 'id') }, 'Pack Ventas y Stock sumado.');
 }

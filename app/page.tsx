@@ -1,3 +1,4 @@
+import { HomeTimers } from "@/components/home-timers";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ChevronRight, Factory, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
@@ -54,7 +55,7 @@ export default async function Home() {
 
   const count = async (table: string) => user ? (await supabase.from(table).select("id", { count: "exact", head: true }).eq("user_id", user.id)).count ?? 0 : 0;
   // Todo se pide a la vez (antes iba de a una consulta y el Inicio tardaba más).
-  const [snapshot, activitiesCount, oldPrices, settingsRes, [materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore, prefsRes] = await Promise.all([
+  const [snapshot, activitiesCount, oldPrices, settingsRes, [materials, formulas, molds, calculations], profileRes, salesRes, anySaleRes, calcsRes, stock, owned, simple, hidden, cookieStore, prefsRes, timersRes] = await Promise.all([
     user ? getAccessSnapshot() : Promise.resolve(null),
     user ? supabase.from("user_activities").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active").then((r) => r.count) : Promise.resolve(null),
     user ? countOldPrices(user.id) : Promise.resolve(0),
@@ -70,6 +71,7 @@ export default async function Home() {
     getHiddenSections(),
     cookies(),
     user ? supabase.from("user_preferences").select("home_widgets").eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    user ? supabase.from("cure_timers").select("id,label,ends_at").eq("user_id", user.id).is("done_at", null).order("ends_at").limit(3) : Promise.resolve({ data: [] }),
   ]);
   // Edición Personal recién activada: primero elige su actividad principal.
   if (user && snapshot?.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester && activitiesCount === 0) redirect("/bienvenida");
@@ -121,6 +123,9 @@ export default async function Home() {
           <h1 className="text-[30px] leading-tight lg:text-4xl">¿Qué querés calcular hoy?</h1>
         </div>
       </header>
+
+      {/* Temporizadores en marcha (solo si hay alguno). */}
+      <HomeTimers timers={timersRes.data ?? []} />
 
       {/* Lo principal: cuánto material y cuánto líquido preparar. */}
       {show.has("preparo") && <MixQuick options={quickOptions} />}

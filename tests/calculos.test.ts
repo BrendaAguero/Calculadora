@@ -146,3 +146,28 @@ test('números como se escriben en Argentina', () => {
   assert.ok(Number.isNaN(parseAR('abc')));
   assert.ok(Number.isNaN(parseAR('')));
 });
+
+test('recetas de color: escalar el pigmento a otra cantidad de mezcla', async () => {
+  const { scalePigments, pigmentPercent } = await import('../lib/colors.ts');
+  const base = [{ name: 'Rosa', amount: 2, unit: 'g' as const }, { name: 'Negro', amount: 3, unit: 'gotas' as const }, { name: 'Ocre', amount: 0.5, unit: 'ml' as const }];
+  const doble = scalePigments(base, 100, 250);
+  close(doble[0].amount, 5);
+  assert.equal(doble[1].amount, 8); // 7,5 gotas → 8
+  close(doble[2].amount, 1.3); // 1,25 ml → 1,3
+  const poquito = scalePigments(base, 100, 10);
+  assert.equal(poquito[1].amount, 1); // nunca menos de 1 gota
+  close(poquito[0].amount, 0.2);
+  close(pigmentPercent(base[0], 100)!, 2);
+  assert.equal(pigmentPercent(base[1], 100), null);
+});
+
+test('temporizadores: textos de duración y cuenta regresiva', async () => {
+  const { formatDuration, formatCountdown } = await import('../lib/timers.ts');
+  assert.equal(formatDuration(45), '45 min');
+  assert.equal(formatDuration(150), '2 h 30 min');
+  assert.equal(formatDuration(24 * 60), '24 h');
+  assert.equal(formatDuration(7 * 24 * 60), '7 días');
+  assert.equal(formatCountdown(65_000), '1:05');
+  assert.equal(formatCountdown(3_909_000), '1:05:09');
+  assert.equal(formatCountdown((2 * 86400 + 4 * 3600) * 1000), '2 d 4 h');
+});
