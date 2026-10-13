@@ -33,6 +33,15 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
     ],
   },
   {
+    id: 'taller', title: 'Taller: colores, pruebas y tiempos', steps: [
+      <>¿Te salió mal una pieza? En <Link href="/ayuda/problemas">¿Qué le pasó a mi pieza?</Link> ves por qué pasa y cómo evitarlo (burbujas, resina pegajosa, fisuras y más). Es gratis.</>,
+      <>Con <Link href="/colores">Recetas de color</Link> guardás cuánto pigmento lleva cada color y la app te dice cuánto poner para otra cantidad de mezcla.</>,
+      <>En el <Link href="/cuaderno">Cuaderno de pruebas</Link> anotás cada colada (material, proporción, color, temperatura) y cómo salió, con foto.</>,
+      <>Los <Link href="/temporizadores">Temporizadores</Link> te avisan cuándo desmoldar y cuándo está curada la pieza. Suenan mientras la app esté abierta.</>,
+      <>Estos tres son módulos que se compran sueltos en <Link href="/access">Mi acceso</Link>, o vienen con la Mensualidad Plus.</>,
+    ],
+  },
+  {
     id: 'stock', title: 'Stock', steps: [
       <>En <Link href="/stock">Stock</Link> ves materias primas y productos terminados, con su cantidad, mínimo y valor.</>,
       <>El stock se mueve solo cuando registrás producción, compras o ventas. Si necesitás corregirlo, usá un ajuste desde el detalle del ítem.</>,
@@ -66,7 +75,7 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
 
 const FAQ: [string, React.ReactNode][] = [
   ['¿Mis datos los puede ver otra persona?', <>No. Cada cuenta solo puede ver sus propios datos. Más detalles en la <Link href="/legal/privacidad">Política de privacidad</Link>.</>],
-  ['¿Qué diferencia hay entre la Edición Personal y la Mensualidad Plus?', <>La <strong>Edición Personal</strong> se paga una sola vez: calculadora, materiales, fórmulas, moldes y productos, 2 aparatos, con publicidad. Si vendés, sumale el <strong>Pack Ventas y Stock</strong> (ventas, resumen, stock, producción, compras y proveedores), también de pago único. La <strong>Mensualidad Plus</strong> se suma por mes: sin publicidad, todas las actividades, el Pack Ventas y Stock, sin límites y modo sin conexión. Mirá tu acceso en <Link href="/access">Mi acceso</Link>.</>],
+  ['¿Qué diferencia hay entre la Edición Personal y la Mensualidad Plus?', <>La <strong>Edición Personal</strong> se paga una sola vez: calculadora, materiales, fórmulas, moldes y productos, 2 aparatos, con publicidad. Si vendés, sumale el <strong>Pack Ventas y Stock</strong> (ventas, resumen, stock, producción, compras y proveedores), también de pago único. Para el taller hay módulos sueltos: <strong>Recetas de color</strong>, <strong>Cuaderno de pruebas</strong> y <strong>Temporizadores</strong>. La <strong>Mensualidad Plus</strong> se suma por mes: sin publicidad, todas las actividades, el Pack Ventas y Stock y los módulos del taller, sin límites y modo sin conexión. Mirá tu acceso en <Link href="/access">Mi acceso</Link>.</>],
   ['¿Qué actividades tengo?', <>La primera vez que entrás elegís tu <strong>actividad principal</strong> (Yeso, Resina, Jesmonite o Cemento): viene incluida. Tu segunda actividad sale siempre a mitad de precio y las siguientes a precio normal; se compran aparte en <Link href="/access#actividades">Mi acceso</Link> y queda para siempre. Con la Mensualidad Plus tenés todas.</>],
   ['¿Puedo revender la app?', <>Sí. En <Link href="/revendedora">Revendedora</Link> activás el modo gratis, comprás licencias de a una o en paquetes con descuento y se las asignás a tus clientas con su correo. Cuando lo aprobamos, le llega su clave por correo. Ahí mismo tenés recursos de venta y el contacto para acelerar las aprobaciones.</>],
   ['¿Qué pasa si doy de baja Plus?', <>Seguís con tu Edición Personal. <strong>No se borra nada.</strong> Si tenías más cosas que los límites de la Edición Personal, las seguís viendo, pero no podés crear nuevas hasta liberar lugar o volver a Plus.</>],

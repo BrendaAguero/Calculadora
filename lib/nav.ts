@@ -1,14 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { Ruler, ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
+import { CircleHelp, NotebookPen, Palette, Timer, Ruler, ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
 
 // Menú de la app: el mismo en la barra del costado (computadora), la barra de abajo y «Más» (celular).
 export type NavItem = { href: string; label: string; icon: LucideIcon; section?: MenuSection };
 
 // Secciones que aparecen en el menú solo si la persona las usa (o si eligió verlas en «Más»).
-export const MENU_SECTIONS = ["produccion", "compras", "proveedores", "resumen", "lista-precios", "revendedora"] as const;
+export const MENU_SECTIONS = ["produccion", "compras", "proveedores", "resumen", "lista-precios", "colores", "cuaderno", "temporizadores", "revendedora"] as const;
 export type MenuSection = (typeof MENU_SECTIONS)[number];
 export const MENU_SECTION_LABELS: Record<MenuSection, string> = {
-  produccion: "Producción", compras: "Compras", proveedores: "Proveedores", resumen: "Resumen del negocio", "lista-precios": "Lista de precios", revendedora: "Revendedora",
+  produccion: "Producción", compras: "Compras", proveedores: "Proveedores", resumen: "Resumen del negocio", "lista-precios": "Lista de precios", colores: "Recetas de color", cuaderno: "Cuaderno de pruebas", temporizadores: "Temporizadores", revendedora: "Revendedora",
 };
 
 // Saca del menú las secciones ocultas (y los grupos que quedan vacíos).
@@ -30,6 +30,12 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/compras", label: "Compras", icon: ShoppingCart, section: "compras" },
     { href: "/resumen", label: "Resumen", icon: BarChart3, section: "resumen" },
     { href: "/lista-precios", label: "Lista de precios", icon: ClipboardList, section: "lista-precios" },
+  ] },
+  { title: "Taller", items: [
+    { href: "/colores", label: "Recetas de color", icon: Palette, section: "colores" },
+    { href: "/cuaderno", label: "Cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer, section: "temporizadores" },
+    { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
   ] },
   { title: "Mis datos", items: [
     { href: "/materials", label: "Materiales", icon: Layers },
@@ -71,6 +77,10 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
     { href: "/lista-precios", label: "Lista de precios", icon: ClipboardList, section: "lista-precios" },
   ] },
   { title: null, items: [
+    { href: "/colores", label: "Mis colores", icon: Palette, section: "colores" },
+    { href: "/cuaderno", label: "Mi cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer, section: "temporizadores" },
+    { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
     { href: "/mas", label: "Más opciones", icon: MoreHorizontal },
   ] },

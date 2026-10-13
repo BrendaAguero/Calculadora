@@ -18,6 +18,11 @@ const labels: Record<string, string> = {
   MOLDES_AVANZADOS: "Moldes avanzados",
   STOCK_BASICO: "Stock básico",
   PROVEEDORES_BASICO: "Proveedores básico",
+  PACK_VENTAS: "Pack Ventas y Stock",
+  COLORES: "Recetas de color",
+  CUADERNO: "Cuaderno de pruebas",
+  TEMPORIZADORES: "Temporizadores",
+  EXTRA_DEVICE: "Aparato extra",
 };
 
 const RESOURCES: Resource[] = ["materials", "products", "formulas", "molds"];

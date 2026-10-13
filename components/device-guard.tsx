@@ -8,6 +8,7 @@ import { signOut } from "@/app/login/actions";
 import { answerSessionAlert } from "@/app/seguridad/actions";
 import { LAST_ONLINE_KEY, OFFLINE_PLUS_KEY, OFFLINE_USER_KEY } from "@/lib/outbox";
 import { SW_PLUS_EVENT } from "@/components/sw-register";
+import { FIRED_KEY, TIMERS_KEY } from "@/lib/timers";
 import { HIDDEN_AT_KEY, RELOCK_AFTER_MS, UNLOCKED_KEY, UNLOCKED_PATHS, checkBiometric, checkPin, readLock, saveLock, type LockConfig } from "@/lib/app-lock";
 
 type Alert = { id: string; place_a: string | null; place_b: string | null };
@@ -33,7 +34,7 @@ function rememberConnection(data: { plus?: boolean; userId?: string }) {
 
 // Al cerrar sesión (pantalla de entrada): se borran las pantallas guardadas y los datos del modo sin conexión.
 function forgetConnection() {
-  try { localStorage.removeItem(OFFLINE_PLUS_KEY); localStorage.removeItem(OFFLINE_USER_KEY); } catch {}
+  try { [OFFLINE_PLUS_KEY, OFFLINE_USER_KEY, TIMERS_KEY, FIRED_KEY].forEach((key) => localStorage.removeItem(key)); } catch {}
   if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage({ type: "clear" })).catch(() => {});
 }
 const PING_EVERY_MS = 5 * 60 * 1000;

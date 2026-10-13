@@ -11,9 +11,12 @@ const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const dateTime = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires' });
 
 // Extras que ya funcionan; el resto se muestra como «Próximamente» (con Plus se incluyen al estar listos).
-const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS']);
+const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS', 'COLORES', 'CUADERNO', 'TEMPORIZADORES']);
 const MODULE_HINTS: Record<string, string> = {
   EXTRA_DEVICE: 'Usá la app en un aparato más (podés comprar varios).',
+  COLORES: 'Para el taller: guardá cada color con su pigmento y repetilo igual en cualquier cantidad.',
+  CUADERNO: 'Para el taller: anotá cada colada y cómo salió, con foto, para repetir lo que funciona.',
+  TEMPORIZADORES: 'Para el taller: avisos para desmoldar y curar cada pieza a tiempo.',
   PACK_VENTAS: 'Para vender: ventas, resumen de ganancias, stock, producción, compras y proveedores.',
 };
 const PURCHASE_LABELS: Record<string, string> = { license: 'Edición Personal', license_upgrade: 'Edición Personal', module: '' };

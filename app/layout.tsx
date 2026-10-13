@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Figtree, Geist_Mono } from "next/font/google";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { LOCK_INIT_SCRIPT } from "@/lib/app-lock";
 import { DeviceGuard } from "@/components/device-guard";
+import { TimerWatcher } from "@/components/timer-watcher";
 import { AppFrame } from "@/components/app-nav";
 import { getSimpleMode } from "@/lib/simple-mode-server";
 import { getHiddenSections } from "@/lib/menu-server";
@@ -40,7 +41,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><ServiceWorkerRegister /><OfflineSync /></body>
+      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /></body>
     </html>
   );
 }
