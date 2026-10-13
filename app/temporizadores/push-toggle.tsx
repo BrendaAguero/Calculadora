@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Bell, BellOff, BellRing } from 'lucide-react';
-import { removePushSubscription, savePushSubscription } from './push-actions';
+import { removePushSubscription, savePushSubscription, sendTestNotification } from './push-actions';
 
 type State = 'checking' | 'unsupported' | 'ios-install' | 'off' | 'on' | 'denied' | 'working' | 'error';
 
@@ -19,6 +19,7 @@ async function save(sub: PushSubscription) {
 // Activa los avisos en este aparato: llegan aunque la app esté cerrada o el celular bloqueado.
 export function PushToggle() {
   const [state, setState] = useState<State>('checking');
+  const [test, setTest] = useState('');
 
   useEffect(() => {
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -52,6 +53,23 @@ export function PushToggle() {
     }
   }
 
+  async function tryIt() {
+    setTest('Enviando…');
+    try {
+      const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+      if (!sub) { setTest('Este aparato no tiene los avisos activados. Tocá «Desactivar» y activalos de nuevo.'); return; }
+      await save(sub);
+      const res = await sendTestNotification(sub.endpoint);
+      setTest(res.ok
+        ? 'Enviado. Si en unos segundos no te aparece, revisá en Ajustes del celular → Apps → Chrome: que las notificaciones estén permitidas y la batería «Sin restricciones». También que no esté activo «No molestar».'
+        : res.status === 429 ? 'Probaste muchas veces seguidas. Esperá unos minutos.'
+        : res.status === 404 || res.status === 410 ? 'El servicio de avisos ya no reconoce este aparato. Tocá «Desactivar» y activalos de nuevo.'
+        : `No se pudo enviar (código ${res.status || 'sin respuesta'}). Probá de nuevo en un rato.`);
+    } catch {
+      setTest('No se pudo enviar. Revisá la conexión y probá de nuevo.');
+    }
+  }
+
   async function disable() {
     setState('working');
     try {
@@ -68,7 +86,9 @@ export function PushToggle() {
   if (state === 'on') return (
     <div className={`${box} border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100`}>
       <BellRing size={18} aria-hidden="true" /><span className="flex-1">Avisos activados en este aparato: te llegan aunque la app esté cerrada.</span>
+      <button type="button" onClick={tryIt} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white">Probar aviso</button>
       <button type="button" onClick={disable} className="text-xs underline">Desactivar</button>
+      {test && <p className="w-full text-xs" role="status">{test}</p>}
     </div>
   );
   if (state === 'ios-install') return (
