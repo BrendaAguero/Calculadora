@@ -15,9 +15,6 @@ const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS']);
 const MODULE_HINTS: Record<string, string> = {
   EXTRA_DEVICE: 'Usá la app en un aparato más (podés comprar varios).',
   PACK_VENTAS: 'Para vender: ventas, resumen de ganancias, stock, producción, compras y proveedores.',
-  CALCULO_INVERSO: 'Partir del precio de venta para saber cuánto podés gastar.',
-  ESCALADO_AVANZADO: 'Escalar fórmulas con más opciones.',
-  MOLDES_AVANZADOS: 'Más datos y cálculos para tus moldes.',
 };
 const PURCHASE_LABELS: Record<string, string> = { license: 'Edición Personal', license_upgrade: 'Edición Personal', module: '' };
 
