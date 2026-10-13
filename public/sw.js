@@ -142,13 +142,22 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-192.png",
     vibrate: [500, 200, 500, 200, 500, 200, 1000],
     requireInteraction: true,
-    data: { url: data.url || "/temporizadores" },
+    actions: data.timerId ? [{ action: "done", title: "Listo, apagar" }] : [],
+    data: { url: data.url || "/temporizadores", timerId: data.timerId || null },
   }));
 });
 
 // Al tocar el aviso se abre la app (o se trae al frente si ya estaba abierta).
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const timerId = event.notification.data && event.notification.data.timerId;
+  // «Listo, apagar»: marca el temporizador como hecho (así no se repite el aviso) sin abrir la app.
+  if (event.action === "done" && timerId) {
+    event.waitUntil(fetch("/api/temporizadores/listo", {
+      method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: [timerId] }),
+    }).catch(() => {}));
+    return;
+  }
   const url = new URL((event.notification.data && event.notification.data.url) || "/temporizadores", self.location.origin).href;
   event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
     const open = windows.find((w) => w.url.startsWith(self.location.origin));

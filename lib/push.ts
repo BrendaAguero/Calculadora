@@ -38,28 +38,29 @@ export async function sendTestPush(admin: Admin, sub: { endpoint: string; p256dh
   }
 }
 
-// Manda los avisos de los temporizadores vencidos. Cada uno se «reserva» antes de enviarlo para no repetirlo.
+// Manda los avisos de los temporizadores vencidos. Si nadie toca «Listo», se repite cada minuto (hasta 5 veces).
+// Cada uno se «reserva» en la base antes de enviarlo, para no mandarlo dos veces en el mismo minuto.
 export async function sendDueTimerPushes(admin: Admin) {
   const keys = await vapidKeys(admin);
   if (!keys) return { sent: 0 };
   webpush.setVapidDetails(`mailto:${CONTACT_EMAIL}`, keys.publicKey, keys.privateKey);
 
-  const now = new Date();
-  const dayAgo = new Date(now.getTime() - 86_400_000).toISOString();
-  const { data: due } = await admin.from("cure_timers").update({ notified_at: now.toISOString() })
-    .is("done_at", null).is("notified_at", null).lte("ends_at", now.toISOString()).gt("ends_at", dayAgo)
-    .select("id,user_id,label");
+  const { data: due } = await admin.rpc("claim_due_timer_pushes");
   if (!due?.length) return { sent: 0 };
 
-  const userIds = [...new Set(due.map((t) => t.user_id))];
+  const timers = due as { id: string; user_id: string; label: string; notify_count: number }[];
+  const userIds = [...new Set(timers.map((t) => t.user_id))];
   const { data: subs } = await admin.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth").in("user_id", userIds);
   let sent = 0;
   const gone: string[] = [];
-  await Promise.all(due.flatMap((timer) => (subs ?? []).filter((s) => s.user_id === timer.user_id).map(async (s) => {
+  await Promise.all(timers.flatMap((timer) => (subs ?? []).filter((s) => s.user_id === timer.user_id).map(async (s) => {
     try {
       await webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        JSON.stringify({ title: "¡Tiempo cumplido!", body: timer.label, tag: timer.id, url: "/temporizadores" }),
+        JSON.stringify({
+          title: timer.notify_count > 1 ? `¡Tiempo cumplido! (aviso ${timer.notify_count} de 5)` : "¡Tiempo cumplido!",
+          body: timer.label, tag: timer.id, timerId: timer.id, url: "/temporizadores",
+        }),
         { TTL: 3600, urgency: "high" },
       );
       sent += 1;

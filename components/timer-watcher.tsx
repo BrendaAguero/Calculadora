@@ -59,6 +59,13 @@ function startAlarm() {
   alarm = setInterval(ring, 1200);
 }
 
+// Apagar = marcar como hechos (así tampoco se repiten los avisos en el celular).
+function markDone(timers: StoredTimer[]) {
+  stopAlarm();
+  if (!timers.length) return;
+  fetch('/api/temporizadores/listo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids: timers.map((t) => t.id) }) }).catch(() => {});
+}
+
 // Corre en todas las pantallas: cuando vence un temporizador de curado avisa (mientras la app esté abierta).
 export function TimerWatcher() {
   const [due, setDue] = useState<StoredTimer[]>([]);
@@ -93,7 +100,7 @@ export function TimerWatcher() {
           <p className="font-semibold">¡Tiempo cumplido!</p>
           <ul className="text-sm">{due.map((t) => <li key={t.id}>{t.label}</li>)}</ul>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => { stopAlarm(); setDue([]); }} className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-orange-900">Apagar alarma</button>
+            <button type="button" onClick={() => { markDone(due); setDue([]); }} className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-orange-900">Listo, apagar</button>
             <Link href="/temporizadores" onClick={() => { stopAlarm(); setDue([]); }} className="text-sm underline">Ver temporizadores</Link>
           </div>
         </div>
