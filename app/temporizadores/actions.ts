@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (key: 'ok' | 'error', message: string): never => redirect(`/temporizadores?${key}=${encodeURIComponent(message)}`);
@@ -16,11 +15,9 @@ async function user() {
   return { supabase, userId: user.id };
 }
 
-// Crea un temporizador por cada etapa marcada (por ejemplo «Maceta · Desmoldar»).
+// Gratis para cualquier cuenta. Crea un temporizador por cada etapa marcada (por ejemplo «Maceta · Desmoldar»).
 export async function startTimers(formData: FormData) {
   const { supabase, userId } = await user();
-  const snapshot = await getAccessSnapshot();
-  if (!snapshot || !hasFeature(snapshot, 'TEMPORIZADORES')) redirect('/temporizadores');
   const piece = text(formData, 'piece').slice(0, 80);
   const labels = formData.getAll('stage_label').map((v) => String(v).trim().slice(0, 70));
   const minutes = formData.getAll('stage_minutes').map((v) => Number(v));
@@ -33,7 +30,7 @@ export async function startTimers(formData: FormData) {
   });
   if (!rows.length) back('error', 'Marcá al menos una etapa con su tiempo.');
   const { error } = await supabase.from('cure_timers').insert(rows);
-  if (error) back('error', 'No se pudieron crear los temporizadores.');
+  if (error) back('error', 'No se pudieron crear los temporizadores. Si tenés muchos, borrá los ya terminados.');
   revalidatePath('/temporizadores');
   back('ok', rows.length === 1 ? 'Temporizador en marcha.' : `${rows.length} temporizadores en marcha.`);
 }

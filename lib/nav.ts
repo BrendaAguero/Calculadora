@@ -5,10 +5,10 @@ import { CircleHelp, NotebookPen, Palette, Timer, Ruler, ClipboardList, Download
 export type NavItem = { href: string; label: string; icon: LucideIcon; section?: MenuSection };
 
 // Secciones que aparecen en el menú solo si la persona las usa (o si eligió verlas en «Más»).
-export const MENU_SECTIONS = ["produccion", "compras", "proveedores", "resumen", "lista-precios", "colores", "cuaderno", "temporizadores", "revendedora"] as const;
+export const MENU_SECTIONS = ["produccion", "compras", "proveedores", "resumen", "lista-precios", "colores", "cuaderno", "revendedora"] as const;
 export type MenuSection = (typeof MENU_SECTIONS)[number];
 export const MENU_SECTION_LABELS: Record<MenuSection, string> = {
-  produccion: "Producción", compras: "Compras", proveedores: "Proveedores", resumen: "Resumen del negocio", "lista-precios": "Lista de precios", colores: "Recetas de color", cuaderno: "Cuaderno de pruebas", temporizadores: "Temporizadores", revendedora: "Revendedora",
+  produccion: "Producción", compras: "Compras", proveedores: "Proveedores", resumen: "Resumen del negocio", "lista-precios": "Lista de precios", colores: "Recetas de color", cuaderno: "Cuaderno de pruebas", revendedora: "Revendedora",
 };
 
 // Saca del menú las secciones ocultas (y los grupos que quedan vacíos).
@@ -34,7 +34,7 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: "Taller", items: [
     { href: "/colores", label: "Recetas de color", icon: Palette, section: "colores" },
     { href: "/cuaderno", label: "Cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
-    { href: "/temporizadores", label: "Temporizadores", icon: Timer, section: "temporizadores" },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
   ] },
   { title: "Mis datos", items: [
@@ -79,7 +79,7 @@ export const SIMPLE_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [
     { href: "/colores", label: "Mis colores", icon: Palette, section: "colores" },
     { href: "/cuaderno", label: "Mi cuaderno de pruebas", icon: NotebookPen, section: "cuaderno" },
-    { href: "/temporizadores", label: "Temporizadores", icon: Timer, section: "temporizadores" },
+    { href: "/temporizadores", label: "Temporizadores", icon: Timer },
     { href: "/ayuda/problemas", label: "¿Qué le pasó a mi pieza?", icon: CircleHelp },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
     { href: "/mas", label: "Más opciones", icon: MoreHorizontal },

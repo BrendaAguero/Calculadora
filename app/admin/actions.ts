@@ -159,7 +159,7 @@ export async function setPackPrices(formData: FormData) {
 
 export async function setModulePrices(formData: FormData) {
   const supabase = await createClient();
-  for (const code of ['COLORES', 'CUADERNO', 'TEMPORIZADORES']) {
+  for (const code of ['COLORES', 'CUADERNO']) {
     const price = Number(text(formData, code).replace(/\./g, '').replace(',', '.'));
     const { error } = await supabase.rpc('admin_set_module_price', { p_code: code, p_price: price });
     if (error) back('/admin/precios', 'error', error.message);
