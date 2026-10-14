@@ -13,15 +13,22 @@ const money = (value: number) => value.toLocaleString('es-AR', { style: 'currenc
 export default async function BuyPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const supabase = await createClient();
-  const [{ data: prices }, { data: monthly }, { data: pack }] = await Promise.all([
+  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: prices }, { data: monthly }, { data: pack }, { data: offers }] = await Promise.all([
     supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'included_devices', 'pack_ventas_with_personal', 'personal_price_regular']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
     supabase.from('modules').select('price').eq('code', 'PACK_VENTAS').eq('active', true).maybeSingle(),
+    user ? supabase.rpc('my_offer') : Promise.resolve({ data: null }),
   ]);
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
   const devices = price('included_devices', 2);
   const packPrice = Number(pack?.price ?? 10000);
   const packWith = price('pack_ventas_with_personal', 7000);
+  // Descuento personal (de un aviso automático): se aplica solo al comprar con el email de esta cuenta.
+  const offer = ((offers ?? []) as { discount_pct: number; expires_at: string }[])[0] ?? null;
+  const listPrice = price('personal_price_online', 15000);
+  const finalPrice = offer ? Math.round(listPrice * (100 - offer.discount_pct) / 100) : listPrice;
+  const offerUntil = offer ? new Date(offer.expires_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', timeZone: 'America/Argentina/Buenos_Aires' }) : '';
 
   return (
     <PublicPage>
@@ -29,10 +36,14 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Calculá cuánto preparar, cuánto te cuesta cada pieza y a cuánto venderla. Guardá tus materiales, fórmulas, moldes y productos. <strong>Pagás una sola vez.</strong></p>
 
       <section className={`mt-6 ${cardClass}`}>
-        {price('personal_price_regular', 0) > price('personal_price_online', 15000) && (
+        {offer && (
+          <p className="mb-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">🎁 Tenés un {offer.discount_pct} % de descuento hasta el {offerUntil}. Se aplica al comprar con tu email ({user?.email}).</p>
+        )}
+        {offer && <p className="text-sm text-neutral-500 line-through">{money(listPrice)}</p>}
+        {!offer && price('personal_price_regular', 0) > price('personal_price_online', 15000) && (
           <p className="text-sm"><span className="text-neutral-500 line-through">{money(price('personal_price_regular', 0))}</span> <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Precio de lanzamiento</span></p>
         )}
-        <p className="text-3xl font-bold">{money(price('personal_price_online', 15000))}</p>
+        <p className="text-3xl font-bold">{money(finalPrice)}</p>
         <p className="text-xs text-neutral-500">pago único con Mercado Pago</p>
         <ul className="mt-4 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
           <li>✓ Calculadora de tu actividad principal: Yeso, Resina, Jesmonite o Cemento</li>
@@ -46,11 +57,11 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
         {error && <div role="alert" className={`mt-4 ${errorBox}`}>{error}</div>}
         <form action={buyPersonal} className="mt-4 grid gap-3">
           <label className={labelClass}>Tu nombre<input name="full_name" maxLength={120} autoComplete="name" className={inputClass} /></label>
-          <label className={labelClass}>Tu email (ahí te mandamos tu clave de acceso)<input name="email" type="email" required maxLength={200} autoComplete="email" className={inputClass} /></label>
+          <label className={labelClass}>Tu email (ahí te mandamos tu clave de acceso)<input name="email" type="email" required maxLength={200} autoComplete="email" defaultValue={user?.email ?? ''} className={inputClass} /></label>
           <fieldset className="grid gap-2 rounded-2xl border border-neutral-200 p-3 text-sm dark:border-neutral-700">
             <legend className="px-1 font-semibold">¿Vas a usar la app para vender?</legend>
-            <label className="flex items-start gap-2"><input type="radio" name="vender" value="si" className="mt-1" required /><span><strong>Sí, también vendo.</strong> Sumá el <strong>Pack Ventas y Stock</strong> por {money(packWith)} <span className="text-neutral-500">(después sale {money(packPrice)})</span>: ventas, resumen de ganancias, stock, producción, compras y proveedores. Total: <strong>{money(price('personal_price_online', 15000) + packWith)}</strong>.</span></label>
-            <label className="flex items-start gap-2"><input type="radio" name="vender" value="no" className="mt-1" /><span>No, solo quiero calcular. Total: <strong>{money(price('personal_price_online', 15000))}</strong>.</span></label>
+            <label className="flex items-start gap-2"><input type="radio" name="vender" value="si" className="mt-1" required /><span><strong>Sí, también vendo.</strong> Sumá el <strong>Pack Ventas y Stock</strong> por {money(packWith)} <span className="text-neutral-500">(después sale {money(packPrice)})</span>: ventas, resumen de ganancias, stock, producción, compras y proveedores. Total: <strong>{money(finalPrice + packWith)}</strong>.</span></label>
+            <label className="flex items-start gap-2"><input type="radio" name="vender" value="no" className="mt-1" /><span>No, solo quiero calcular. Total: <strong>{money(finalPrice)}</strong>.</span></label>
           </fieldset>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms" className="mt-1" required /><span>Acepto los <Link href="/legal/terminos" className="underline">términos</Link>, la <Link href="/legal/privacidad" className="underline">privacidad</Link> y las <Link href="/legal/compras" className="underline">condiciones de compra</Link>.</span></label>
           <div><SubmitButton className="rounded-xl bg-orange-700 px-5 py-2.5 font-semibold text-white hover:bg-orange-800" pendingText="Yendo a Mercado Pago…">Comprar con Mercado Pago</SubmitButton></div>

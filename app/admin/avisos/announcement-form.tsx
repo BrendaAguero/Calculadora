@@ -4,7 +4,7 @@ import { AUDIENCES, KINDS, toLocalAR } from '@/lib/announcements';
 import { inputClass, labelClass, primaryButton } from '@/lib/ui';
 import { saveAnnouncement } from '../actions';
 
-type Row = { id: string; kind: string; title: string; body: string; image: string | null; button_label: string | null; button_link: string | null; audience: string; starts_at: string; ends_at: string | null; active: boolean };
+type Row = { id: string; kind: string; title: string; body: string; image: string | null; button_label: string | null; button_link: string | null; audience: string; starts_at: string; ends_at: string | null; active: boolean; target_emails?: string };
 
 export function AnnouncementForm({ row }: { row?: Row }) {
   return (
@@ -18,6 +18,7 @@ export function AnnouncementForm({ row }: { row?: Row }) {
           <select name="audience" defaultValue={row?.audience ?? 'all'} className={inputClass}>{AUDIENCES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select>
         </label>
       </div>
+      <label className={labelClass}>Emails de las cuentas (solo si elegiste «Cuentas específicas»; separados por coma o uno por renglón)<textarea name="target_emails" rows={2} maxLength={30000} defaultValue={row?.target_emails ?? ''} placeholder="ana@ejemplo.com, lu@ejemplo.com" className={inputClass} /></label>
       <label className={labelClass}>Título<input name="title" required minLength={2} maxLength={100} defaultValue={row?.title} placeholder="Ej.: ¡Nueva Comunidad!" className={inputClass} /></label>
       <label className={labelClass}>Texto<textarea name="body" required maxLength={1500} rows={4} defaultValue={row?.body} placeholder="Contá en pocas palabras qué hay de nuevo." className={inputClass} /></label>
       <div className="grid gap-3 sm:grid-cols-2">

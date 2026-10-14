@@ -194,20 +194,43 @@ export async function setModerator(formData: FormData) {
   await rpc('/admin/equipo', 'admin_set_moderator', { p_email: text(formData, 'email'), p_moderator: add }, add ? 'Listo: ya es moderadora. Que entre por el ingreso del equipo.' : 'Ya no es moderadora.');
 }
 
-// Avisos emergentes (novedades, cambios, promociones).
+// Avisos emergentes (novedades, cambios, promociones). Con «Cuentas específicas», solo los ven esos emails.
 export async function saveAnnouncement(formData: FormData) {
+  const { supabase } = await requireAdmin();
   const id = text(formData, 'id');
   const link = text(formData, 'button_link');
   if (link && !/^\/[^/]/.test(link) && !/^https:\/\//.test(link)) back('/admin/avisos', 'error', 'El enlace del botón tiene que ser una pantalla de la app (por ejemplo /access) o empezar con https://');
   if (link && !text(formData, 'button_label')) back('/admin/avisos', 'error', 'Si ponés un enlace, escribí también el texto del botón.');
-  await rpc('/admin/avisos', 'admin_save_announcement', {
+  const { data, error } = await supabase.rpc('admin_save_announcement_v2', {
     p_id: /^[0-9a-f-]{36}$/i.test(id) ? id : null,
     p_kind: text(formData, 'kind'), p_title: text(formData, 'title').slice(0, 100), p_body: text(formData, 'body').slice(0, 1500),
     p_image: readPhoto(formData.get('image')), p_keep_image: text(formData, 'image_action') === 'keep',
     p_button_label: text(formData, 'button_label').slice(0, 40) || null, p_button_link: link || null,
     p_audience: text(formData, 'audience'), p_starts_at: fromLocalAR(text(formData, 'starts_at')), p_ends_at: fromLocalAR(text(formData, 'ends_at')),
-    p_active: formData.get('active') === 'on',
-  }, id ? 'Aviso actualizado.' : 'Aviso creado. Lo van a ver al abrir la app.');
+    p_active: formData.get('active') === 'on', p_target_emails: text(formData, 'target_emails').slice(0, 30000),
+  });
+  if (error) back('/admin/avisos', 'error', error.message);
+  const result = data as { targets: number; missing: string[] } | null;
+  revalidatePath('/admin/avisos');
+  const targeted = text(formData, 'audience') === 'users';
+  const missing = result?.missing?.length ? ` Sin cuenta en la app (no lo van a ver): ${result.missing.slice(0, 10).join(', ')}${result.missing.length > 10 ? '…' : ''}.` : '';
+  back('/admin/avisos', 'ok', `${id ? 'Aviso actualizado.' : 'Aviso creado.'}${targeted ? ` Lo van a ver ${result?.targets ?? 0} cuenta(s).` : ''}${missing}`);
+}
+
+// Avisos automáticos: la app los muestra sola cuando alguien cumple la condición.
+export async function saveAutoNotice(formData: FormData) {
+  const int = (key: string, min: number, max: number, fallback: number) => {
+    const n = Math.round(Number(text(formData, key).replace(',', '.')));
+    return Number.isFinite(n) ? Math.min(Math.max(n, min), max) : fallback;
+  };
+  const link = text(formData, 'button_link');
+  if (link && !/^\/[^/]/.test(link) && !/^https:\/\//.test(link)) back('/admin/avisos', 'error', 'El enlace del botón tiene que ser una pantalla de la app (por ejemplo /comprar) o empezar con https://');
+  await rpc('/admin/avisos', 'admin_save_auto_notice', {
+    p_code: text(formData, 'code'), p_active: formData.get('active') === 'on', p_kind: text(formData, 'kind'),
+    p_title: text(formData, 'title').slice(0, 100), p_body: text(formData, 'body').slice(0, 1500),
+    p_button_label: text(formData, 'button_label').slice(0, 40) || null, p_button_link: link || null,
+    p_days: int('days', 0, 3650, 14), p_discount_pct: int('discount_pct', 0, 90, 0), p_offer_days: int('offer_days', 1, 90, 7), p_repeat_days: int('repeat_days', 0, 3650, 0),
+  }, 'Aviso automático guardado.');
 }
 
 export async function setAnnouncementActive(formData: FormData) {
