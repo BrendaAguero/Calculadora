@@ -35,7 +35,11 @@ function rememberConnection(data: { plus?: boolean; userId?: string }) {
 // Al cerrar sesión (pantalla de entrada): se borran las pantallas guardadas y los datos del modo sin conexión.
 function forgetConnection() {
   try { [OFFLINE_PLUS_KEY, OFFLINE_USER_KEY, TIMERS_KEY, FIRED_KEY].forEach((key) => localStorage.removeItem(key)); } catch {}
-  if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage({ type: "clear" })).catch(() => {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then((registration) => {
+    registration.active?.postMessage({ type: "clear" });
+    // Los avisos de los temporizadores eran de la cuenta que salió: se dejan de recibir en este aparato.
+    return registration.pushManager?.getSubscription().then((sub) => sub?.unsubscribe());
+  }).catch(() => {});
 }
 const PING_EVERY_MS = 5 * 60 * 1000;
 const MAX_PIN_TRIES = 5;

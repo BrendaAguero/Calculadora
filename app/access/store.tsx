@@ -10,7 +10,7 @@ const money = (value: number | string) => Number(value).toLocaleString('es-AR', 
 const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const dateTime = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires' });
 
-// Extras que ya funcionan; el resto se muestra como «Próximamente» (con Plus se incluyen al estar listos).
+// Extras que se pueden comprar; si aparece otro activo en la base sin estar listo, se muestra como «Próximamente».
 const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS', 'COLORES', 'CUADERNO']);
 const MODULE_HINTS: Record<string, string> = {
   EXTRA_DEVICE: 'Usá la app en un aparato más (podés comprar varios).',
@@ -38,7 +38,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
     return (
       <section id="planes" className={cardClass}>
         <h2 className="font-semibold">Edición Personal</h2>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Esta cuenta todavía no tiene la Edición Personal. Pagás una sola vez y la usás en 2 aparatos.</p>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Esta cuenta todavía no tiene la Edición Personal. Pagás una sola vez y la usás en 2 aparatos. Si vendés, al comprarla podés sumar el <strong>Pack Ventas y Stock</strong> (ventas, stock, producción y compras) con descuento.</p>
         <Link href="/comprar" className="mt-3 inline-block rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white">Comprar la Edición Personal</Link>
       </section>
     );

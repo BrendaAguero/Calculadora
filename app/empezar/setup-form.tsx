@@ -8,8 +8,8 @@ import { SubmitButton } from '@/components/submit-button';
 import { saveSetup } from './actions';
 
 const MODES = [
-  { value: 'simple', title: 'Fácil', text: 'Lo esencial, con botones y letras grandes: cuánto preparar, el precio y tus ventas.' },
-  { value: 'completo', title: 'Completo', text: 'Todo a mano: stock, producción, compras, resumen del negocio y más.' },
+  { value: 'simple', title: 'Fácil', text: 'Lo esencial, con botones y letras grandes: cuánto preparar, el precio y tus productos.' },
+  { value: 'completo', title: 'Completo', text: 'Todo a mano: tus datos, herramientas, temporizadores y más. Con el Pack Ventas y Stock, también ventas, stock, producción y compras.' },
 ] as const;
 const box = 'flex items-start gap-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900';
 

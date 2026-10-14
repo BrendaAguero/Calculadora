@@ -153,9 +153,13 @@ self.addEventListener("notificationclick", (event) => {
   const timerId = event.notification.data && event.notification.data.timerId;
   // «Listo, apagar»: marca el temporizador como hecho (así no se repite el aviso) sin abrir la app.
   if (event.action === "done" && timerId) {
-    event.waitUntil(fetch("/api/temporizadores/listo", {
-      method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: [timerId] }),
-    }).catch(() => {}));
+    event.waitUntil(Promise.all([
+      fetch("/api/temporizadores/listo", {
+        method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: [timerId] }),
+      }).catch(() => {}),
+      // Si la app está abierta, que apague la alarma y lo saque de la lista.
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => windows.forEach((w) => w.postMessage({ type: "timer-done", id: timerId }))),
+    ]));
     return;
   }
   const url = new URL((event.notification.data && event.notification.data.url) || "/temporizadores", self.location.origin).href;

@@ -13,3 +13,13 @@ export async function POST(request: Request) {
   if (error) return Response.json({ error: "No se pudo marcar." }, { status: 500 });
   return Response.json({ ok: true, done: data?.length ?? 0 });
 }
+
+// Los temporizadores en marcha de la persona: el aviso de la app se pone al día al abrirla
+// (por ejemplo, si se apagó uno desde la notificación o se creó en otro aparato).
+export async function GET() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return Response.json({ timers: null }, { status: 401 });
+  const { data } = await supabase.from("cure_timers").select("id,label,ends_at").eq("user_id", user.id).is("done_at", null).order("ends_at").limit(100);
+  return Response.json({ timers: data ?? [] });
+}

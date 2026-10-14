@@ -45,7 +45,8 @@ export async function sendDueTimerPushes(admin: Admin) {
   if (!keys) return { sent: 0 };
   webpush.setVapidDetails(`mailto:${CONTACT_EMAIL}`, keys.publicKey, keys.privateKey);
 
-  const { data: due } = await admin.rpc("claim_due_timer_pushes");
+  const { data: due, error: claimError } = await admin.rpc("claim_due_timer_pushes");
+  if (claimError) console.error("[avisos] no se pudieron reservar los temporizadores", claimError.message);
   if (!due?.length) return { sent: 0 };
 
   const timers = due as { id: string; user_id: string; label: string; notify_count: number }[];

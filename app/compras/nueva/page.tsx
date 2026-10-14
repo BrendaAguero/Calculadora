@@ -17,7 +17,7 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const snapshot = await getAccessSnapshot();
-  if (!snapshot || !hasFeature(snapshot, 'PROVEEDORES_BASICO')) redirect('/proveedores');
+  if (!snapshot || !hasFeature(snapshot, 'PROVEEDORES_BASICO')) redirect('/compras');
 
   const [{ data: suppliers }, { data: materials }] = await Promise.all([
     supabase.from('suppliers').select('id,name').eq('user_id', user.id).eq('status', 'active').order('name'),

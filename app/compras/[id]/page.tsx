@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { amount, money } from '@/app/stock/constants';
 import { cardClass, dateOnly, okBox, pageClass } from '@/lib/ui';
 
@@ -12,6 +13,8 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+  const snapshot = await getAccessSnapshot();
+  if (!snapshot || !hasFeature(snapshot, 'PROVEEDORES_BASICO')) redirect('/compras');
 
   const { data: purchase } = await supabase
     .from('supplier_purchases')

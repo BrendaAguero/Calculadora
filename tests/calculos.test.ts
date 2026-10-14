@@ -171,3 +171,13 @@ test('temporizadores: textos de duración y cuenta regresiva', async () => {
   assert.equal(formatCountdown(3_909_000), '1:05:09');
   assert.equal(formatCountdown((2 * 86400 + 4 * 3600) * 1000), '2 d 4 h');
 });
+
+test('números: el punto de miles no confunde «0.250» con 250', async () => {
+  const { parseAR } = await import('../lib/num.ts');
+  assert.equal(parseAR('12.500'), 12500);
+  assert.equal(parseAR('1.234.567'), 1234567);
+  close(parseAR('0.250'), 0.25);
+  close(parseAR('0,250'), 0.25);
+  close(parseAR('12.500,50'), 12500.5);
+  close(parseAR('$ 3.000'), 3000);
+});

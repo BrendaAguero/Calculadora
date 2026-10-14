@@ -16,7 +16,7 @@ export default async function ComparePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const snapshot = await getAccessSnapshot();
-  if (!snapshot || !hasFeature(snapshot, 'PROVEEDORES_BASICO')) redirect('/proveedores');
+  if (!snapshot || !hasFeature(snapshot, 'PROVEEDORES_BASICO')) redirect('/compras');
 
   const { data: items, error } = await supabase
     .from('supplier_purchase_items')

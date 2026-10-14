@@ -27,7 +27,7 @@ export async function requestLoginCode(_prevState: ActionState, formData: FormDa
   const email = String(formData.get("email") || "").trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Revisá que el email esté bien escrito." };
   if (formData.get("terms_accepted") !== "on") return { error: "Tenés que aceptar los términos para continuar." };
-  if (!(await allowAttempt("login-code", 5, 600))) return { error: TOO_MANY };
+  if (!(await allowAttempt("login-code", 5, 600, email)) || !(await allowAttempt("login-code-ip", 30, 600))) return { error: TOO_MANY };
 
   const admin = createAdminClient();
   if (admin) {
@@ -49,7 +49,7 @@ export async function verifyLoginCode(_prevState: ActionState, formData: FormDat
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const token = String(formData.get("code") || "").replace(/\D/g, "");
   if (token.length < 6) return { error: "Escribí el código que te llegó por correo.", email };
-  if (!(await allowAttempt("login-verify", 10, 600))) return { error: TOO_MANY, email };
+  if (!(await allowAttempt("login-verify", 10, 600, email)) || !(await allowAttempt("login-verify-ip", 40, 600))) return { error: TOO_MANY, email };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
@@ -96,7 +96,7 @@ export async function redeemAccessKey(_prevState: ActionState, formData: FormDat
 export async function requestPasswordReset(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim();
   if (!email) return { error: "Ingresá tu email." };
-  if (!(await allowAttempt("password-reset", 5, 600))) return { error: TOO_MANY };
+  if (!(await allowAttempt("password-reset", 5, 600, email)) || !(await allowAttempt("password-reset-ip", 30, 600))) return { error: TOO_MANY };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -110,7 +110,7 @@ export async function signInWithPassword(_prevState: ActionState, formData: Form
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
   if (!email || !password) return { error: "Ingresá tu email y contraseña." };
-  if (!(await allowAttempt("password-login", 10, 600))) return { error: TOO_MANY };
+  if (!(await allowAttempt("password-login", 10, 600, email)) || !(await allowAttempt("password-login-ip", 40, 600))) return { error: TOO_MANY };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });

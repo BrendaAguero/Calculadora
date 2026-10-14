@@ -43,6 +43,10 @@ export function OfflineSync() {
           if (result.status === "done" || result.status === "duplicate") await removeFromOutbox(item.id);
           else if (result.status === "error") await updateOutbox({ ...item, error: result.message ?? "No se pudo subir." });
         }
+      } else if (response.status === 403) {
+        // Ya no tiene el modo sin conexión (por ejemplo, venció Plus): se avisa en cada pendiente para poder descartarlo.
+        const { error } = (await response.json().catch(() => ({}))) as { error?: string };
+        for (const item of pending) await updateOutbox({ ...item, error: error ?? "No se puede subir con tu acceso actual." });
       }
     } catch {
       // Sin conexión de verdad: se reintenta al volver.

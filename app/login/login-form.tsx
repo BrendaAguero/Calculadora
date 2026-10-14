@@ -35,10 +35,10 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
         <div className="mx-auto max-w-sm lg:mx-0">
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-resina text-resina-dark"><Calculator size={28} aria-hidden="true" /></span>
           <h1 className="mt-5 text-[34px] leading-[1.05] text-white lg:text-5xl">Calculadora<br />Emprender</h1>
-          <p className="mt-3 max-w-xs text-white/80 lg:text-lg">Calculá, vendé y ordená tu taller de yeso, resina y más.</p>
+          <p className="mt-3 max-w-xs text-white/80 lg:text-lg">Calculá, organizá y hacé crecer tu taller de yeso, resina y más.</p>
         </div>
         <ul className="mt-10 hidden max-w-sm space-y-3 text-white/85 lg:block">
-          {["Costos y precio de venta en segundos", "Stock, producción y ventas en un solo lugar", "Tu ganancia del mes siempre a la vista"].map((text) => (
+          {["Cuánto preparar de cada material, al instante", "Costos y precio de venta en segundos", "Temporizadores que te avisan cuándo desmoldar"].map((text) => (
             <li key={text} className="flex items-center gap-3"><span className="grid h-7 w-7 place-items-center rounded-full bg-white/15"><Check size={16} aria-hidden="true" /></span>{text}</li>
           ))}
         </ul>

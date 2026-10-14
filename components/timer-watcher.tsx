@@ -13,7 +13,8 @@ async function systemNotice(title: string, body: string, tag: string) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
     const registration = await navigator.serviceWorker?.getRegistration();
-    if (registration) await registration.showNotification(title, { body, tag, icon: '/icons/icon-192.png' });
+    // Igual que el aviso push (mismo «tag», botón «Listo, apagar»), así uno reemplaza al otro sin perder el botón.
+    if (registration) await registration.showNotification(title, { body, tag, icon: '/icons/icon-192.png', requireInteraction: true, data: { url: '/temporizadores', timerId: tag }, actions: [{ action: 'done', title: 'Listo, apagar' }] } as NotificationOptions);
     else new Notification(title, { body, tag });
   } catch {}
 }
@@ -82,13 +83,28 @@ export function TimerWatcher() {
       if (fresh.some((t) => now - new Date(t.ends_at).getTime() < 3 * 60_000)) startAlarm();
       setDue((d) => [...d, ...fresh]);
     };
-    check();
+    // Al abrir la app, la lista de temporizadores se toma del servidor (así no suena uno ya apagado).
+    fetch('/api/temporizadores/listo', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res: { timers?: StoredTimer[] } | null) => {
+        if (res?.timers) { try { localStorage.setItem(TIMERS_KEY, JSON.stringify(res.timers)); } catch {} }
+      })
+      .catch(() => {})
+      .finally(check);
+    // «Listo, apagar» tocado en la notificación con la app abierta: se saca de la lista y se apaga.
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type !== 'timer-done') return;
+      const id = String(e.data.id);
+      try { localStorage.setItem(TIMERS_KEY, JSON.stringify(read<StoredTimer[]>(TIMERS_KEY, []).filter((t) => t.id !== id))); } catch {}
+      setDue((d) => { const rest = d.filter((t) => t.id !== id); if (!rest.length) stopAlarm(); return rest; });
+    };
+    navigator.serviceWorker?.addEventListener('message', onMessage);
     const id = setInterval(check, 5_000);
     const onStorage = (e: StorageEvent) => { if (e.key === TIMERS_KEY) check(); };
     window.addEventListener('storage', onStorage);
     // El navegador solo deja sonar después de que la persona tocó algo en la app.
     window.addEventListener('pointerdown', unlockAudio, { passive: true });
-    return () => { clearInterval(id); window.removeEventListener('storage', onStorage); window.removeEventListener('pointerdown', unlockAudio); stopAlarm(); };
+    return () => { clearInterval(id); window.removeEventListener('storage', onStorage); window.removeEventListener('pointerdown', unlockAudio); navigator.serviceWorker?.removeEventListener('message', onMessage); stopAlarm(); };
   }, []);
 
   if (!due.length) return null;
@@ -101,10 +117,10 @@ export function TimerWatcher() {
           <ul className="text-sm">{due.map((t) => <li key={t.id}>{t.label}</li>)}</ul>
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => { markDone(due); setDue([]); }} className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-orange-900">Listo, apagar</button>
-            <Link href="/temporizadores" onClick={() => { stopAlarm(); setDue([]); }} className="text-sm underline">Ver temporizadores</Link>
+            <Link href="/temporizadores" onClick={() => { markDone(due); setDue([]); }} className="text-sm underline">Ver temporizadores</Link>
           </div>
         </div>
-        <button type="button" onClick={() => { stopAlarm(); setDue([]); }} aria-label="Cerrar el aviso" className="rounded-lg p-1 hover:bg-white/10"><X size={18} aria-hidden="true" /></button>
+        <button type="button" onClick={() => { markDone(due); setDue([]); }} aria-label="Cerrar el aviso" className="rounded-lg p-1 hover:bg-white/10"><X size={18} aria-hidden="true" /></button>
       </div>
     </div>
   );
