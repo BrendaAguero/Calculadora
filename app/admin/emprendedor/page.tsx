@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
-import { notFound, redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin';
 import { activateSubscription } from './actions';
 
 type Request = { subscription_id: string; user_email: string; user_name: string | null; months: number; price: number; discount_pct: number; final_price: number; base_plan: string; requested_at: string; upgrade_from_months: number | null; upgrade_credit: number | null };
@@ -10,12 +9,7 @@ const money = (value: number | string) => Number(value).toLocaleString('es-AR', 
 
 export default async function AdminEntrepreneurPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: isAdmin } = await supabase.rpc('is_admin');
-  if (!isAdmin) notFound();
+  const { supabase } = await requireAdmin();
 
   const { data, error: loadError } = await supabase.rpc('admin_list_entrepreneur_requests_v2');
   const requests = (data ?? []) as Request[];
