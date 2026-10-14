@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
-import { one, requireAdmin } from '@/lib/admin';
+import { requireAdmin } from '@/lib/admin';
 import { cardClass, dateOnly, errorBox, inputClass, okBox, pageClass } from '@/lib/ui';
 import { grantLicense, setAccountStatus } from '../actions';
 
