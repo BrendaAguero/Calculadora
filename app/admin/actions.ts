@@ -8,6 +8,8 @@ import { requireAdmin } from '@/lib/admin';
 import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
+import { fromLocalAR } from '@/lib/announcements';
+import { readPhoto } from '@/lib/photo';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
@@ -190,4 +192,25 @@ export async function setActivityPrices(formData: FormData) {
 export async function setModerator(formData: FormData) {
   const add = text(formData, 'moderator') === '1';
   await rpc('/admin/equipo', 'admin_set_moderator', { p_email: text(formData, 'email'), p_moderator: add }, add ? 'Listo: ya es moderadora. Que entre por el ingreso del equipo.' : 'Ya no es moderadora.');
+}
+
+// Avisos emergentes (novedades, cambios, promociones).
+export async function saveAnnouncement(formData: FormData) {
+  const id = text(formData, 'id');
+  const link = text(formData, 'button_link');
+  if (link && !/^\/[^/]/.test(link) && !/^https:\/\//.test(link)) back('/admin/avisos', 'error', 'El enlace del botón tiene que ser una pantalla de la app (por ejemplo /access) o empezar con https://');
+  if (link && !text(formData, 'button_label')) back('/admin/avisos', 'error', 'Si ponés un enlace, escribí también el texto del botón.');
+  await rpc('/admin/avisos', 'admin_save_announcement', {
+    p_id: /^[0-9a-f-]{36}$/i.test(id) ? id : null,
+    p_kind: text(formData, 'kind'), p_title: text(formData, 'title').slice(0, 100), p_body: text(formData, 'body').slice(0, 1500),
+    p_image: readPhoto(formData.get('image')), p_keep_image: text(formData, 'image_action') === 'keep',
+    p_button_label: text(formData, 'button_label').slice(0, 40) || null, p_button_link: link || null,
+    p_audience: text(formData, 'audience'), p_starts_at: fromLocalAR(text(formData, 'starts_at')), p_ends_at: fromLocalAR(text(formData, 'ends_at')),
+    p_active: formData.get('active') === 'on',
+  }, id ? 'Aviso actualizado.' : 'Aviso creado. Lo van a ver al abrir la app.');
+}
+
+export async function setAnnouncementActive(formData: FormData) {
+  const active = text(formData, 'active') === '1';
+  await rpc('/admin/avisos', 'admin_set_announcement_active', { p_id: text(formData, 'id'), p_active: active }, active ? 'Aviso activado.' : 'Aviso pausado: ya no aparece.');
 }

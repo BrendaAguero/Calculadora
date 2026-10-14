@@ -5,6 +5,8 @@ import { LOCK_INIT_SCRIPT } from "@/lib/app-lock";
 import { DeviceGuard } from "@/components/device-guard";
 import { TimerWatcher } from "@/components/timer-watcher";
 import { AppFrame } from "@/components/app-nav";
+import { Announcements } from "@/components/announcements";
+import { Suspense } from "react";
 import { getSimpleMode } from "@/lib/simple-mode-server";
 import { getHiddenSections } from "@/lib/menu-server";
 import { getAccessSnapshot, hasPackAccess } from "@/lib/access/permissions";
@@ -43,7 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden} pack={pack} staff={staff}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /></body>
+      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden} pack={pack} staff={staff}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /><Suspense fallback={null}><Announcements /></Suspense></body>
     </html>
   );
 }

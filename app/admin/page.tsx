@@ -5,13 +5,12 @@ import { cardClass, pageClass } from '@/lib/ui';
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
   const count = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
-  const [users, entrepreneur, applications, withdrawals, regrets, reports] = await Promise.all([
+  const [users, entrepreneur, applications, withdrawals, regrets] = await Promise.all([
     count(supabase.from('profiles').select('id', { count: 'exact', head: true })),
     count(supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
     count(supabase.from('affiliates').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
     count(supabase.from('withdrawals').select('id', { count: 'exact', head: true }).in('status', ['requested', 'reviewing', 'approved'])),
     count(supabase.from('regret_requests').select('id', { count: 'exact', head: true }).eq('status', 'received')),
-    count(supabase.from('community_reports').select('id', { count: 'exact', head: true }).eq('status', 'open')),
   ]);
 
   const sections: [string, string, string, number?][] = [
@@ -25,7 +24,8 @@ export default async function AdminHome() {
     ['/admin/arrepentimiento', 'Arrepentimiento y bajas', 'Pedidos para revocar una compra (10 días) o dar de baja la suscripción.', regrets],
     ['/admin/banner', 'Banner de publicidad', 'El aviso que ve quien no tiene Mensualidad Plus: tus planes o un sponsor.'],
     ['/admin/equipo', 'Equipo', 'Sumar o sacar moderadoras de la Comunidad y el enlace de ingreso del equipo.'],
-    ['/moderacion', 'Moderación de la Comunidad', 'Denuncias, publicaciones ocultas y personas pausadas.', reports],
+    ['/admin/avisos', 'Avisos emergentes', 'Novedades, cambios y promociones que aparecen en una ventanita al abrir la app.'],
+    ['/moderacion', 'Comunidad', 'Publicar consejos y tutoriales, y ver lo oculto.'],
     ['/admin/uso', 'Uso de la app', 'Qué pantallas se usan más y cuáles nadie abre (sin datos personales).'],
     ['/admin/auditoria', 'Auditoría', 'Todo lo que se hizo desde la administración.'],
   ];

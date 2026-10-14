@@ -19,7 +19,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <header>
         <Link href="/admin" className="text-sm text-neutral-500 dark:text-neutral-400">← Administración</Link>
         <h1 className="text-2xl font-semibold">Equipo</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Las moderadoras solo moderan la Comunidad: ocultan publicaciones o comentarios, revisan denuncias, destacan y pausan a alguien por unos días. No ven ventas, precios ni cuentas, y no pueden cambiar nada más.</p>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Las moderadoras publican en la Comunidad (consejos, tutoriales, inspiración), editan lo suyo, y pueden ocultar o destacar publicaciones. No ven ventas, precios ni cuentas, y no pueden cambiar nada más.</p>
       </header>
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {error && <div role="alert" className={errorBox}>{error}</div>}

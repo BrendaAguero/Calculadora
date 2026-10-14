@@ -1,15 +1,16 @@
 // Comunidad: categorías y límites (los mismos que controla la base).
+// La publica el equipo (administración y moderadoras); el resto la lee como un microblog.
 export const CATEGORIES = [
   { value: 'consejo', label: 'Consejo', emoji: '💡' },
-  { value: 'pregunta', label: 'Pregunta', emoji: '❓' },
-  { value: 'trabajo', label: 'Mi trabajo', emoji: '✨' },
   { value: 'tutorial', label: 'Tutorial', emoji: '🎓' },
+  { value: 'trabajo', label: 'Inspiración', emoji: '✨' },
 ] as const;
 export type Category = (typeof CATEGORIES)[number]['value'];
 
 export const categoryInfo = (value: string) => CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[0];
 
-export const LIMITS = { title: 120, body: 5000, comment: 2000, link: 500, reason: 300 };
+export const LIMITS = { title: 120, body: 5000, link: 500, reason: 300 };
+export const PAGE_SIZE = 15;
 
 // Solo enlaces https (YouTube, Instagram, TikTok, etc.).
 export function readLink(value: FormDataEntryValue | null) {
