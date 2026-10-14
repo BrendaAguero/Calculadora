@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { CircleHelp, NotebookPen, Palette, Timer, Ruler, ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
+import { Lock, CircleHelp, NotebookPen, Palette, Timer, Ruler, ClipboardList, Download, MoreHorizontal, Receipt, Store, BarChart3, Calculator, Cylinder, FlaskConical, Gem, History, House, Layers, LifeBuoy, Menu, Package, Settings, ShoppingCart, Star, Truck, User, Factory, Wallet } from "lucide-react";
 
 // Menú de la app: el mismo en la barra del costado (computadora), la barra de abajo y «Más» (celular).
 export type NavItem = { href: string; label: string; icon: LucideIcon; section?: MenuSection };
@@ -101,3 +101,28 @@ export const isActive = (pathname: string, href: string) => href === "/" ? pathn
 // En una lista de enlaces, solo el más específico queda marcado (por ejemplo «Registrar una venta» y no también «Lo que vendí»).
 export const activeHref = (pathname: string, items: NavItem[]) =>
   items.filter((item) => isActive(pathname, item.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
+
+// Sin el Pack Ventas y Stock: en vez de varias pantallas bloqueadas, una sola entrada que explica el pack,
+// y la barra de abajo con lo que sí puede usar.
+const PACK_HREFS = ["/ventas", "/ventas/nueva", "/stock", "/produccion", "/compras", "/resumen", "/proveedores"];
+const PACK_ENTRY: NavItem = { href: "/ventas", label: "Ventas y stock", icon: Lock };
+
+export function packGroups(groups: { title: string | null; items: NavItem[] }[], pack: boolean) {
+  if (pack) return groups;
+  let added = false;
+  return groups.map((g) => {
+    const had = g.items.some((i) => PACK_HREFS.includes(i.href));
+    const items = g.items.filter((i) => !PACK_HREFS.includes(i.href));
+    if (had && !added) { added = true; items.push(PACK_ENTRY); }
+    return { ...g, items };
+  }).filter((g) => g.items.length > 0);
+}
+
+const BOTTOM_NO_PACK: NavItem[] = [
+  { href: "/", label: "Inicio", icon: House },
+  { href: "/calcular", label: "Calcular", icon: Calculator },
+  { href: "/temporizadores", label: "Tiempos", icon: Timer },
+  { href: "/herramientas", label: "Herramientas", icon: Ruler },
+  { href: "/mas", label: "Más", icon: Menu },
+];
+export const bottomItems = (simple: boolean, pack: boolean) => (!pack ? BOTTOM_NO_PACK : simple ? SIMPLE_BOTTOM : BOTTOM_ITEMS);

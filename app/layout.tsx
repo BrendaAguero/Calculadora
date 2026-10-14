@@ -7,6 +7,7 @@ import { TimerWatcher } from "@/components/timer-watcher";
 import { AppFrame } from "@/components/app-nav";
 import { getSimpleMode } from "@/lib/simple-mode-server";
 import { getHiddenSections } from "@/lib/menu-server";
+import { hasPackAccess } from "@/lib/access/permissions";
 import { UsageTracker } from "@/components/usage-tracker";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { OfflineSync } from "@/components/offline-sync";
@@ -33,7 +34,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [simple, hidden] = await Promise.all([getSimpleMode(), getHiddenSections()]);
+  const [simple, hidden, pack] = await Promise.all([getSimpleMode(), getHiddenSections(), hasPackAccess()]);
   return (
     // suppressHydrationWarning: el script de tema agrega la clase "dark" antes de que React hidrate.
     <html lang="es" className={`${figtree.variable} ${bricolage.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
@@ -41,7 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /></body>
+      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden} pack={pack}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /></body>
     </html>
   );
 }

@@ -21,8 +21,8 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Calcular", url: "/calcular" },
-      { name: "Nueva venta", url: "/ventas/nueva" },
-      { name: "Stock", url: "/stock" },
+      { name: "Temporizadores", url: "/temporizadores" },
+      { name: "Herramientas", url: "/herramientas" },
     ],
   };
 }

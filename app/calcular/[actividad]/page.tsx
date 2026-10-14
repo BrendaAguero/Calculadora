@@ -5,7 +5,7 @@ import { AppShell } from '@/components/app-shell';
 import { ActivityTabs } from '@/components/activity-tabs';
 import { createClient } from '@/lib/supabase/server';
 import { canUseActivity, getOwnedActivities } from '@/lib/access/activities';
-import { getAccessSnapshot } from '@/lib/access/permissions';
+import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { mergeSettings, mixBySlug, MIXES } from '@/lib/mixes';
 import { MixCalculator } from './mix-calculator';
 
@@ -31,7 +31,7 @@ export default async function MixPage({ params }: { params: Promise<{ actividad:
     <AppShell>
       <ActivityTabs current={def.code} available={available} />
       {access.allowed ? (
-        <MixCalculator code={def.code} initialSettings={mergeSettings(def, saved?.settings)} hasSaved={Boolean(saved)} />
+        <MixCalculator code={def.code} initialSettings={mergeSettings(def, saved?.settings)} hasSaved={Boolean(saved)} canSell={!snapshot || hasFeature(snapshot, 'VENTAS')} />
       ) : (
         <section className="rounded-4xl bg-white p-6 dark:bg-neutral-900">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300"><Lock size={22} aria-hidden="true" /></span>

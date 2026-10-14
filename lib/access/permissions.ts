@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type BasePlanCode = "BASIC" | "ADVANCED";
@@ -37,7 +38,8 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
 
 const one = <T,>(value: T | T[] | null | undefined) => (Array.isArray(value) ? value[0] : value);
 
-export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
+// Una sola consulta por pedido aunque la llamen el menú, la página y las acciones.
+export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -118,12 +120,18 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
     }),
     limits,
   };
-}
+});
 
 // Pack Ventas y Stock: ventas, resumen, stock, producción, compras y proveedores van juntos.
 // Se compra como extra de la Edición Personal; la Mensualidad Plus lo incluye.
 export const PACK_CODE = "PACK_VENTAS";
 const PACK_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
+
+// ¿Tiene el Pack Ventas y Stock (o Plus, administración, cuenta de prueba)? Sin sesión se toma como sí, para no tocar el menú.
+export async function hasPackAccess() {
+  const snapshot = await getAccessSnapshot();
+  return !snapshot || hasFeature(snapshot, "VENTAS");
+}
 
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   if (snapshot.isAdmin || snapshot.isTester) return true;

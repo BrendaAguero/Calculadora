@@ -13,7 +13,11 @@ const MODES = [
 ] as const;
 const box = 'flex items-start gap-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900';
 
-export function SetupForm({ initialMode, initialWidgets, initialSections, firstTime }: { initialMode: 'simple' | 'completo'; initialWidgets: HomeWidget[] | null; initialSections: Record<string, boolean>; firstTime: boolean }) {
+// Sin el Pack Ventas y Stock no se ofrecen las partes de ventas, stock, producción y compras.
+const PACK_WIDGETS = ['acciones', 'ganancias'];
+const PACK_SECTIONS = ['produccion', 'compras', 'proveedores', 'resumen'];
+
+export function SetupForm({ initialMode, initialWidgets, initialSections, firstTime, pack = true }: { initialMode: 'simple' | 'completo'; initialWidgets: HomeWidget[] | null; initialSections: Record<string, boolean>; firstTime: boolean; pack?: boolean }) {
   const [mode, setMode] = useState(initialMode);
   const [custom, setCustom] = useState(!firstTime);
   const [widgets, setWidgets] = useState<HomeWidget[]>(initialWidgets ?? WIDGET_PRESETS[initialMode]);
@@ -43,7 +47,7 @@ export function SetupForm({ initialMode, initialWidgets, initialSections, firstT
         <>
           <fieldset className="grid gap-2">
             <legend className="mb-2 text-lg font-semibold">2. ¿Qué querés ver en Inicio?</legend>
-            {HOME_WIDGETS.map((w) => (
+            {HOME_WIDGETS.filter((w) => pack || !PACK_WIDGETS.includes(w.key)).map((w) => (
               <label key={w.key} className={box}>
                 <input type="checkbox" name={`w_${w.key}`} checked={widgets.includes(w.key)} onChange={(e) => setWidgets(e.target.checked ? [...widgets, w.key] : widgets.filter((k) => k !== w.key))} className="mt-1 h-5 w-5 accent-orange-800" />
                 <span><span className="block font-semibold">{w.label}</span><span className="block text-sm text-neutral-500 dark:text-neutral-400">{w.hint}</span></span>
@@ -53,7 +57,7 @@ export function SetupForm({ initialMode, initialWidgets, initialSections, firstT
           <fieldset className="grid gap-2">
             <legend className="mb-1 text-lg font-semibold">3. ¿Qué más hacés?</legend>
             <p className="mb-1 text-sm text-neutral-500 dark:text-neutral-400">Marcá lo que te interesa y aparece en el menú. Lo demás aparece solo cuando lo uses.</p>
-            {MENU_SECTIONS.map((s) => (
+            {MENU_SECTIONS.filter((s) => pack || !PACK_SECTIONS.includes(s)).map((s) => (
               <label key={s} className={box}>
                 <input type="checkbox" name={`s_${s}`} defaultChecked={initialSections[s]} className="mt-1 h-5 w-5 accent-orange-800" />
                 <span className="font-semibold">{MENU_SECTION_LABELS[s]}</span>
