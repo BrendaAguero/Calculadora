@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Calculator } from "lucide-react";
-import { NAV_GROUPS, NO_NAV_PATHS, SIMPLE_GROUPS, activeHref, bottomItems, packGroups, visibleGroups } from "@/lib/nav";
+import { NAV_GROUPS, NO_NAV_PATHS, SIMPLE_GROUPS, activeHref, bottomItems, packGroups, staffGroup, visibleGroups, type StaffRole } from "@/lib/nav";
 
 // Marco de la app: menú verde oscuro al costado en la computadora (como un programa)
 // y barra blanca abajo en el celular (como una app).
-export function AppFrame({ children, simple = false, hidden = [], pack = true }: { children: React.ReactNode; simple?: boolean; hidden?: readonly string[]; pack?: boolean }) {
+export function AppFrame({ children, simple = false, hidden = [], pack = true, staff = null }: { children: React.ReactNode; simple?: boolean; hidden?: readonly string[]; pack?: boolean; staff?: StaffRole }) {
   const pathname = usePathname();
   if (NO_NAV_PATHS.some((path) => pathname.startsWith(path))) return <>{children}</>;
-  const groups = packGroups(visibleGroups(simple ? SIMPLE_GROUPS : NAV_GROUPS, hidden), pack);
+  const groups = [...packGroups(visibleGroups(simple ? SIMPLE_GROUPS : NAV_GROUPS, hidden), pack), ...staffGroup(staff)];
   const bottom = bottomItems(simple, pack);
   const sideActive = activeHref(pathname, groups.flatMap((g) => g.items));
   // «Más» está activo en las pantallas que no tienen botón propio en la barra de abajo.

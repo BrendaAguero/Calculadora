@@ -7,6 +7,8 @@ export type Resource = "materials" | "products" | "formulas" | "molds";
 export type AccessSnapshot = {
   accountStatus: "active" | "suspended" | "blocked";
   isAdmin: boolean;
+  // Moderadora de la comunidad (las administradoras también moderan).
+  isModerator: boolean;
   // Cuenta de prueba: sin límites ni restricciones de plan (no es administradora).
   isTester: boolean;
   basePlan: BasePlanCode | null;
@@ -109,6 +111,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
   return {
     accountStatus: (profile?.account_status ?? "active") as AccessSnapshot["accountStatus"],
     isAdmin,
+    isModerator: isAdmin || (profile?.role === "moderator" && profile?.account_status === "active"),
     isTester,
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),

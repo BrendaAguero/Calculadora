@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/admin';
+import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
 
@@ -16,6 +17,7 @@ async function rpc(path: string, fn: string, args: Record<string, unknown>, ok: 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+  if (!(await hasStaffSession(user.id))) redirect(`${STAFF_LOGIN_PATH}?next=/admin`);
   const { error } = await supabase.rpc(fn, args);
   if (error) back(path, 'error', error.message);
   revalidatePath(path.split('?')[0]);
@@ -63,9 +65,7 @@ export async function saveBanner(formData: FormData) {
 }
 
 export async function approveEmail(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { supabase } = await requireAdmin();
   const email = text(formData, 'email').toLowerCase();
   const { data: id, error } = await supabase.rpc('admin_approve_email', { p_email: email, p_source: text(formData, 'source'), p_note: text(formData, 'note') || null });
   if (error || !id) back('/admin/emails', 'error', error?.message ?? 'No se pudo aprobar.');
@@ -90,7 +90,7 @@ export async function approveEmail(formData: FormData) {
 
 // Solicitud de una revendedora: al aprobar, el email queda habilitado y se manda la clave (la de siempre si ya tenía).
 export async function decideResellerClient(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const approve = text(formData, 'approve') === '1';
   const { data: id, error } = await supabase.rpc('admin_decide_reseller_client', { p_id: text(formData, 'id'), p_approve: approve, p_note: text(formData, 'note') || null });
   if (error) back('/admin/emails', 'error', error.message);
@@ -121,7 +121,7 @@ export async function saveResellerResources(formData: FormData) {
 }
 
 export async function newAccessKey(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   try {
     const key = await issueKey(supabase, text(formData, 'id'));
     const sent = text(formData, 'send') === '1' ? await sendKeyEmail(text(formData, 'email'), key, await siteOrigin()) : false;
@@ -162,7 +162,7 @@ export async function setPackPrices(formData: FormData) {
 }
 
 export async function setModulePrices(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   for (const code of ['COLORES', 'CUADERNO']) {
     const price = Number(text(formData, code).replace(/\./g, '').replace(',', '.'));
     const { error } = await supabase.rpc('admin_set_module_price', { p_code: code, p_price: price });
@@ -184,4 +184,10 @@ export async function setRegularPrice(formData: FormData) {
 export async function setActivityPrices(formData: FormData) {
   const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
   await rpc('/admin/precios', 'admin_set_activity_prices', { p_secondary: n('extra') / 2, p_extra: n('extra') }, 'Precios de las actividades guardados.');
+}
+
+// Equipo: nombrar o sacar moderadoras (solo administración).
+export async function setModerator(formData: FormData) {
+  const add = text(formData, 'moderator') === '1';
+  await rpc('/admin/equipo', 'admin_set_moderator', { p_email: text(formData, 'email'), p_moderator: add }, add ? 'Listo: ya es moderadora. Que entre por el ingreso del equipo.' : 'Ya no es moderadora.');
 }

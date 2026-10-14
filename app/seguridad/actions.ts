@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { closeStaffSession } from '@/lib/staff';
 import { issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -29,6 +30,7 @@ async function closeEverywhere(newKey: boolean) {
     }
   }
   await supabase.auth.signOut({ scope: 'global' });
+  await closeStaffSession();
   return sent;
 }
 

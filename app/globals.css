@@ -125,6 +125,15 @@ html.app-locked body > nav, html.app-locked body > aside { display: none; }
 /* Al imprimir o guardar en PDF: sin menús ni avisos, fondo blanco. */
 @media print {
   aside, nav[aria-label="Navegación principal"], [role="status"] { display: none !important; }
-  body { background: #fff !important; }
+  html, body { background: #fff !important; background-image: none !important; }
   .lg\:pl-62 { padding-left: 0 !important; }
+  .min-h-screen { min-height: 0 !important; }
+  .pb-24 { padding-bottom: 0 !important; }
+  /* Hojas para imprimir (presupuesto, lista de feria, tarjetas): solo el papel, sin la pantalla de edición. */
+  .no-print { display: none !important; }
+  .paper { box-shadow: none !important; border: 0 !important; margin: 0 !important; padding: 0 !important; max-width: none !important; color: #000 !important; background: #fff !important; }
+  .paper * { color: #000 !important; }
+  .avoid-break { break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+@page { margin: 12mm; }

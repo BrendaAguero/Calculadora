@@ -42,6 +42,15 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
     ],
   },
   {
+    id: 'vender', title: 'Para vender: presupuestos, ferias y más', steps: [
+      <>En <Link href="/presupuesto">Presupuesto</Link> armás uno para un encargo (con seña y envío) y lo imprimís, lo guardás en PDF o lo mandás por WhatsApp.</>,
+      <>La <Link href="/feria">Lista para ferias</Link> te recuerda qué llevar y trae una planilla para anotar las ventas del día. Se imprime en dos hojas.</>,
+      <>La <Link href="/cuidados">Tarjeta de cuidados</Link> explica cómo cuidar cada pieza: salen 8 por hoja para recortar y entregar con cada venta.</>,
+      <>En <Link href="/fechas">Fechas para vender</Link> ves el Día de la Madre, Navidad y las demás fechas fuertes, y desde cuándo preparar. Cuando se acerca una, te avisa en Inicio.</>,
+      <>En <Link href="/herramientas">Herramientas → Medidas</Link> pasás cucharadas, tazas y ml a gramos de yeso, resina, cemento o pigmento.</>,
+    ],
+  },
+  {
     id: 'stock', title: 'Stock (Pack Ventas y Stock)', steps: [
       <>En <Link href="/stock">Stock</Link> ves materias primas y productos terminados, con su cantidad, mínimo y valor.</>,
       <>El stock se mueve solo cuando registrás producción, compras o ventas. Si necesitás corregirlo, usá un ajuste desde el detalle del ítem.</>,

@@ -1,4 +1,6 @@
 import { HomeTimers } from "@/components/home-timers";
+import { upcomingSaleDates } from "@/lib/sale-dates";
+import { todayAR } from "@/lib/test-logs";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ChevronRight, Factory, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
@@ -117,6 +119,8 @@ export default async function Home() {
 
   const title = (calc: Calc) => one(calc.products)?.name ?? one(calc.formulas)?.name ?? one(calc.molds)?.name ?? `Cálculo de ${one(calc.activities)?.name ?? "yeso"}`;
   const big = simple ? "text-xl" : "text-lg";
+  // Próxima fecha para vender, solo cuando ya es momento de preparar.
+  const nextSale = upcomingSaleDates(todayAR()).find((d) => d.preparing);
 
   return (
     <AppShell>
@@ -129,6 +133,13 @@ export default async function Home() {
 
       {/* Temporizadores en marcha (solo si hay alguno). */}
       <HomeTimers timers={timersRes.data ?? []} />
+
+      {nextSale && (
+        <Link href="/fechas" className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-orange-50 px-4 py-3 text-sm text-orange-900 dark:bg-orange-950/40 dark:text-orange-100">
+          <span><strong>{nextSale.name}</strong>: {nextSale.daysLeft === 0 ? "es hoy" : `faltan ${nextSale.daysLeft} día${nextSale.daysLeft === 1 ? "" : "s"}`}. ¡Es momento de preparar!</span>
+          <span className="shrink-0 font-semibold underline">Ver fechas</span>
+        </Link>
+      )}
 
       {/* Lo principal: cuánto material y cuánto líquido preparar. */}
       {show.has("preparo") && <MixQuick options={quickOptions} />}

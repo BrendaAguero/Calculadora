@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { DEVICE_LIMIT_MESSAGE, registerCurrentDevice } from "@/lib/devices";
 import { hashKey, normalizeKey } from "@/lib/access-key";
 import { allowAttempt, TOO_MANY } from "@/lib/rate-limit";
+import { closeStaffSession } from "@/lib/staff";
 
 export type ActionState = { error?: string; success?: boolean; email?: string };
 
@@ -150,5 +151,6 @@ export async function setPassword(_prevState: ActionState, formData: FormData): 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  await closeStaffSession();
   redirect("/login");
 }

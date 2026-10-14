@@ -32,3 +32,33 @@ export function kitPrice(items: { cost: number; qty: number }[], packaging: numb
   const cost = items.reduce((acc, i) => acc + Math.max(i.cost, 0) * Math.max(i.qty, 0), 0) + Math.max(packaging, 0);
   return { cost, price: cost * (1 + Math.max(profitPct, 0) / 100) };
 }
+
+// Conversor de medidas: gramos, kilos, mililitros, litros, cucharadas, cucharaditas y tazas.
+// Para pasar de peso a volumen usa la densidad aproximada del material (gramos por ml, sin apretar).
+export const MEASURE_UNITS = {
+  g: { label: 'gramos', grams: 1 },
+  kg: { label: 'kilos', grams: 1000 },
+  ml: { label: 'mililitros (cc)', ml: 1 },
+  l: { label: 'litros', ml: 1000 },
+  cda: { label: 'cucharadas', ml: 15 },
+  cdta: { label: 'cucharaditas', ml: 5 },
+  taza: { label: 'tazas', ml: 240 },
+} as const;
+export type MeasureUnit = keyof typeof MEASURE_UNITS;
+
+export const MEASURE_MATERIALS = [
+  { id: 'agua', label: 'Agua', density: 1 },
+  { id: 'yeso', label: 'Yeso en polvo', density: 0.8 },
+  { id: 'cemento', label: 'Cemento en polvo', density: 1.4 },
+  { id: 'arena', label: 'Arena fina', density: 1.5 },
+  { id: 'resina', label: 'Resina epoxi (líquida)', density: 1.1 },
+  { id: 'pigmento', label: 'Pigmento en polvo o mica', density: 0.5 },
+] as const;
+
+export function convertMeasure(value: number, from: MeasureUnit, to: MeasureUnit, density: number) {
+  if (!(value >= 0) || !(density > 0)) return 0;
+  const f = MEASURE_UNITS[from] as { grams?: number; ml?: number };
+  const t = MEASURE_UNITS[to] as { grams?: number; ml?: number };
+  const grams = f.grams ? value * f.grams : value * f.ml! * density;
+  return t.grams ? grams / t.grams : grams / density / t.ml!;
+}

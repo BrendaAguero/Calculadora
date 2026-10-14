@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { saveMenuSections } from "./menu-actions";
 import { getSimpleMode } from "@/lib/simple-mode-server";
 import { SimpleModeToggle } from "@/components/simple-mode-toggle";
-import { ChevronRight, FileText, Undo2, CircleStop, Wrench } from "lucide-react";
+import { ChevronRight, FileText, Undo2, CircleStop, ShieldCheck, Wrench } from "lucide-react";
 
 const row = "flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800";
 const box = "divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white dark:divide-neutral-800 dark:bg-neutral-900";
@@ -84,6 +84,7 @@ export default async function MasPage({ searchParams }: { searchParams: Promise<
           <h2 className="mb-2 px-2 text-sm font-semibold text-neutral-500">Otros</h2>
           <div className={box}>
             {snapshot?.isAdmin && <Link href="/admin" className={row}><Wrench size={19} aria-hidden="true" className="text-orange-800 dark:text-orange-300" />Administración</Link>}
+            {snapshot?.isModerator && <Link href="/moderacion" className={row}><ShieldCheck size={19} aria-hidden="true" className="text-orange-800 dark:text-orange-300" />Moderación</Link>}
             <Link href="/legal" className={row}><FileText size={19} aria-hidden="true" className="text-orange-800 dark:text-orange-300" />Términos, privacidad y compras</Link>
             <Link href="/arrepentimiento" className={row}><Undo2 size={19} aria-hidden="true" className="text-orange-800 dark:text-orange-300" />Botón de arrepentimiento</Link>
             <Link href="/baja" className={row}><CircleStop size={19} aria-hidden="true" className="text-orange-800 dark:text-orange-300" />Botón de baja</Link>
