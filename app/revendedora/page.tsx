@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { BookOpen, Download, Lightbulb, MessageCircle, Store, UserPlus, Users } from 'lucide-react';
 import { CopyButton } from '@/components/copy-button';
@@ -7,7 +6,6 @@ import { getResellerResources, parseMaterials, whatsappLink } from '@/lib/resell
 import { AppShell } from '@/components/app-shell';
 import { SubmitButton } from '@/components/submit-button';
 import { createClient } from '@/lib/supabase/server';
-import { getAccessSnapshot } from '@/lib/access/permissions';
 import { dateOnly, errorBox, inputClass, okBox } from '@/lib/ui';
 import { addClient, becomeReseller, buyPack, cancelClient } from './actions';
 
@@ -22,8 +20,7 @@ export default async function ResellerPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const [snapshot, { data: account }, { data: price }, { data: retail }] = await Promise.all([
-    getAccessSnapshot(),
+  const [{ data: account }, { data: price }, { data: retail }] = await Promise.all([
     supabase.from('reseller_accounts').select('status').eq('user_id', user.id).maybeSingle(),
     supabase.from('pricing_config').select('value_numeric').eq('key', 'reseller_unit_price').maybeSingle(),
     supabase.from('pricing_config').select('value_numeric').eq('key', 'personal_price_online').maybeSingle(),
@@ -44,11 +41,10 @@ export default async function ResellerPage({ searchParams }: { searchParams: Pro
             `Comprás licencias de a una (${pesos(unit)} c/u; al público valen ${pesos(retailPrice)}) o en paquetes de 5, 10 o 20 con más descuento.`,
             'Cobrás a tus clientas como quieras y asignás cada licencia con el correo de tu clienta.',
             'La administración aprueba y tu clienta recibe su clave de acceso por correo. Tenés recursos de venta, consejos y material gráfico.',
+            'Activarlo es gratis. Si comprás un paquete de 5 licencias o más, te regalamos tu propia Edición Personal para que conozcas lo que vendés.',
           ].map((text, i) => <li key={i} className={`${card} flex gap-3`}><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange-100 text-sm font-bold text-orange-800 dark:bg-orange-950 dark:text-orange-300">{i + 1}</span>{text}</li>)}
         </ol>
-        {snapshot?.baseLicenseActive || snapshot?.isAdmin
-          ? <form action={becomeReseller} className="mt-5"><SubmitButton className="rounded-2xl bg-resina px-5 py-3 font-bold text-resina-dark">Activar el modo revendedora (gratis)</SubmitButton></form>
-          : <p className="mt-5"><Link href="/comprar" className="underline">Primero necesitás la Edición Personal.</Link></p>}
+        <form action={becomeReseller} className="mt-5"><SubmitButton className="rounded-2xl bg-resina px-5 py-3 font-bold text-resina-dark">Activar el modo revendedora (gratis)</SubmitButton></form>
       </AppShell>
     );
   }

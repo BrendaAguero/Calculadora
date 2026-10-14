@@ -11,6 +11,8 @@ export type AccessSnapshot = {
   isTester: boolean;
   basePlan: BasePlanCode | null;
   baseLicenseActive: boolean;
+  // Licencia de cortesía con vencimiento (null = no vence).
+  licenseExpiresAt: string | null;
   // Versión gratis: sin licencia (y sin ser administradora ni cuenta de prueba). Tiene límites chicos y banner.
   isFree: boolean;
   entrepreneurActive: boolean;
@@ -52,7 +54,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
       supabase.from("profiles").select("account_status, role, is_tester").eq("id", user.id).maybeSingle(),
       supabase
         .from("licenses")
-        .select("status, plan_id, plans(code)")
+        .select("status, plan_id, expires_at, plans(code)")
         .eq("user_id", user.id)
         .eq("status", "active"),
       supabase
@@ -73,7 +75,10 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
     ]);
 
   // Si hubiera más de una licencia base, vale la de mayor nivel.
-  const baseLicenses = (licenses ?? []).filter((license) => ["BASIC", "ADVANCED"].includes(one(license.plans)?.code ?? ""));
+  // Las de cortesía con fecha dejan de contar apenas vencen (la base las marca como vencidas cada hora).
+  const nowMs = Date.now();
+  const baseLicenses = (licenses ?? []).filter((license) => ["BASIC", "ADVANCED"].includes(one(license.plans)?.code ?? "")
+    && (!license.expires_at || new Date(license.expires_at as string).getTime() > nowMs));
   const activeLicense = baseLicenses.find((license) => one(license.plans)?.code === "ADVANCED") ?? baseLicenses[0];
   const plan = one(activeLicense?.plans)?.code;
 
@@ -107,6 +112,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
     isTester,
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),
+    licenseExpiresAt: (activeLicense?.expires_at as string | null | undefined) ?? null,
     isFree: !activeLicense && !isAdmin && !isTester,
     entrepreneurActive: Boolean(activeLicense) && entrepreneurExpiresAt !== null,
     entrepreneurExpiresAt,
