@@ -2,8 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { InstallApp } from "@/components/install-app";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getAccessSnapshot } from "@/lib/access/permissions";
-import { MENU_SECTIONS, MENU_SECTION_LABELS, NAV_GROUPS, SIMPLE_GROUPS, visibleGroups } from "@/lib/nav";
+import { getAccessSnapshot, hasFeature } from "@/lib/access/permissions";
+import { MENU_SECTIONS, MENU_SECTION_LABELS, NAV_GROUPS, SIMPLE_GROUPS, packGroups, visibleGroups } from "@/lib/nav";
 import { getMenuState, isShown } from "@/lib/menu-server";
 import { SubmitButton } from "@/components/submit-button";
 import { saveMenuSections } from "./menu-actions";
@@ -20,8 +20,9 @@ export default async function MasPage({ searchParams }: { searchParams: Promise<
   const [snapshot, simple, menu] = await Promise.all([getAccessSnapshot(), getSimpleMode(), getMenuState()]);
   const hidden = menu ? MENU_SECTIONS.filter((s) => !isShown(menu, s)) : [];
   const hrefOf = (section: string) => NAV_GROUPS.flatMap((g) => g.items).find((i) => i.section === section)!;
-  const essentials = SIMPLE_GROUPS.flatMap((g) => g.items).filter((item) => item.href !== "/" && item.href !== "/mas");
-  const groups = visibleGroups(NAV_GROUPS, hidden).map((group, i) => (
+  const pack = !snapshot || hasFeature(snapshot, 'VENTAS');
+  const essentials = packGroups(SIMPLE_GROUPS, pack).flatMap((g) => g.items).filter((item) => item.href !== "/" && item.href !== "/mas");
+  const groups = packGroups(visibleGroups(NAV_GROUPS, hidden), pack).map((group, i) => (
     <section key={group.title ?? i}>
       {group.title && <h2 className="mb-2 px-2 text-sm font-semibold text-neutral-500">{group.title}</h2>}
       <div className={box}>
@@ -64,7 +65,7 @@ export default async function MasPage({ searchParams }: { searchParams: Promise<
               {params.ok && <p role="status" className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300">Listo, el menú quedó como elegiste.</p>}
               {params.error && <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-300">{params.error}</p>}
               <form action={saveMenuSections} className="mt-3 grid gap-2">
-                {MENU_SECTIONS.map((section) => {
+                {MENU_SECTIONS.filter((section) => pack || !['produccion', 'compras', 'proveedores', 'resumen'].includes(section)).map((section) => {
                   const item = hrefOf(section);
                   return (
                     <div key={section} className="flex items-center gap-3 rounded-2xl border border-neutral-200 px-3 py-2.5 dark:border-neutral-800">

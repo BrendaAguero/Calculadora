@@ -17,7 +17,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <h2>1. Quién presta el servicio</h2>
         <p>{APP_NAME} es una aplicación web prestada por {OWNER_NAME}, CUIT {OWNER_CUIT}, con domicilio en {OWNER_ADDRESS ? `${OWNER_ADDRESS}, ` : ''}República Argentina. Contacto: <Mail />.</p>
         <h2>2. Qué es la aplicación</h2>
-        <p>Es una herramienta para que emprendedoras y emprendedores calculen cantidades, costos, precios y ganancias, y organicen materiales, fórmulas, moldes, productos, stock, producción, compras y ventas.</p>
+        <p>Es una herramienta para que emprendedoras y emprendedores calculen cantidades, costos, precios y ganancias, y organicen materiales, fórmulas, moldes y productos. Con el Pack Ventas y Stock también organizan stock, producción, compras y ventas.</p>
         <p>Los resultados son estimaciones que dependen de los datos que cargás: son una ayuda para decidir, así que revisalos antes de usarlos. No reemplazan el asesoramiento contable, impositivo ni técnico de un profesional.</p>
         <h2>3. Cuenta</h2>
         <ul>
@@ -89,7 +89,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
           <li><strong>Pack Ventas y Stock:</strong> pago único y permanente. Suma las funciones de gestión: ventas, resumen, stock, producción, compras y proveedores. Si se agrega al comprar la Edición Personal tiene un precio con descuento, que se muestra antes de pagar. Viene incluido en la Mensualidad Plus mientras esté activa.</li>
           <li><strong>Módulos del taller</strong> (Recetas de color y Cuaderno de pruebas): pago único y permanente cada uno. Los Temporizadores de curado son gratis. Vienen incluidos en la Mensualidad Plus mientras esté activa. Los tiempos y consejos que muestra la app son referencias generales: siempre valen las indicaciones del fabricante de cada material.</li>
           <li><strong>Extras:</strong> pago único y permanentes (por ejemplo, «Aparato extra» para usar la app en un aparato más).</li>
-          <li><strong>Mensualidad Plus:</strong> suscripción mensual que se suma a la Edición Personal. Quita la publicidad, desbloquea todas las actividades, el Pack Ventas y Stock, los módulos del taller y los demás módulos disponibles, elimina los límites de altas y, cuando esté disponible, permite usar la app sin conexión.</li>
+          <li><strong>Mensualidad Plus:</strong> suscripción mensual que se suma a la Edición Personal. Quita la publicidad, desbloquea todas las actividades, el Pack Ventas y Stock, los módulos del taller y los demás módulos disponibles, elimina los límites de altas y permite usar la app sin conexión.</li>
         </ul>
         <p>El precio final se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan. Según el medio de pago el precio de la Edición Personal puede variar (online, transferencia o MercadoLibre).</p>
         <h2>2. Pago, aprobación y acceso</h2>

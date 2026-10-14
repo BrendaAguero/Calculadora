@@ -98,7 +98,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <section className={cardClass}>
           <h2 className="font-semibold">Tu plan</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p></div>
+            <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p>{snapshot.licenseExpiresAt && <p className="text-xs text-amber-700 dark:text-amber-300">De regalo hasta el {date(snapshot.licenseExpiresAt)}</p>}</div>
             <div><span className="text-neutral-500">Mensualidad Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
@@ -114,7 +114,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <section id="emprendedor" className={cardClass}>
           <h2 className="font-semibold">Mensualidad Plus</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Sin publicidad, todas las actividades y módulos, sin límites de altas y modo sin conexión (próximamente). Se cobra sola cada mes y la cancelás cuando quieras: seguís con tu Edición Personal y no se borra nada.
+            Sin publicidad, todas las actividades y módulos, sin límites de altas y modo sin conexión. Se cobra sola cada mes y la cancelás cuando quieras: seguís con tu Edición Personal y no se borra nada.
           </p>
 
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (

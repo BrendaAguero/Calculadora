@@ -19,7 +19,7 @@ const fmt = (value: number, unit: string) => `${value.toLocaleString('es-AR', { 
 
 const EMPTY: MixInput = { quantity: '1', moldMl: '', gramsPerPiece: '', moldCost: '', packaging: '', labor: '', other: '', priceMethod: 'percentage', profitPercentage: '30', fixedProfit: '', manualPrice: '' };
 
-export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCode; initialSettings: MixSettings; hasSaved: boolean }) {
+export function MixCalculator({ code, initialSettings, hasSaved, canSell = true }: { code: MixCode; initialSettings: MixSettings; hasSaved: boolean; canSell?: boolean }) {
   const def = mixByCode(code)!;
   const [settings, setSettings] = useState<MixSettings>(initialSettings);
   const [input, setInput] = useState<MixInput>(EMPTY);
@@ -167,7 +167,7 @@ export function MixCalculator({ code, initialSettings, hasSaved }: { code: MixCo
         <p className="mt-4 text-xs text-white/70">El precio sugerido es una referencia: vos decidís el precio final.</p>
         <button type="button" onClick={saveCalc} disabled={pending} className="mt-4 min-h-12 w-full rounded-2xl bg-resina px-4 font-bold text-resina-dark disabled:opacity-60">{pending ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className="mt-3 rounded-xl bg-white/15 p-3 text-sm">{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
-        {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold">¿Ya lo vendiste? Registrá la venta →</Link>}
+        {status?.ok && canSell && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold">¿Ya lo vendiste? Registrá la venta →</Link>}
       </section>
     </>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { amount, money, qty } from '@/app/stock/constants';
 import { cardClass, dateTime, okBox, pageClass } from '@/lib/ui';
 
@@ -12,6 +13,8 @@ export default async function ProductionDetailPage({ params, searchParams }: { p
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+  const snapshot = await getAccessSnapshot();
+  if (!snapshot || !hasFeature(snapshot, 'PRODUCCION')) redirect('/produccion');
 
   const { data: production } = await supabase
     .from('productions')

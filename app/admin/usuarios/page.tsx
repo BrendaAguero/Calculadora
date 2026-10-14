@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
-import { one, requireAdmin } from '@/lib/admin';
+import { requireAdmin } from '@/lib/admin';
 import { cardClass, dateOnly, errorBox, inputClass, okBox, pageClass } from '@/lib/ui';
 import { grantLicense, setAccountStatus } from '../actions';
 
@@ -17,11 +17,11 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const now = new Date().toISOString();
   const [{ data: licenses }, { data: subscriptions }] = ids.length
     ? await Promise.all([
-      supabase.from('licenses').select('user_id,plans(code),dev_grant_id').eq('status', 'active').in('user_id', ids),
+      supabase.from('licenses').select('user_id,plans(code),dev_grant_id,expires_at').eq('status', 'active').in('user_id', ids).or(`expires_at.is.null,expires_at.gt.${now}`),
       supabase.from('subscriptions').select('user_id,expires_at').eq('status', 'active').gt('expires_at', now).in('user_id', ids),
     ])
     : [{ data: [] }, { data: [] }];
-  const plan = new Map((licenses ?? []).map((l) => [l.user_id, `${one(l.plans)?.code === 'ADVANCED' ? 'Avanzado' : 'Básico'}${l.dev_grant_id ? ' (cortesía)' : ''}`]));
+  const plan = new Map((licenses ?? []).map((l) => [l.user_id, `Edición Personal${l.dev_grant_id ? ' (cortesía' + (l.expires_at ? `, vence el ${dateOnly(l.expires_at)}` : '') + ')' : ''}`]));
   const until = new Map<string, string>();
   for (const s of subscriptions ?? []) if (!until.has(s.user_id) || until.get(s.user_id)! < s.expires_at) until.set(s.user_id, s.expires_at);
 
@@ -58,9 +58,12 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                   {!plan.has(u.id) && (
                     <form action={grantLicense} className="flex flex-wrap items-end gap-2">
                       <input type="hidden" name="user_id" value={u.id} />
-                      <select name="plan" className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950"><option value="BASIC">Básico</option><option value="ADVANCED">Avanzado</option></select>
+                      <input type="hidden" name="plan" value="ADVANCED" />
+                      <label className="grid gap-0.5 text-xs text-neutral-500">Duración
+                        <select name="months" defaultValue="1" className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"><option value="1">1 mes</option><option value="2">2 meses</option><option value="0">Sin vencimiento</option></select>
+                      </label>
                       <input name="reason" placeholder="Motivo" maxLength={120} className="rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950" />
-                      <SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">Dar licencia de cortesía</SubmitButton>
+                      <SubmitButton className="rounded-lg border border-neutral-300 px-3 py-1.5 dark:border-neutral-700">Dar Edición Personal gratis</SubmitButton>
                     </form>
                   )}
                 </div>

@@ -3,9 +3,9 @@ export const HOME_WIDGETS = [
   { key: "preparo", label: "¿Cuánto preparo?", hint: "Cuánto material y cuánto líquido para tus moldes" },
   { key: "calculos", label: "Tus últimos cálculos", hint: "Para repetir un cálculo con un toque" },
   { key: "pasos", label: "Primeros pasos", hint: "Una guía hasta que cargues tus datos" },
-  { key: "acciones", label: "Botones de venta, producción y compra", hint: "Para anotar rápido" },
-  { key: "avisos", label: "Avisos", hint: "Stock por terminarse y precios para actualizar" },
-  { key: "ganancias", label: "Ganancias del mes", hint: "Cuánto vendiste y ganaste" },
+  { key: "acciones", label: "Botones de venta, producción y compra", hint: "Para anotar rápido (con el Pack Ventas y Stock)" },
+  { key: "avisos", label: "Avisos", hint: "Precios para actualizar (y stock por terminarse, con el Pack Ventas y Stock)" },
+  { key: "ganancias", label: "Ganancias del mes", hint: "Cuánto vendiste y ganaste (con el Pack Ventas y Stock)" },
 ] as const;
 export type HomeWidget = (typeof HOME_WIDGETS)[number]["key"];
 

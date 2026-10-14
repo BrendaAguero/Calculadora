@@ -5,7 +5,7 @@ function parseAR(value: unknown): number {
   let text = String(value ?? '').trim().replace(/[\s$]/g, '');
   if (!text) return NaN;
   if (text.includes(',')) text = text.replace(/\./g, '').replace(',', '.');
-  else if (/^-?\d{1,3}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, '');
+  else if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, ''); // «12.500» = 12500, pero «0.250» = 0,25
   return Number(text);
 }
 

@@ -28,7 +28,11 @@ export async function setAccountStatus(formData: FormData) {
 }
 
 export async function grantLicense(formData: FormData) {
-  await rpc('/admin/usuarios', 'admin_grant_license', { p_user_id: text(formData, 'user_id'), p_plan_code: text(formData, 'plan'), p_reason: text(formData, 'reason') }, 'Licencia de cortesía otorgada.');
+  const months = text(formData, 'months');
+  await rpc('/admin/usuarios', 'admin_grant_license_for', {
+    p_user_id: text(formData, 'user_id'), p_plan_code: text(formData, 'plan') || 'ADVANCED', p_reason: text(formData, 'reason'),
+    p_months: months === '1' || months === '2' ? Number(months) : null,
+  }, months === '1' ? 'Licencia de cortesía otorgada por 1 mes.' : months === '2' ? 'Licencia de cortesía otorgada por 2 meses.' : 'Licencia de cortesía otorgada sin vencimiento.');
 }
 
 export async function reviewAffiliate(formData: FormData) {
@@ -170,6 +174,11 @@ export async function setModulePrices(formData: FormData) {
 
 export async function givePack(formData: FormData) {
   await rpc('/admin/emails', 'admin_give_pack', { p_id: text(formData, 'id') }, 'Pack Ventas y Stock sumado.');
+}
+
+export async function setRegularPrice(formData: FormData) {
+  const n = Number(text(formData, 'regular').replace(/\./g, '').replace(',', '.') || 0);
+  await rpc('/admin/precios', 'admin_set_regular_price', { p_price: n }, n > 0 ? 'Precio normal guardado: se muestra tachado en la compra.' : 'Precio tachado quitado.');
 }
 
 export async function setActivityPrices(formData: FormData) {

@@ -12,7 +12,7 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
       <>Si usás siempre la misma mezcla, guardala como <Link href="/formulas">fórmula</Link>.</>,
       <>Registrá tus <Link href="/gestion/moldes">moldes</Link> con los gramos que entran en cada uno.</>,
       <>Usá <Link href="/calcular">Calcular</Link> para saber cuánto material necesitás, cuánto te cuesta y a qué precio vender.</>,
-      <>Cuando quieras ordenar tu negocio, sumá <Link href="/gestion/productos">productos</Link>, <Link href="/stock">stock</Link>, <Link href="/produccion">producción</Link> y <Link href="/ventas">ventas</Link>.</>,
+      <>Cargá tus <Link href="/gestion/productos">productos</Link> para tener sus precios a mano. Si vendés, con el <Link href="/access">Pack Ventas y Stock</Link> sumás <Link href="/stock">stock</Link>, <Link href="/produccion">producción</Link> y <Link href="/ventas">ventas</Link>.</>,
     ],
   },
   {
@@ -42,7 +42,7 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
     ],
   },
   {
-    id: 'stock', title: 'Stock', steps: [
+    id: 'stock', title: 'Stock (Pack Ventas y Stock)', steps: [
       <>En <Link href="/stock">Stock</Link> ves materias primas y productos terminados, con su cantidad, mínimo y valor.</>,
       <>El stock se mueve solo cuando registrás producción, compras o ventas. Si necesitás corregirlo, usá un ajuste desde el detalle del ítem.</>,
       <>Poné un mínimo para recibir el aviso de que te estás quedando sin algo.</>,
@@ -50,21 +50,21 @@ const GUIDES: { id: string; title: string; steps: React.ReactNode[] }[] = [
     ],
   },
   {
-    id: 'produccion', title: 'Producción', steps: [
+    id: 'produccion', title: 'Producción (Pack Ventas y Stock)', steps: [
       <>Entrá a <Link href="/produccion/nueva">Nueva producción</Link>, elegí el producto y la cantidad que fabricaste.</>,
       <>Se descuentan los materiales del stock y se suman las piezas terminadas.</>,
       <>El costo de esa producción queda guardado y se usa para calcular la ganancia de tus ventas y el valor del stock.</>,
     ],
   },
   {
-    id: 'compras', title: 'Compras y proveedores', steps: [
+    id: 'compras', title: 'Compras y proveedores (Pack Ventas y Stock)', steps: [
       <>Cargá tus <Link href="/proveedores">proveedores</Link> una sola vez.</>,
       <>En <Link href="/compras/nueva">Nueva compra</Link> anotá qué compraste, a quién y a qué precio. El stock y el precio del material se actualizan solos.</>,
       <>Usá <Link href="/compras/comparar">Comparar</Link> para ver qué proveedor te vende más barato cada material.</>,
     ],
   },
   {
-    id: 'ventas', title: 'Ventas y resumen', steps: [
+    id: 'ventas', title: 'Ventas y resumen (Pack Ventas y Stock)', steps: [
       <>En <Link href="/ventas/nueva">Nueva venta</Link> elegí los productos, el precio, descuentos y comisiones (por ejemplo, la de Mercado Pago o de una feria).</>,
       <>La aplicación calcula la ganancia y el margen de cada venta con el costo de producción.</>,
       <>Si te equivocaste, anulá la venta: el stock vuelve y queda registrado.</>,

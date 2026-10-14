@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type BasePlanCode = "BASIC" | "ADVANCED";
@@ -10,6 +11,8 @@ export type AccessSnapshot = {
   isTester: boolean;
   basePlan: BasePlanCode | null;
   baseLicenseActive: boolean;
+  // Licencia de cortesía con vencimiento (null = no vence).
+  licenseExpiresAt: string | null;
   // Versión gratis: sin licencia (y sin ser administradora ni cuenta de prueba). Tiene límites chicos y banner.
   isFree: boolean;
   entrepreneurActive: boolean;
@@ -37,7 +40,8 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
 
 const one = <T,>(value: T | T[] | null | undefined) => (Array.isArray(value) ? value[0] : value);
 
-export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
+// Una sola consulta por pedido aunque la llamen el menú, la página y las acciones.
+export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -50,7 +54,7 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
       supabase.from("profiles").select("account_status, role, is_tester").eq("id", user.id).maybeSingle(),
       supabase
         .from("licenses")
-        .select("status, plan_id, plans(code)")
+        .select("status, plan_id, expires_at, plans(code)")
         .eq("user_id", user.id)
         .eq("status", "active"),
       supabase
@@ -71,7 +75,10 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
     ]);
 
   // Si hubiera más de una licencia base, vale la de mayor nivel.
-  const baseLicenses = (licenses ?? []).filter((license) => ["BASIC", "ADVANCED"].includes(one(license.plans)?.code ?? ""));
+  // Las de cortesía con fecha dejan de contar apenas vencen (la base las marca como vencidas cada hora).
+  const nowMs = Date.now();
+  const baseLicenses = (licenses ?? []).filter((license) => ["BASIC", "ADVANCED"].includes(one(license.plans)?.code ?? "")
+    && (!license.expires_at || new Date(license.expires_at as string).getTime() > nowMs));
   const activeLicense = baseLicenses.find((license) => one(license.plans)?.code === "ADVANCED") ?? baseLicenses[0];
   const plan = one(activeLicense?.plans)?.code;
 
@@ -105,6 +112,7 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
     isTester,
     basePlan: plan === "BASIC" || plan === "ADVANCED" ? plan : null,
     baseLicenseActive: Boolean(activeLicense),
+    licenseExpiresAt: (activeLicense?.expires_at as string | null | undefined) ?? null,
     isFree: !activeLicense && !isAdmin && !isTester,
     entrepreneurActive: Boolean(activeLicense) && entrepreneurExpiresAt !== null,
     entrepreneurExpiresAt,
@@ -118,12 +126,18 @@ export async function getAccessSnapshot(): Promise<AccessSnapshot | null> {
     }),
     limits,
   };
-}
+});
 
 // Pack Ventas y Stock: ventas, resumen, stock, producción, compras y proveedores van juntos.
 // Se compra como extra de la Edición Personal; la Mensualidad Plus lo incluye.
 export const PACK_CODE = "PACK_VENTAS";
 const PACK_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
+
+// ¿Tiene el Pack Ventas y Stock (o Plus, administración, cuenta de prueba)? Sin sesión se toma como sí, para no tocar el menú.
+export async function hasPackAccess() {
+  const snapshot = await getAccessSnapshot();
+  return !snapshot || hasFeature(snapshot, "VENTAS");
+}
 
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   if (snapshot.isAdmin || snapshot.isTester) return true;

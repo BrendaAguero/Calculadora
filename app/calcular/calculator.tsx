@@ -31,7 +31,7 @@ function grams(value: number) {
 }
 
 // allowPersonalized: el modo Personalizado es de los planes pagos (la versión gratis tiene Fácil y Estándar).
-export function Calculator({ molds, formulas, materials, products, initial, allowPersonalized = true, simple = false }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null; allowPersonalized?: boolean; simple?: boolean }) {
+export function Calculator({ molds, formulas, materials, products, initial, allowPersonalized = true, simple = false, canSell = true }: { molds: SavedMold[]; formulas: SavedFormula[]; materials: SavedMaterial[]; products: SavedProduct[]; initial?: SaveInput | null; allowPersonalized?: boolean; simple?: boolean; canSell?: boolean }) {
   // Al duplicar desde el historial se arranca con los datos de ese cálculo; los vínculos que ya no existen se descartan.
   const keep = (id: string | undefined, list: { id: string }[]) => (id && list.some(item => item.id === id) ? id : '');
   // Un solo estado para los tres modos: cambiar de modo no borra lo cargado.
@@ -250,7 +250,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
         <PriceExtras price={result.price} unitCost={result.unitCost} />
         <button type="button" onClick={save} disabled={saving} className="mt-4 min-h-11 w-full rounded-xl bg-orange-500 px-4 font-semibold text-white disabled:opacity-50">{saving ? 'Guardando…' : 'Guardar cálculo'}</button>
         {status && <p role={status.ok ? 'status' : 'alert'} className={`mt-3 rounded-xl p-3 text-sm ${status.ok ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>{status.message}{status.id && <> <Link href={`/historial/${status.id}`} className="underline">Ver en el historial</Link></>}</p>}
-        {status?.ok && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold dark:bg-black/10">¿Ya lo vendiste? Registrá la venta →</Link>}
+        {status?.ok && canSell && <Link href="/ventas/nueva" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white/15 px-4 font-semibold dark:bg-black/10">¿Ya lo vendiste? Registrá la venta →</Link>}
       </section>
     </>
   );

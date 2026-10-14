@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { ChevronRight, Factory, Receipt, ShoppingCart, TriangleAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAccessSnapshot } from "@/lib/access/permissions";
+import { getAccessSnapshot, hasFeature } from "@/lib/access/permissions";
 import { getOwnedActivities } from "@/lib/access/activities";
 import { AppShell } from "@/components/app-shell";
 import { LegalLinks } from "@/components/legal-links";
@@ -102,11 +102,14 @@ export default async function Home() {
   const sold = sales.reduce((acc, s) => acc + Number(s.total), 0);
   const profit = sales.reduce((acc, s) => acc + Number(s.net_income), 0);
   const pieces = sales.reduce((acc, s) => acc + Number(s.quantity), 0);
-  const hasSales = (anySaleRes.count ?? 0) > 0;
+  // Sin el Pack Ventas y Stock no se muestran ganancias ni avisos de stock (llevarían a pantallas bloqueadas).
+  const pack = !snapshot || hasFeature(snapshot, "VENTAS");
+  const hasSales = pack && (anySaleRes.count ?? 0) > 0;
   const profitHidden = cookieStore.get(PROFIT_COOKIE)?.value === "0";
-  const low = stock.rows.filter((r) => !r.archived && isLow(r)).slice(0, 4);
+  const low = !pack ? [] : stock.rows.filter((r) => !r.archived && isLow(r)).slice(0, 4);
   const firstName = (profileRes.data?.full_name ?? "").trim().split(/\s+/)[0];
-  const quick = [
+  // Ventas, producción y compras son del Pack Ventas y Stock: sin él no se muestran los atajos.
+  const quick = !pack ? [] : [
     { href: "/ventas/nueva", label: "Registrar una venta", icon: Receipt, show: true },
     { href: "/produccion/nueva", label: "Registrar producción", icon: Factory, show: !simple && !hidden.includes("produccion") },
     { href: "/compras/nueva", label: "Registrar una compra", icon: ShoppingCart, show: !simple && !hidden.includes("compras") },
@@ -176,7 +179,7 @@ export default async function Home() {
         </Link>
       )}
 
-      {show.has("acciones") && <nav aria-label="Otras acciones" className={`mt-4 grid gap-2.5 ${quick.length > 1 ? "sm:grid-cols-3" : ""}`}>
+      {show.has("acciones") && quick.length > 0 && <nav aria-label="Otras acciones" className={`mt-4 grid gap-2.5 ${quick.length > 1 ? "sm:grid-cols-3" : ""}`}>
         {quick.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className="flex items-center gap-3 rounded-3xl bg-white px-4 py-3.5 font-semibold hover:ring-2 hover:ring-orange-200 dark:bg-neutral-900 dark:hover:ring-orange-900">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300"><Icon size={20} aria-hidden="true" /></span>
