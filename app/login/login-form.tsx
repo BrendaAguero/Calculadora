@@ -48,7 +48,7 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
         <div className="mx-auto w-full max-w-md space-y-5 rounded-4xl bg-white p-6 dark:bg-neutral-900 lg:p-8">
           <div>
             <h2 className="text-2xl">{mode === "code" ? "Entrá a tu taller" : mode === "password" ? "Entrar con contraseña" : "Contraseña nueva"}</h2>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Edición Personal</p>
+            
           </div>
           {okMessage && <p role="status" className="rounded-2xl bg-orange-50 px-4 py-3 text-sm text-orange-900 dark:bg-orange-950/50 dark:text-orange-100">{okMessage}</p>}
           {linkError && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">{linkError}</p>}
@@ -58,7 +58,7 @@ export function LoginForm({ linkError, okMessage }: { linkError: string | null; 
           {mode === "forgot" && <ForgotPanel key={`forgot-${round}`} onBack={back} />}
         </div>
         <div className="mx-auto mt-6 w-full max-w-md space-y-5 lg:absolute lg:bottom-8 lg:left-1/2 lg:-translate-x-1/2 lg:px-10">
-          <p className="text-center text-sm">¿Todavía no la tenés? <a href="/comprar" className="font-semibold text-orange-800 underline underline-offset-4 dark:text-orange-300">Comprá la Edición Personal</a></p>
+          <p className="text-center text-sm">¿Todavía no tenés cuenta? <a href="/registro" className="font-semibold text-orange-800 underline underline-offset-4 dark:text-orange-300">Probá gratis</a> o <a href="/comprar" className="font-semibold text-orange-800 underline underline-offset-4 dark:text-orange-300">comprá la Edición Personal</a></p>
           <LegalLinks className="justify-center" />
         </div>
       </section>
