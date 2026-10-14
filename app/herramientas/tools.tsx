@@ -2,9 +2,9 @@
 
 import { parseAR } from '@/lib/num';
 import { useState } from 'react';
-import { Calculator, Clock, Package, Store, Weight } from 'lucide-react';
+import { ArrowDownUp, Calculator, Clock, Package, Scale, Store, Weight } from 'lucide-react';
 import { QuickCalc } from '@/components/quick-calc';
-import { hourlyFromMonthly, kitPrice, laborPerPiece, marketplacePrice, piecesFrom } from '@/lib/tools';
+import { MEASURE_MATERIALS, MEASURE_UNITS, convertMeasure, hourlyFromMonthly, kitPrice, laborPerPiece, marketplacePrice, piecesFrom, type MeasureUnit } from '@/lib/tools';
 import { roundPrice } from '@/lib/pricing';
 import { cardClass, inputClass } from '@/lib/ui';
 
@@ -19,13 +19,14 @@ const TABS = [
   { key: 'piezas', label: '¿Cuántas salen?', icon: Weight },
   { key: 'kit', label: 'Kits y combos', icon: Package },
   { key: 'tiempo', label: 'Tu tiempo', icon: Clock },
+  { key: 'medidas', label: 'Medidas', icon: Scale },
 ] as const;
 
 export function Tools({ net: initialNet, cost: initialCost }: { net: string; cost: string }) {
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>(initialNet ? 'online' : initialCost ? 'kit' : 'precio');
   return (
     <div className="mt-5">
-      <div role="tablist" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div role="tablist" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {TABS.map(({ key, label: text, icon: Icon }) => (
           <button key={key} role="tab" type="button" aria-selected={tab === key} onClick={() => setTab(key)}
             className={`flex items-center gap-2 rounded-2xl px-3 py-3 text-left text-sm font-semibold ${tab === key ? 'bg-orange-800 text-white dark:bg-orange-600' : 'bg-white dark:bg-neutral-900'}`}>
@@ -39,6 +40,7 @@ export function Tools({ net: initialNet, cost: initialCost }: { net: string; cos
         {tab === 'piezas' && <Pieces />}
         {tab === 'kit' && <Kit initialCost={initialCost} />}
         {tab === 'tiempo' && <Time />}
+        {tab === 'medidas' && <Measures />}
       </div>
     </div>
   );
@@ -162,5 +164,44 @@ function Time() {
         </div>
       )}
     </section>
+  );
+}
+
+const UNIT_KEYS = Object.keys(MEASURE_UNITS) as MeasureUnit[];
+
+// Conversor: cucharadas, tazas, ml y gramos según el material (densidad aproximada).
+function Measures() {
+  const [value, setValue] = useState('1');
+  const [from, setFrom] = useState<MeasureUnit>('cda');
+  const [to, setTo] = useState<MeasureUnit>('g');
+  const [material, setMaterial] = useState<string>('yeso');
+  const density = MEASURE_MATERIALS.find((m) => m.id === material)?.density ?? 1;
+  const out = convertMeasure(n(value), from, to, density);
+  const select = (v: MeasureUnit, set: (u: MeasureUnit) => void, aria: string) => (
+    <select value={v} onChange={(e) => set(e.target.value as MeasureUnit)} aria-label={aria} className={inputClass}>
+      {UNIT_KEYS.map((u) => <option key={u} value={u}>{MEASURE_UNITS[u].label}</option>)}
+    </select>
+  );
+  return (
+    <div className={cardClass}>
+      <div className="grid gap-3">
+        <label className={label}>Material
+          <select value={material} onChange={(e) => setMaterial(e.target.value)} className={inputClass}>
+            {MEASURE_MATERIALS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+          </select>
+        </label>
+        <div className="grid grid-cols-[1fr_1.4fr] gap-2">
+          <label className={label}>Cantidad<input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" className={inputClass} /></label>
+          <label className={label}>De{select(from, setFrom, 'Unidad de origen')}</label>
+        </div>
+        <button type="button" onClick={() => { setFrom(to); setTo(from); }} className="mx-auto flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-800"><ArrowDownUp size={16} aria-hidden="true" />Invertir</button>
+        <label className={label}>A{select(to, setTo, 'Unidad de destino')}</label>
+      </div>
+      <div className={result}>
+        <p className="text-sm text-white/80">{value || 0} {MEASURE_UNITS[from].label} de {MEASURE_MATERIALS.find((m) => m.id === material)?.label.toLowerCase()} son</p>
+        <p className="text-3xl font-bold">{out.toLocaleString('es-AR', { maximumFractionDigits: out < 10 ? 2 : 1 })} {MEASURE_UNITS[to].label}</p>
+      </div>
+      <p className="mt-3 text-xs text-neutral-500">Cucharada = 15 ml, cucharadita = 5 ml, taza = 240 ml. Los polvos cambian según cuánto se aprieten: es una referencia, para precisión pesá con balanza.</p>
+    </div>
   );
 }
