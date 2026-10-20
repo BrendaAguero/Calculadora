@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { cardClass, pageClass } from '@/lib/ui';
+import { adjustDue } from '@/lib/price-adjust';
+import { cardClass, pageClass, warnBox } from '@/lib/ui';
 
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
@@ -12,6 +13,9 @@ export default async function AdminHome() {
     count(supabase.from('withdrawals').select('id', { count: 'exact', head: true }).in('status', ['requested', 'reviewing', 'approved'])),
     count(supabase.from('regret_requests').select('id', { count: 'exact', head: true }).eq('status', 'received')),
   ]);
+  // Recordatorio del ajuste trimestral por inflación.
+  const { data: lastAdjust } = await supabase.from('pricing_config').select('value_text').eq('key', 'last_price_adjust').maybeSingle();
+  const adjustNow = adjustDue(lastAdjust?.value_text ?? null);
 
   const sections: [string, string, string, number?][] = [
     ['/admin/emails', 'Edición Personal: emails', 'Aprobar emails (transferencia, MercadoLibre), revocar y liberar aparatos.'],
@@ -36,6 +40,7 @@ export default async function AdminHome() {
         <Link href="/" className="text-sm text-neutral-500 dark:text-neutral-400">← Volver a la app</Link>
         <h1 className="text-2xl font-semibold">Administración</h1>
       </header>
+      {adjustNow && <Link href="/admin/precios" className={`${warnBox} block`}><strong>Toca ajustar los precios por inflación.</strong> {lastAdjust?.value_text ? 'Pasaron 3 meses desde el último ajuste.' : 'Todavía no hiciste el primero.'} Tocá acá para hacerlo en un minuto.</Link>}
       <section className="grid gap-3">
         {sections.map(([href, title, hint, badge]) => (
           <Link key={href} href={href} className={`${cardClass} flex items-start justify-between gap-3 transition hover:border-neutral-400`}>

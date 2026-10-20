@@ -32,6 +32,14 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   ]);
   const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? activities?.find((a) => a.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
   const online = mercadoPagoReady();
+  // Comparación para la Edición Personal: todos los extras sueltos frente a un año de Personal Plus.
+  const plusQuote = snapshot.baseLicenseActive && !snapshot.entrepreneurActive
+    ? ((await supabase.rpc('quote_entrepreneur', { p_months: 12 })).data as { ok: boolean; final_price: number; discount_pct: number } | null)
+    : null;
+  const plusAnnual = plusQuote?.ok ? plusQuote : null;
+  const missingActivities = (activities ?? []).filter((a) => !owned?.some((o) => o.activity_id === a.id)).length;
+  const extrasTotal = (modules ?? []).filter((m) => m.code !== 'EXTRA_DEVICE' && SELLABLE_MODULES.has(m.code) && !snapshot.modules.includes(m.code)).reduce((acc, m) => acc + Number(m.price), 0)
+    + missingActivities * Number(activityPrice ?? 0);
 
   if (!snapshot.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester) {
     return (
@@ -95,6 +103,11 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
           })}
         </ul>
         {online && <p className="mt-2 text-xs text-neutral-500">Pagás en Mercado Pago y se activa apenas se aprueba el pago. Tenés 10 días para arrepentirte.</p>}
+        {plusAnnual && extrasTotal > 0 && (
+          <p className="mt-3 rounded-xl bg-violet-50 px-3 py-2 text-sm text-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
+            ¿Vas a querer varios? Sumar todos los extras y actividades sueltos sale unos <strong>{money(extrasTotal)}</strong>. <strong>Personal Plus por año</strong> sale {money(plusAnnual.final_price)}{Number(plusAnnual.discount_pct) > 0 ? ` con tu ${Number(plusAnnual.discount_pct)} % de descuento por antigüedad` : ''} e incluye todo eso, sin límites y con las funciones nuevas. <Link href="#emprendedor" className="font-semibold underline">Ver Personal Plus</Link>
+          </p>
+        )}
       </section>
 
       <section id="actividades" className={cardClass}>

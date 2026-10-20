@@ -117,6 +117,9 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             {snapshot.baseLicenseActive && !snapshot.entrepreneurActive && <> Como ya tenés la Edición Personal, no la necesitás: si querés algo puntual (por ejemplo, el Pack Ventas y Stock), lo comprás suelto arriba, de una sola vez.</>}
           </p>
 
+          {!snapshot.entrepreneurActive && quotes.some((q) => q?.ok && Number(q.age_pct) > 0) && (
+            <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">🎁 Por el tiempo que tenés la Edición Personal, te hacemos un <strong>{Math.max(...quotes.map((q) => (q?.ok ? Number(q.age_pct) : 0)))} % de descuento</strong> si te pasás a Personal Plus (en el mensual, todos los meses).</p>
+          )}
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
             <div className="mt-4 rounded-xl border border-violet-300 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
               {monthly.auto_renew ? (

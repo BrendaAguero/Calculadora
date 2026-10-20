@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet } from 'lucide-react';
+import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet, X } from 'lucide-react';
 import { LegalLinks } from '@/components/legal-links';
 import { createClient } from '@/lib/supabase/server';
 
@@ -39,6 +39,21 @@ const FAQ = [
   { q: '¿Funciona en el celular?', a: 'Sí, en el celular y en la computadora. Podés instalarla como una app desde el navegador.' },
   { q: '¿Cómo pago?', a: 'Con Mercado Pago, por transferencia o por MercadoLibre.' },
   { q: '¿Y si me arrepiento?', a: 'Tenés 10 días para pedir la devolución con el botón de arrepentimiento, sin dar explicaciones.' },
+];
+
+// Comparación de planes: true = incluido, false = no, texto = detalle.
+const COMPARE: [string, boolean | string, boolean | string, boolean | string][] = [
+  ['Calculadora y herramientas', true, true, true],
+  ['Comunidad y guías', true, true, true],
+  ['Materiales y productos', 'Hasta 5 y 2', 'Hasta 100 y 50', 'Sin límite'],
+  ['Fórmulas, moldes e historial', false, true, true],
+  ['Colores y Cuaderno de pruebas', false, true, true],
+  ['Pack Ventas y Stock', false, 'Extra', true],
+  ['Todas las actividades', false, 'Extra', true],
+  ['Sin publicidad', false, false, true],
+  ['Modo sin conexión', false, false, true],
+  ['Actualizaciones', true, true, true],
+  ['Funciones nuevas', false, 'A veces', true],
 ];
 
 // Página para quien todavía no tiene cuenta: qué hace la app, precios y cómo empezar.
@@ -112,7 +127,7 @@ export default async function LandingPage() {
               <p className="mt-1 text-3xl font-bold">{money(personal)}</p>
               <p className="text-sm text-white/80">pago único</p>
               <ul className="mt-4 space-y-1.5 text-sm">
-                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'Recetas de color y Cuaderno de pruebas', 'En 2 aparatos', 'Actualizaciones incluidas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
+                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'Colores y Cuaderno de pruebas', 'En 2 aparatos', 'Actualizaciones incluidas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
               </ul>
               <Link href="/comprar" className="mt-5 block rounded-2xl bg-resina px-4 py-3 text-center font-bold text-resina-dark">Comprar</Link>
             </article>
@@ -128,6 +143,42 @@ export default async function LandingPage() {
               <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.</p>
             </article>
           </div>
+        </section>
+
+        <section aria-labelledby="comparar" className="pb-14">
+          <h2 id="comparar" className="text-3xl">Compará los planes</h2>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">La Edición Personal y Personal Plus son dos formas de pagar: un pago único, o una suscripción con todo incluido.</p>
+          <div className="mt-5 overflow-x-auto rounded-3xl bg-white dark:bg-neutral-900">
+            <table className="w-full table-fixed text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200 dark:border-neutral-800">
+                  <th scope="col" className="w-[34%] p-2 font-semibold sm:p-3"><span className="sr-only">Qué incluye</span></th>
+                  <th scope="col" className="p-2 text-center font-semibold sm:p-3">Gratis</th>
+                  <th scope="col" className="bg-orange-50 p-2 text-center sm:p-3 font-semibold text-orange-900 dark:bg-orange-950 dark:text-orange-200">Edición Personal</th>
+                  <th scope="col" className="p-2 text-center font-semibold sm:p-3">Personal Plus</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE.map(([label, free, personalCell, plus]) => (
+                  <tr key={label} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+                    <th scope="row" className="p-2 font-normal sm:p-3">{label}</th>
+                    {[free, personalCell, plus].map((cell, i) => (
+                      <td key={i} className={`p-2 text-center sm:p-3 ${i === 1 ? 'bg-orange-50/60 dark:bg-orange-950/40' : ''}`}>
+                        {cell === true ? <Check size={18} aria-label="Sí" className="mx-auto h-4 w-4 text-emerald-700 sm:h-5 sm:w-5" /> : cell === false ? <X size={18} aria-label="No" className="mx-auto h-4 w-4 text-neutral-400 sm:h-5 sm:w-5" /> : cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr>
+                  <th scope="row" className="p-2 font-semibold sm:p-3">Precio</th>
+                  <td className="p-2 text-center font-semibold sm:p-3">$0</td>
+                  <td className="bg-orange-50/60 p-2 text-center sm:p-3 font-semibold dark:bg-orange-950/40">{money(personal)}<span className="block text-xs font-normal text-neutral-500">pago único</span></td>
+                  <td className="p-2 text-center font-semibold sm:p-3">{money(Number(monthly?.price ?? 6900))}<span className="block text-xs font-normal text-neutral-500">por mes{annual ? ` o ${money(Number(annual.price))}/año` : ''}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">Con la Edición Personal podés sumar extras sueltos desde la tienda. Si después te pasás a Personal Plus, te hacemos un descuento según el tiempo que la tengas.</p>
         </section>
 
         <section aria-labelledby="preguntas" className="pb-14">
