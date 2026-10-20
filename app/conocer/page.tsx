@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet, X } from 'lucide-react';
 import { LegalLinks } from '@/components/legal-links';
+import { annualSavings, PlusPrices } from '@/components/plus-prices';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -67,6 +68,9 @@ export default async function LandingPage() {
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
   const personal = price('personal_price_online', 15000);
   const regular = price('personal_price_regular', 0);
+  const plusMonthly = Number(monthly?.price ?? 6900);
+  const plusAnnual = annual ? Number(annual.price) : null;
+  const yearly = annualSavings(plusMonthly, plusAnnual);
 
   return (
     <div className="min-h-screen text-neutral-900 dark:text-white">
@@ -134,8 +138,7 @@ export default async function LandingPage() {
             <article className="rounded-3xl bg-white p-6 dark:bg-neutral-900">
               <h3 className="text-lg font-semibold">Personal Plus</h3>
               <p className="text-sm text-neutral-500">O, en vez del pago único, una suscripción</p>
-              <p className="mt-1 text-3xl font-bold">{money(Number(monthly?.price ?? 6900))}<span className="text-base font-normal text-neutral-500"> /mes</span></p>
-              {annual && <p className="text-sm text-neutral-600 dark:text-neutral-300">o {money(Number(annual.price))} por año</p>}
+              <PlusPrices monthly={plusMonthly} annual={plusAnnual} />
               <ul className="mt-4 space-y-1.5 text-sm">
                 {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión', 'Todas las funciones nuevas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
@@ -173,7 +176,7 @@ export default async function LandingPage() {
                   <th scope="row" className="p-2 font-semibold sm:p-3">Precio</th>
                   <td className="p-2 text-center font-semibold sm:p-3">$0</td>
                   <td className="bg-orange-50/60 p-2 text-center sm:p-3 font-semibold dark:bg-orange-950/40">{money(personal)}<span className="block text-xs font-normal text-neutral-500">pago único</span></td>
-                  <td className="p-2 text-center font-semibold sm:p-3">{money(Number(monthly?.price ?? 6900))}<span className="block text-xs font-normal text-neutral-500">por mes{annual ? ` o ${money(Number(annual.price))}/año` : ''}</span></td>
+                  <td className="p-2 text-center font-semibold sm:p-3">{money(plusMonthly)}<span className="block text-xs font-normal text-neutral-500">por mes</span>{plusAnnual ? <><span className="mt-1 block">{money(plusAnnual)}</span><span className="block text-xs font-normal text-neutral-500">por año</span>{yearly.savings > 0 && <span className="block text-xs font-semibold text-emerald-700 dark:text-emerald-400">ahorrás {money(yearly.savings)}</span>}</> : null}</td>
                 </tr>
               </tbody>
             </table>

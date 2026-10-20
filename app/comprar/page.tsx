@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from '@/lib/legal';
 import { createClient } from '@/lib/supabase/server';
 import { cardClass, errorBox, inputClass, labelClass } from '@/lib/ui';
 import { buyPersonal } from './actions';
+import { PlusPrices } from '@/components/plus-prices';
 
 export const metadata = { title: 'Comprar · Calculadora Emprender' };
 
@@ -76,7 +77,8 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
 
       <section className={`mt-4 ${cardClass} text-sm`}>
         <h2 className="font-semibold">¿Preferís una suscripción?</h2>
-        <p className="mt-1 text-neutral-700 dark:text-neutral-300">Con <strong>Personal Plus</strong> ({money(Number(monthly?.price ?? 6900))} por mes{annual ? ` o ${money(Number(annual.price))} por año` : ''}) tenés todo incluido mientras esté activo: todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad, sin conexión y <strong>todas las funciones nuevas</strong>. Es <strong>en lugar de</strong> la Edición Personal, no además. El mensual lo cancelás cuando quieras.</p>
+        <PlusPrices monthly={Number(monthly?.price ?? 6900)} annual={annual ? Number(annual.price) : null} />
+        <p className="mt-3 text-neutral-700 dark:text-neutral-300">Con <strong>Personal Plus</strong> tenés todo incluido mientras esté activo: todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad, sin conexión y <strong>todas las funciones nuevas</strong>. Es <strong>en lugar de</strong> la Edición Personal, no además. El mensual lo cancelás cuando quieras.</p>
         <p className="mt-2"><Link href="/registro" className="font-semibold underline">Creá tu cuenta gratis</Link> y elegila en «Mi acceso».</p>
       </section>
 

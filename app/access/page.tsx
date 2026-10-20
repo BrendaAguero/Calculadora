@@ -7,6 +7,7 @@ import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
 import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
 import { PlanStore } from "./store";
+import { SavingsBadge } from "@/components/plus-prices";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -201,10 +202,10 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
               {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
-                  const title = months === 1 ? "Suscripción mensual" : monthsLabel(months);
+                  const title = months === 1 ? "Por mes" : months === 12 ? "Por año (12 meses)" : monthsLabel(months);
                   // La suscripción mensual no se suma: se contrata cuando no hay Plus vigente.
                   const monthlyBlocked = months === 1 && snapshot.entrepreneurActive;
                   if (!quote?.ok || monthlyBlocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {monthlyBlocked ? (hasMonthly ? "ya la tenés" : `disponible cuando venza tu plan actual (${date(snapshot.entrepreneurExpiresAt!)})`) : quote && !quote.ok ? quote.error : "no disponible"}</div>;
@@ -219,7 +220,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}
                       {months === 1
                         ? <span className="mt-1 text-xs text-neutral-500">Se renueva cada mes. Cancelás cuando quieras.</span>
-                        : <span className="mt-1 text-xs text-neutral-500">{money(perMonth)} por mes{savings > 0 ? ` · ahorrás ${money(savings)} frente a ${months} mensualidades` : ""}</span>}
+                        : <><span className="mt-1 text-xs text-neutral-500">Equivale a {money(perMonth)} por mes. Pagás una vez y no se renueva sola.</span>{savings > 0 && <span className="mt-1"><SavingsBadge savings={savings} freeMonths={monthlyQuote ? Math.floor(savings / Number(monthlyQuote.final_price)) : 0} /></span>}</>}
                     </label>
                   );
                 })}
