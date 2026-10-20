@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Calculator, CalendarHeart, Check, ClipboardList, FileText, FlaskConical, Palette, Smartphone, Timer, Users, Wallet } from 'lucide-react';
+import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet } from 'lucide-react';
 import { LegalLinks } from '@/components/legal-links';
 import { createClient } from '@/lib/supabase/server';
 
@@ -26,14 +26,16 @@ const FEATURES = [
   { icon: CalendarHeart, title: 'Fechas para vender', text: 'Día de la Madre, Navidad y más: te avisa cuándo empezar a preparar.' },
   { icon: Users, title: 'Comunidad', text: 'Consejos y tutoriales para mejorar tus piezas y tu emprendimiento.' },
 ];
+// En la tienda de la app: solo extras específicos, para quien los necesita (pago único).
 const EXTRAS = [
-  { icon: ClipboardList, title: 'Pack Ventas y Stock', text: 'Ventas, ganancia del mes, stock, producción, compras y proveedores.' },
-  { icon: Palette, title: 'Recetas de color', text: 'Guardá cuánto pigmento lleva cada color y escalalo a cualquier cantidad.' },
-  { icon: FlaskConical, title: 'Cuaderno de pruebas', text: 'Anotá cada colada con foto y repetí lo que te salió perfecto.' },
+  { icon: ClipboardList, title: 'Pack Ventas y Stock', text: 'Solo si vendés: ventas, ganancia del mes, stock, producción, compras y proveedores.' },
+  { icon: Smartphone, title: 'Aparato extra', text: 'Para usar la app en un celular o computadora más.' },
+  { icon: Layers, title: 'Otra actividad', text: 'Si trabajás con más de un material (yeso, resina, Jesmonite, cemento).' },
 ];
 const FAQ = [
   { q: '¿Tengo que pagar para probarla?', a: 'No. La versión gratis no vence y no pide tarjeta. Tiene límites (por ejemplo, 5 materiales y 2 productos) y un aviso de publicidad.' },
-  { q: '¿La Edición Personal es un pago mensual?', a: 'No: es un pago único. Lo mensual es opcional (Mensualidad Plus) para quien quiere todo desbloqueado.' },
+  { q: '¿La Edición Personal es un pago mensual?', a: 'No: es un pago único y es tuya. Si preferís pagar por mes, está la Mensualidad Plus con todo incluido: es una u otra, nunca las dos.' },
+  { q: '¿Tengo que comprar extras?', a: 'No. La Edición Personal trae todo lo del taller. Los extras son solo para casos puntuales: el Pack Ventas y Stock si vendés, un aparato más o una segunda actividad.' },
   { q: '¿Funciona en el celular?', a: 'Sí, en el celular y en la computadora. Podés instalarla como una app desde el navegador.' },
   { q: '¿Cómo pago?', a: 'Con Mercado Pago, por transferencia o por MercadoLibre.' },
   { q: '¿Y si me arrepiento?', a: 'Tenés 10 días para pedir la devolución con el botón de arrepentimiento, sin dar explicaciones.' },
@@ -80,7 +82,8 @@ export default async function LandingPage() {
               </article>
             ))}
           </div>
-          <h3 className="mt-10 text-xl font-semibold">Y si querés más, sumás módulos</h3>
+          <h3 className="mt-10 text-xl font-semibold">Extras, solo si los necesitás</h3>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">Se compran una sola vez desde la tienda de la app.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {EXTRAS.map(({ icon: Icon, title, text }) => (
               <article key={title} className="flex gap-3 rounded-3xl bg-white p-4 dark:bg-neutral-900">
@@ -108,17 +111,19 @@ export default async function LandingPage() {
               <p className="mt-1 text-3xl font-bold">{money(personal)}</p>
               <p className="text-sm text-white/80">pago único</p>
               <ul className="mt-4 space-y-1.5 text-sm">
-                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'En 2 aparatos'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
+                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'Recetas de color y Cuaderno de pruebas', 'En 2 aparatos'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
               </ul>
               <Link href="/comprar" className="mt-5 block rounded-2xl bg-resina px-4 py-3 text-center font-bold text-resina-dark">Comprar</Link>
             </article>
             <article className="rounded-3xl bg-white p-6 dark:bg-neutral-900">
               <h3 className="text-lg font-semibold">Mensualidad Plus</h3>
+              <p className="text-sm text-neutral-500">O, en vez del pago único, pagá por mes</p>
               <p className="mt-1 text-3xl font-bold">{money(Number(monthly?.price ?? 4900))}<span className="text-base font-normal text-neutral-500"> /mes</span></p>
               <ul className="mt-4 space-y-1.5 text-sm">
-                {['Todas las actividades', 'Pack Ventas y Stock y módulos del taller', 'Sin límites y sin publicidad', 'Modo sin conexión'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
+                {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
-              <p className="mt-5 text-center text-sm text-neutral-500">Se suma desde la app, cuando quieras.</p>
+              <Link href="/registro" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
+              <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y la elegís en «Mi acceso». La cancelás cuando quieras.</p>
             </article>
           </div>
         </section>

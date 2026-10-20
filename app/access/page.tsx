@@ -63,9 +63,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
     supabase.from("subscriptions").select("id, duration_months, auto_renew, final_price, total_discount_percentage, upgrade_credit, created_at, external_preapproval_id, preapproval_status").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
     // Suscripción mensual vigente (la más nueva), con o sin renovación.
     supabase.from("subscriptions").select("id, auto_renew, auto_renew_canceled_at, expires_at, final_price, external_preapproval_id").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    snapshot.baseLicenseActive
-      ? Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null))
-      : Promise.resolve([]),
+    // Plus es otra forma de pagar: cualquier cuenta puede contratarla (con o sin Edición Personal).
+    Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null)),
     // Actualizar a un plan más largo (solo con un único plan activo y pagado; la base lo comprueba).
     snapshot.entrepreneurActive
       ? Promise.all(([6, 12] as const).map(async (months) => (await supabase.rpc("quote_entrepreneur_upgrade", { p_months: months })).data as UpgradeQuote | null))
@@ -114,7 +113,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <section id="emprendedor" className={cardClass}>
           <h2 className="font-semibold">Mensualidad Plus</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Sin publicidad, todas las actividades y módulos, sin límites de altas y modo sin conexión. Se cobra sola cada mes y la cancelás cuando quieras: seguís con tu Edición Personal y no se borra nada.
+            La otra forma de pagar: en vez de comprar la Edición Personal, pagás por mes y tenés <strong>todo incluido</strong> mientras esté activa (todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad y sin conexión). No hace falta tener la Edición Personal. Se cobra sola cada mes y la cancelás cuando quieras: no se borra nada.
+            {snapshot.baseLicenseActive && !snapshot.entrepreneurActive && <> Como ya tenés la Edición Personal, no la necesitás: si querés algo puntual (por ejemplo, el Pack Ventas y Stock), lo comprás suelto arriba, de una sola vez.</>}
           </p>
 
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
@@ -195,8 +195,6 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 </form>
               </div>
             </div>
-          ) : !snapshot.baseLicenseActive ? (
-            <p className="mt-4 text-sm text-neutral-500">Para sumar Plus primero necesitás la Edición Personal. <a href="/comprar" className="underline">Comprarla</a></p>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
               {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
