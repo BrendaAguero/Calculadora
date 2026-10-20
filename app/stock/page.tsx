@@ -30,7 +30,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <p className="font-medium">Stock es parte del Pack Ventas y Stock.</p>
           <p className="mt-1">Te permite llevar la cantidad de materias primas y productos terminados, con mínimos, alertas y valor.</p>
-          <p className="mt-1">El pack trae ventas, resumen, stock, producción, compras y proveedores. También viene con la Mensualidad Plus.</p>
+          <p className="mt-1">El pack trae ventas, resumen, stock, producción, compras y proveedores. También viene con Personal Plus.</p>
           <Link href="/access#planes" className="mt-3 inline-block underline">Ver el pack</Link>
         </div>
       </main>

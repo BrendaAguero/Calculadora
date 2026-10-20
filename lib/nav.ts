@@ -97,7 +97,7 @@ export const SIMPLE_BOTTOM: NavItem[] = [
 ];
 
 // Pantallas sin menú (entrada, páginas públicas y administración).
-export const NO_NAV_PATHS = ["/login", "/auth/", "/comprar", "/legal", "/arrepentimiento", "/baja", "/r/", "/set-password", "/ayuda", "/admin", "/moderacion", "/equipo-ingreso", "/bienvenida", "/empezar"];
+export const NO_NAV_PATHS = ["/login", "/registro", "/conocer", "/auth/", "/comprar", "/legal", "/arrepentimiento", "/baja", "/r/", "/set-password", "/ayuda", "/admin", "/moderacion", "/equipo-ingreso", "/bienvenida", "/empezar"];
 
 // Equipo: la administradora ve «Administración» y «Moderación»; la moderadora, solo «Moderación».
 export type StaffRole = "admin" | "moderator" | null;

@@ -36,7 +36,7 @@ export default async function CalcularPage({ searchParams }: { searchParams: Pro
         <ActivityTabs current="YESO" available={available} />
         <section className="rounded-4xl bg-white p-6 dark:bg-neutral-900">
           <h1 className="text-2xl">Calculadora de Yeso</h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-300">{error ? `No se pudieron cargar tus actividades: ${error}` : 'Yeso no está entre tus actividades. Podés sumarla desde «Mi acceso» o tenerla con la Mensualidad Plus.'}</p>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-300">{error ? `No se pudieron cargar tus actividades: ${error}` : 'Yeso no está entre tus actividades. Podés sumarla desde «Mi acceso» o tenerla con Personal Plus.'}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             {first && <Link href={`/calcular/${first.slug}`} className="rounded-2xl bg-orange-800 px-5 py-3 font-semibold text-white">Ir a {first.name}</Link>}
             <Link href="/access#actividades" className="rounded-2xl border border-neutral-300 px-5 py-3 font-semibold dark:border-neutral-700">Sumar actividades</Link>

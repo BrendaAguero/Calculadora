@@ -15,7 +15,7 @@ type Props = Omit<ComponentProps<'form'>, 'onSubmit'> & {
   again?: string;
 };
 
-// Formulario que, sin conexión (Mensualidad Plus), se guarda en el aparato y se sube solo al volver internet.
+// Formulario que, sin conexión (Personal Plus), se guarda en el aparato y se sube solo al volver internet.
 export function OfflineForm({ kind, label, rename, extra, again, children, ...props }: Props) {
   const [queued, setQueued] = useState<string | null>(null);
   if (queued) {

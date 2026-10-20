@@ -7,7 +7,7 @@ export const UNLOCKED_KEY = "calculadora-desbloqueada";
 export const HIDDEN_AT_KEY = "calculadora-oculta-desde";
 export const RELOCK_AFTER_MS = 5 * 60 * 1000;
 // Páginas que no se bloquean (públicas o de entrada).
-export const UNLOCKED_PATHS = ["/login", "/equipo-ingreso", "/auth/", "/ayuda", "/legal", "/arrepentimiento", "/baja", "/comprar", "/r/", "/set-password"];
+export const UNLOCKED_PATHS = ["/login", "/registro", "/conocer", "/equipo-ingreso", "/auth/", "/ayuda", "/legal", "/arrepentimiento", "/baja", "/comprar", "/r/", "/set-password"];
 
 export type LockConfig = { type: "pin"; salt: string; hash: string } | { type: "bio"; credentialId: string };
 

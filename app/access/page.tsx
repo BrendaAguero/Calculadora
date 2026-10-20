@@ -7,6 +7,7 @@ import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
 import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
 import { PlanStore } from "./store";
+import { SavingsBadge } from "@/components/plus-prices";
 
 const labels: Record<string, string> = {
   YESO: "Yeso",
@@ -26,8 +27,8 @@ const labels: Record<string, string> = {
 };
 
 const RESOURCES: Resource[] = ["materials", "products", "formulas", "molds"];
-// Mensualidad Plus: solo plazo mensual (6 y 12 meses quedaron desactivados).
-const MONTHS = [1] as const;
+// Personal Plus: por mes (se renueva solo) o por año (un pago). El plazo de 6 meses quedó desactivado.
+const MONTHS = [1, 12] as const;
 const cardClass = "rounded-3xl bg-white p-5 dark:bg-neutral-900";
 
 type Quote = { ok: true; price: number; discount_pct: number; final_price: number; age_pct: number; recent_pct: number } | { ok: false; error: string };
@@ -63,9 +64,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
     supabase.from("subscriptions").select("id, duration_months, auto_renew, final_price, total_discount_percentage, upgrade_credit, created_at, external_preapproval_id, preapproval_status").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
     // Suscripción mensual vigente (la más nueva), con o sin renovación.
     supabase.from("subscriptions").select("id, auto_renew, auto_renew_canceled_at, expires_at, final_price, external_preapproval_id").eq("user_id", user.id).eq("status", "active").eq("duration_months", 1).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    snapshot.baseLicenseActive
-      ? Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null))
-      : Promise.resolve([]),
+    // Plus es otra forma de pagar: cualquier cuenta puede contratarla (con o sin Edición Personal).
+    Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null)),
     // Actualizar a un plan más largo (solo con un único plan activo y pagado; la base lo comprueba).
     snapshot.entrepreneurActive
       ? Promise.all(([6, 12] as const).map(async (months) => (await supabase.rpc("quote_entrepreneur_upgrade", { p_months: months })).data as UpgradeQuote | null))
@@ -88,7 +88,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           <Link href="/mas" className="text-sm underline">← Volver</Link>
           <h1 className="mt-3 text-3xl font-semibold">Mi acceso</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Tu Edición Personal, la Mensualidad Plus, extras y aparatos.
+            Tu Edición Personal, Personal Plus, extras y aparatos.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           <h2 className="font-semibold">Tu plan</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p>{snapshot.licenseExpiresAt && <p className="text-xs text-amber-700 dark:text-amber-300">De regalo hasta el {date(snapshot.licenseExpiresAt)}</p>}</div>
-            <div><span className="text-neutral-500">Mensualidad Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
+            <div><span className="text-neutral-500">Personal Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
@@ -112,11 +112,15 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <PlanStore snapshot={snapshot} userId={user.id} referral={referral} />
 
         <section id="emprendedor" className={cardClass}>
-          <h2 className="font-semibold">Mensualidad Plus</h2>
+          <h2 className="font-semibold">Personal Plus</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Sin publicidad, todas las actividades y módulos, sin límites de altas y modo sin conexión. Se cobra sola cada mes y la cancelás cuando quieras: seguís con tu Edición Personal y no se borra nada.
+            El plan por suscripción, en lugar de comprar la Edición Personal: pagás <strong>por mes o por año</strong> y tenés <strong>todo incluido</strong> mientras esté activo (todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad y sin conexión) y <strong>todas las funciones nuevas</strong> que vayamos sumando. No hace falta tener la Edición Personal. El mensual se cobra solo cada mes y lo cancelás cuando quieras; el anual es un solo pago. No se borra nada.
+            {snapshot.baseLicenseActive && !snapshot.entrepreneurActive && <> Como ya tenés la Edición Personal, no la necesitás: si querés algo puntual (por ejemplo, el Pack Ventas y Stock), lo comprás suelto arriba, de una sola vez.</>}
           </p>
 
+          {!snapshot.entrepreneurActive && quotes.some((q) => q?.ok && Number(q.age_pct) > 0) && (
+            <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">🎁 Por el tiempo que tenés la Edición Personal, te hacemos un <strong>{Math.max(...quotes.map((q) => (q?.ok ? Number(q.age_pct) : 0)))} % de descuento</strong> si te pasás a Personal Plus (en el mensual, todos los meses).</p>
+          )}
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
             <div className="mt-4 rounded-xl border border-violet-300 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
               {monthly.auto_renew ? (
@@ -195,15 +199,13 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 </form>
               </div>
             </div>
-          ) : !snapshot.baseLicenseActive ? (
-            <p className="mt-4 text-sm text-neutral-500">Para sumar Plus primero necesitás la Edición Personal. <a href="/comprar" className="underline">Comprarla</a></p>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
               {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
-                  const title = months === 1 ? "Suscripción mensual" : monthsLabel(months);
+                  const title = months === 1 ? "Por mes" : months === 12 ? "Por año (12 meses)" : monthsLabel(months);
                   // La suscripción mensual no se suma: se contrata cuando no hay Plus vigente.
                   const monthlyBlocked = months === 1 && snapshot.entrepreneurActive;
                   if (!quote?.ok || monthlyBlocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {monthlyBlocked ? (hasMonthly ? "ya la tenés" : `disponible cuando venza tu plan actual (${date(snapshot.entrepreneurExpiresAt!)})`) : quote && !quote.ok ? quote.error : "no disponible"}</div>;
@@ -218,7 +220,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}
                       {months === 1
                         ? <span className="mt-1 text-xs text-neutral-500">Se renueva cada mes. Cancelás cuando quieras.</span>
-                        : <span className="mt-1 text-xs text-neutral-500">{money(perMonth)} por mes{savings > 0 ? ` · ahorrás ${money(savings)} frente a ${months} mensualidades` : ""}</span>}
+                        : <><span className="mt-1 text-xs text-neutral-500">Equivale a {money(perMonth)} por mes. Pagás una vez y no se renueva sola.</span>{savings > 0 && <span className="mt-1"><SavingsBadge savings={savings} freeMonths={monthlyQuote ? Math.floor(savings / Number(monthlyQuote.final_price)) : 0} /></span>}</>}
                     </label>
                   );
                 })}

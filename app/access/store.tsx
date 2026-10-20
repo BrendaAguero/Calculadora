@@ -10,13 +10,12 @@ const money = (value: number | string) => Number(value).toLocaleString('es-AR', 
 const cardClass = 'rounded-3xl bg-white p-5 dark:bg-neutral-900';
 const dateTime = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires' });
 
-// Extras que se pueden comprar; si aparece otro activo en la base sin estar listo, se muestra como «Próximamente».
-const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS', 'COLORES', 'CUADERNO']);
+// Tienda: solo extras específicos (los necesita una parte de las usuarias). Recetas de color y Cuaderno vienen con la Edición Personal.
+// Si aparece otro activo en la base sin estar listo, se muestra como «Próximamente».
+const SELLABLE_MODULES = new Set(['EXTRA_DEVICE', 'PACK_VENTAS']);
 const MODULE_HINTS: Record<string, string> = {
   EXTRA_DEVICE: 'Usá la app en un aparato más (podés comprar varios).',
-  COLORES: 'Para el taller: guardá cada color con su pigmento y repetilo igual en cualquier cantidad.',
-  CUADERNO: 'Para el taller: anotá cada colada y cómo salió, con foto, para repetir lo que funciona.',
-  PACK_VENTAS: 'Para vender: ventas, resumen de ganancias, stock, producción, compras y proveedores.',
+  PACK_VENTAS: 'Solo si vendés: ventas, resumen de ganancias, stock, producción, compras y proveedores.',
 };
 const PURCHASE_LABELS: Record<string, string> = { license: 'Edición Personal', license_upgrade: 'Edición Personal', module: '' };
 
@@ -33,13 +32,32 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   ]);
   const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? activities?.find((a) => a.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
   const online = mercadoPagoReady();
+  // Comparación para la Edición Personal: todos los extras sueltos frente a un año de Personal Plus.
+  const plusQuote = snapshot.baseLicenseActive && !snapshot.entrepreneurActive
+    ? ((await supabase.rpc('quote_entrepreneur', { p_months: 12 })).data as { ok: boolean; final_price: number; discount_pct: number } | null)
+    : null;
+  const plusAnnual = plusQuote?.ok ? plusQuote : null;
+  const missingActivities = (activities ?? []).filter((a) => !owned?.some((o) => o.activity_id === a.id)).length;
+  const extrasTotal = (modules ?? []).filter((m) => m.code !== 'EXTRA_DEVICE' && SELLABLE_MODULES.has(m.code) && !snapshot.modules.includes(m.code)).reduce((acc, m) => acc + Number(m.price), 0)
+    + missingActivities * Number(activityPrice ?? 0);
 
-  if (!snapshot.baseLicenseActive && !snapshot.isAdmin && !snapshot.isTester) {
+  if (!snapshot.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester) {
     return (
       <section id="planes" className={cardClass}>
-        <h2 className="font-semibold">Edición Personal</h2>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Esta cuenta todavía no tiene la Edición Personal. Pagás una sola vez y la usás en 2 aparatos. Si vendés, al comprarla podés sumar el <strong>Pack Ventas y Stock</strong> (ventas, stock, producción y compras) con descuento.</p>
-        <Link href="/comprar" className="mt-3 inline-block rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white">Comprar la Edición Personal</Link>
+        <h2 className="font-semibold">Elegí cómo pagar</h2>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Estás usando la versión gratis. Para tener todo el taller, elegí <strong>una</strong> de las dos formas (no hace falta tener las dos):</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
+            <p className="font-semibold">Edición Personal</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>una sola vez</strong> y es tuya: calculadora, materiales, fórmulas, moldes, productos, Recetas de color y Cuaderno de pruebas, en 2 aparatos, con sus actualizaciones. Si vendés, después sumás el Pack Ventas y Stock.</p>
+            <Link href="/comprar" className="mt-3 inline-block rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white">Comprar</Link>
+          </div>
+          <div className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
+            <p className="font-semibold">Personal Plus</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>por mes o por año</strong> y tenés todo incluido mientras esté activo: todas las actividades, el Pack Ventas y Stock, sin límites ni publicidad, y las funciones nuevas. El mensual lo cancelás cuando quieras.</p>
+            <Link href="#emprendedor" className="mt-3 inline-block rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold dark:border-neutral-700">Ver Personal Plus</Link>
+          </div>
+        </div>
       </section>
     );
   }
@@ -47,8 +65,8 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   return (
     <>
       <section id="planes" className={cardClass}>
-        <h2 className="font-semibold">Extras (pago único)</h2>
-        <p className="mt-1 text-xs text-neutral-500">Se suman a tu Edición Personal. Con Mensualidad Plus tenés todos los módulos incluidos.</p>
+        <h2 className="font-semibold">Tienda (pago único)</h2>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
 
         {(pending ?? []).length > 0 && (
           <div className="mt-4 space-y-2">
@@ -85,11 +103,16 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
           })}
         </ul>
         {online && <p className="mt-2 text-xs text-neutral-500">Pagás en Mercado Pago y se activa apenas se aprueba el pago. Tenés 10 días para arrepentirte.</p>}
+        {plusAnnual && extrasTotal > 0 && (
+          <p className="mt-3 rounded-xl bg-violet-50 px-3 py-2 text-sm text-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
+            ¿Vas a querer varios? Sumar todos los extras y actividades sueltos sale unos <strong>{money(extrasTotal)}</strong>. <strong>Personal Plus por año</strong> sale {money(plusAnnual.final_price)}{Number(plusAnnual.discount_pct) > 0 ? ` con tu ${Number(plusAnnual.discount_pct)} % de descuento por antigüedad` : ''} e incluye todo eso, sin límites y con las funciones nuevas. <Link href="#emprendedor" className="font-semibold underline">Ver Personal Plus</Link>
+          </p>
+        )}
       </section>
 
       <section id="actividades" className={cardClass}>
         <h2 className="font-semibold">Actividades</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Mensualidad Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(activities ?? []).map((activity) => {
             const mine = owned?.find((o) => o.activity_id === activity.id);

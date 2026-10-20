@@ -46,14 +46,14 @@ type Result = { id: string; status: "done" | "duplicate" | "error" | "other_user
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Sube lo que se cargó sin conexión (solo Mensualidad Plus). Cada carga tiene un id propio:
+// Sube lo que se cargó sin conexión (solo Personal Plus). Cada carga tiene un id propio:
 // si ya se había subido, no se repite.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Iniciá sesión." }, { status: 401 });
   const snapshot = await getAccessSnapshot();
-  if (!snapshot || !(snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester)) return Response.json({ error: "El modo sin conexión es parte de la Mensualidad Plus." }, { status: 403 });
+  if (!snapshot || !(snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester)) return Response.json({ error: "El modo sin conexión es parte de Personal Plus." }, { status: 403 });
 
   const body = (await request.json().catch(() => null)) as { items?: Item[] } | null;
   const items = Array.isArray(body?.items) ? body!.items.slice(0, 50) : [];

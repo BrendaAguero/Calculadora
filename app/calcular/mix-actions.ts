@@ -35,7 +35,7 @@ export async function saveMixCalculation(code: string, settings: MixSettings, in
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Iniciá sesión para guardar el cálculo.' };
   const access = await canUseActivity(supabase, user.id, code);
-  if (!access.allowed || !access.activityId) return { ok: false, error: `La calculadora de ${def.name} requiere la actividad ${def.name} o Mensualidad Plus.` };
+  if (!access.allowed || !access.activityId) return { ok: false, error: `La calculadora de ${def.name} requiere la actividad ${def.name} o Personal Plus.` };
 
   const clean = mergeSettings(def, settings);
   const result = computeMix(clean, input);

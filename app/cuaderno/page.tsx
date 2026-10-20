@@ -36,7 +36,7 @@ export default async function NotebookPage({ searchParams }: { searchParams: Pro
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {(error || loadError) && <div role="alert" className={errorBox}>{error ?? 'No se pudieron cargar tus pruebas.'}</div>}
 
-      {!allowed && <FeatureLocked title="Cuaderno de pruebas es un módulo extra." note="También viene con la Mensualidad Plus." linkLabel="Ver el módulo">Anotá material, proporción, color, temperatura y cómo salió cada pieza, con foto.</FeatureLocked>}
+      {!allowed && <FeatureLocked title="Cuaderno de pruebas viene con la Edición Personal." note="También con Personal Plus." linkLabel="Ver cómo tenerlo">Anotá material, proporción, color, temperatura y cómo salió cada pieza, con foto.</FeatureLocked>}
 
       {allowed && (
         <details className={cardClass} open={!logs?.length}>

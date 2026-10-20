@@ -6,7 +6,7 @@ import { CloudOff, RefreshCw, WifiOff } from "lucide-react";
 import { LAST_ONLINE_KEY, OFFLINE_MAX_DAYS, OUTBOX_EVENT, listOutbox, offlineEnabled, removeFromOutbox, updateOutbox, type OutboxItem } from "@/lib/outbox";
 import { NO_NAV_PATHS } from "@/lib/nav";
 
-// Modo sin conexión (Mensualidad Plus): avisa cuando no hay internet, muestra lo que falta subir
+// Modo sin conexión (Personal Plus): avisa cuando no hay internet, muestra lo que falta subir
 // y lo sube solo cuando vuelve la conexión.
 export function OfflineSync() {
   const pathname = usePathname();

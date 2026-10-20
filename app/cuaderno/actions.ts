@@ -16,7 +16,7 @@ const optionalNumber = (value: FormDataEntryValue | null) => {
   return Number.isFinite(n) ? n : null;
 };
 
-// Cuaderno de pruebas: módulo «Cuaderno de pruebas» o Mensualidad Plus. Se comprueba en cada acción (y en la base).
+// Cuaderno de pruebas: viene con la Edición Personal o Personal Plus. Se comprueba en cada acción (y en la base).
 async function auth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

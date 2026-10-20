@@ -102,7 +102,7 @@ export function Calculator({ molds, formulas, materials, products, initial, allo
   }
 
   function save() {
-    // Sin conexión (Mensualidad Plus): se guarda en el aparato y se sube solo al volver internet.
+    // Sin conexión (Personal Plus): se guarda en el aparato y se sube solo al volver internet.
     if (isOffline() && offlineEnabled()) {
       void enqueue('yeso_calc', { ...effective, moldId, formulaId, materialId, productId, moldCostAuto }, 'Cálculo de Yeso')
         .then(() => setStatus({ ok: true, message: 'Sin conexión: el cálculo quedó guardado en este aparato y se sube solo cuando vuelva internet.' }))

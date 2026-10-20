@@ -28,7 +28,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <h2>4. Uso permitido</h2>
         <p>No está permitido: usar la aplicación para fines ilegales, intentar acceder a datos de otras personas, alterar su funcionamiento, automatizar accesos masivos, revender el servicio o crear cuentas falsas. Si esto ocurre, podemos suspender la cuenta; te avisaremos el motivo por email y podés escribirnos para revisarlo.</p>
         <h2>5. Planes y pagos</h2>
-        <p>Para usar la aplicación necesitás la Edición Personal; algunas funciones requieren un extra o la Mensualidad Plus. Las condiciones de cada compra están en las <Link href="/legal/compras">Condiciones de compra, suscripciones y reembolsos</Link>.</p>
+        <p>Hay una versión gratis con límites. Para usar todo podés comprar la Edición Personal (pago único) o contratar Personal Plus (por mes o por año); algunas funciones puntuales requieren un extra. Las condiciones de cada compra están en las <Link href="/legal/compras">Condiciones de compra, suscripciones y reembolsos</Link>.</p>
         <h2>6. Tus datos</h2>
         <p>Los datos que cargás son tuyos y son privados. Cómo los tratamos está explicado en la <Link href="/legal/privacidad">Política de privacidad</Link>. Si un plan vence, tus datos no se borran.</p>
         <h2>7. Disponibilidad y cambios</h2>
@@ -70,7 +70,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Podés pedir gratis acceder, corregir, actualizar o eliminar tus datos escribiendo a <Mail /> desde el email de tu cuenta. Respondemos el pedido de acceso dentro de los 10 días corridos y los de corrección o eliminación dentro de los 5 días hábiles, como indica la ley.</p>
         <p className="text-sm">La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales. Más información en <a href="https://www.argentina.gob.ar/aaip" target="_blank" rel="noreferrer">argentina.gob.ar/aaip</a>.</p>
         <h2>8. Cookies</h2>
-        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) y el bloqueo opcional con PIN o huella se guardan solo en tu navegador (el PIN, cifrado; la huella o la cara nunca salen de tu aparato). También usamos una cookie que identifica tu aparato para el límite de aparatos. Con la Mensualidad Plus, la app guarda en tu aparato las pantallas que abrís y lo que cargás sin conexión, para poder usarla sin internet; se borra al cerrar sesión (lo que no se haya subido queda en el aparato hasta que vuelvas a entrar). No usamos cookies de publicidad: el aviso de la versión gratis es una imagen fija, sin seguimiento.</p>
+        <p>Usamos solo cookies necesarias: la de tu sesión y, si llegaste por el enlace de una afiliada, la que guarda su código por 30 días. Tu preferencia de tema (claro u oscuro) y el bloqueo opcional con PIN o huella se guardan solo en tu navegador (el PIN, cifrado; la huella o la cara nunca salen de tu aparato). También usamos una cookie que identifica tu aparato para el límite de aparatos. Con Personal Plus, la app guarda en tu aparato las pantallas que abrís y lo que cargás sin conexión, para poder usarla sin internet; se borra al cerrar sesión (lo que no se haya subido queda en el aparato hasta que vuelvas a entrar). No usamos cookies de publicidad: el aviso de la versión gratis es una imagen fija, sin seguimiento.</p>
         <h2>9. Seguridad</h2>
         <p>La conexión es cifrada, cada cuenta solo puede leer sus propios datos y las claves de los servicios nunca se exponen en el navegador. Cuando creás tu contraseña, revisamos que no haya aparecido en filtraciones conocidas consultando el servicio Pwned Passwords: solo se envía un fragmento de una huella cifrada, nunca la contraseña. Si detectamos un incidente que afecte tus datos, te avisaremos.</p>
       </>
@@ -78,36 +78,37 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
   },
   compras: {
     title: 'Condiciones de compra, suscripciones y reembolsos',
-    summary: 'Edición Personal, extras, Mensualidad Plus, arrepentimiento y baja.',
+    summary: 'Edición Personal, extras, Personal Plus, arrepentimiento y baja.',
     body: (
       <>
         <h2>1. Qué se puede comprar</h2>
         <ul>
-          <li><strong>Edición Personal:</strong> pago único y permanente (no vence). Incluye la calculadora de una actividad principal a elección (Yeso, Resina, Jesmonite o Cemento decorativo), que se elige la primera vez que entrás y no se puede cambiar después; guardar materiales, fórmulas, moldes, productos y cálculos, con hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes, el uso en 2 aparatos y un aviso publicitario propio. Funciona con internet.</li>
+          <li><strong>Edición Personal:</strong> pago único y permanente (no vence). Incluye la calculadora de una actividad principal a elección (Yeso, Resina, Jesmonite o Cemento decorativo), que se elige la primera vez que entrás y no se puede cambiar después; guardar materiales, fórmulas, moldes, productos y cálculos, con hasta 100 materiales, 50 productos, 30 fórmulas y 30 moldes, el uso en 2 aparatos y un aviso publicitario propio. Incluye también Recetas de color y Cuaderno de pruebas. Recibe actualizaciones (correcciones y mantenimiento); puede recibir alguna mejora, pero no se garantizan funciones nuevas, que son parte de Personal Plus. Funciona con internet.</li>
           <li><strong>Paquetes para revendedoras:</strong> licencias de la Edición Personal a precio de revendedora, de a una o en paquetes de 5, 10 o 20 con mayor descuento, para revender. Cada licencia se usa al asignarla al correo de una clienta y se descuenta cuando la administración lo aprueba; la clienta recibe su clave por correo. La revendedora fija su precio de venta y es responsable de su relación comercial con sus clientas.</li>
           <li><strong>Actividades extra:</strong> pago único y permanente por cada actividad. La segunda actividad cuesta la mitad del precio normal; las siguientes, el precio normal publicado en la app.</li>
-          <li><strong>Pack Ventas y Stock:</strong> pago único y permanente. Suma las funciones de gestión: ventas, resumen, stock, producción, compras y proveedores. Si se agrega al comprar la Edición Personal tiene un precio con descuento, que se muestra antes de pagar. Viene incluido en la Mensualidad Plus mientras esté activa.</li>
-          <li><strong>Módulos del taller</strong> (Recetas de color y Cuaderno de pruebas): pago único y permanente cada uno. Los Temporizadores de curado son gratis. Vienen incluidos en la Mensualidad Plus mientras esté activa. Los tiempos y consejos que muestra la app son referencias generales: siempre valen las indicaciones del fabricante de cada material.</li>
+          <li><strong>Pack Ventas y Stock:</strong> pago único y permanente. Suma las funciones de gestión: ventas, resumen, stock, producción, compras y proveedores. Se compra desde la tienda de la app. Viene incluido en Personal Plus mientras esté activa.</li>
+          <li><strong>Herramientas del taller</strong> (Recetas de color y Cuaderno de pruebas): vienen incluidas en la Edición Personal y en Personal Plus. Quien las haya comprado sueltas antes las conserva. Los Temporizadores de curado son gratis. Los tiempos y consejos que muestra la app son referencias generales: siempre valen las indicaciones del fabricante de cada material.</li>
           <li><strong>Extras:</strong> pago único y permanentes (por ejemplo, «Aparato extra» para usar la app en un aparato más).</li>
-          <li><strong>Mensualidad Plus:</strong> suscripción mensual que se suma a la Edición Personal. Quita la publicidad, desbloquea todas las actividades, el Pack Ventas y Stock, los módulos del taller y los demás módulos disponibles, elimina los límites de altas y permite usar la app sin conexión.</li>
+          <li><strong>Personal Plus:</strong> suscripción mensual (cobro automático) o anual (un pago por 12 meses), como alternativa a comprar la Edición Personal (no hace falta tenerla). Mientras esté activa incluye todo lo de la Edición Personal y las funciones nuevas que se sumen a la app, y además quita la publicidad, desbloquea todas las actividades, el Pack Ventas y Stock, los módulos del taller y los demás módulos disponibles, elimina los límites de altas y permite usar la app sin conexión.</li>
         </ul>
         <p>El precio final se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan. Según el medio de pago el precio de la Edición Personal puede variar (online, transferencia o MercadoLibre).</p>
         <h2>2. Pago, aprobación y acceso</h2>
         <p>Si comprás online con Mercado Pago, tu email queda aprobado cuando Mercado Pago confirma el pago. Si pagás por transferencia o por MercadoLibre, aprobamos tu email después de verificar el pago. Al aprobarse, te mandamos por correo tu clave de acceso para entrar a la app. Si el pago queda pendiente, el acceso se habilita cuando se acredita; si se rechaza, no se cobra nada.</p>
         <h2>3. Aparatos</h2>
         <p>La Edición Personal se usa en hasta 2 aparatos (por ejemplo, tu celular y tu computadora). Podés liberar un aparato que ya no uses desde «Mi acceso» o sumar aparatos con el extra «Aparato extra». La cuenta es personal: no se puede compartir ni revender.</p>
-        <h2>4. Mensualidad Plus</h2>
+        <h2>4. Personal Plus</h2>
         <ul>
-          <li>Se paga con <strong>cobro automático</strong> de Mercado Pago: autorizás un cobro por mes, del mismo monto, hasta que la des de baja.</li>
+          <li><strong>Mensual:</strong> se paga con <strong>cobro automático</strong> de Mercado Pago: autorizás un cobro por mes, del mismo monto, hasta que la des de baja.</li>
+          <li><strong>Anual:</strong> un solo pago por 12 meses, sin renovación automática. Al terminar podés renovarla.</li>
           <li>Podés darla de baja cuando quieras desde el <Link href="/baja">Botón de baja</Link> o desde <Link href="/access">Mi acceso</Link>: no se te vuelve a cobrar y sigue activa hasta el final del mes pagado.</li>
-          <li>Cuando termina, seguís usando tu Edición Personal con su publicidad y sus límites. <strong>Tus datos no se borran</strong>; solo se limitan las nuevas altas que superen el límite.</li>
+          <li>Cuando termina, volvés a lo que tengas: la Edición Personal si la compraste, o la versión gratis, con su publicidad y sus límites. <strong>Tus datos no se borran</strong>; solo se limitan las nuevas altas que superen el límite.</li>
         </ul>
         <h2>5. Botón de arrepentimiento (10 días)</h2>
         <p>Podés revocar cualquier compra dentro de los 10 días corridos desde que la hiciste, sin dar motivos y sin costo, como establece el artículo 34 de la Ley 24.240. Hacelo desde el <Link href="/arrepentimiento">Botón de arrepentimiento</Link> (no hace falta iniciar sesión) o escribiendo a <Mail />. Te damos un código de trámite en el momento. Devolvemos el total por el mismo medio de pago y se desactiva lo comprado. Las compras hechas en MercadoLibre también pueden gestionarse por las herramientas de MercadoLibre.</p>
         <h2 id="baja">6. Botón de baja</h2>
         <p>Podés dar de baja la suscripción mensual en cualquier momento, sin dar motivos, desde el <Link href="/baja">Botón de baja</Link>, como establece la Resolución 316/2018 de la Secretaría de Comercio. Con tu sesión iniciada la baja es inmediata (también se cancela en Mercado Pago) y te damos un código de baja en el momento. Si no podés entrar a tu cuenta, el mismo botón te deja pedirla con tu nombre y email.</p>
         <h2>7. Después de los 10 días</h2>
-        <p>La Edición Personal y los extras son permanentes y no se reembolsan después de los 10 días, salvo falla del servicio que nos impida prestarlo. La Mensualidad Plus se puede dar de baja en cualquier momento; el mes ya pagado no se reembolsa.</p>
+        <p>La Edición Personal y los extras son permanentes y no se reembolsan después de los 10 días, salvo falla del servicio que nos impida prestarlo. Personal Plus se puede dar de baja en cualquier momento; el mes ya pagado no se reembolsa.</p>
         <h2>8. Contracargos y fraude</h2>
         <p>Si un pago se anula, se devuelve o se desconoce ante Mercado Pago, lo que se activó con ese pago se desactiva.</p>
         <h2>9. Factura y reclamos</h2>

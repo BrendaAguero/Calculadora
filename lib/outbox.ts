@@ -36,7 +36,7 @@ async function run<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => I
 
 const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 
-// ¿Este aparato tiene el modo sin conexión? (Mensualidad Plus; lo informa el servidor en cada conexión).
+// ¿Este aparato tiene el modo sin conexión? (Personal Plus; lo informa el servidor en cada conexión).
 export const offlineEnabled = () => read(OFFLINE_PLUS_KEY) === "1";
 export const isOffline = () => typeof navigator !== "undefined" && !navigator.onLine;
 

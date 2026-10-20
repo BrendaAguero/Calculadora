@@ -17,15 +17,14 @@ export async function buyPersonal(formData: FormData) {
   if (!(await allowAttempt('comprar', 10, 3600))) back(TOO_MANY);
   if (!mercadoPagoReady()) back('La compra online no está disponible en este momento. Escribinos y te ayudamos.');
 
-  const withPack = formData.get('vender') === 'si';
   const supabase = await createClient();
-  const { data: order, error } = await supabase.rpc('create_personal_order_v2', { p_email: email, p_full_name: fullName, p_with_pack: withPack });
+  const { data: order, error } = await supabase.rpc('create_personal_order_v2', { p_email: email, p_full_name: fullName, p_with_pack: false }); // el Pack Ventas y Stock se compra después, en la tienda de la app
   const { id: orderId, total } = (order ?? {}) as { id?: string; total?: number };
   if (error || !orderId || !total) back(error?.message ?? 'No se pudo crear el pedido.');
 
   let url: string;
   try {
-    url = (await createPreference({ purchaseId: orderId!, title: withPack ? 'Calculadora Emprender · Edición Personal + Pack Ventas y Stock' : 'Calculadora Emprender · Edición Personal', price: Number(total), origin: await siteOrigin() })).url;
+    url = (await createPreference({ purchaseId: orderId!, title: 'Calculadora Emprender · Edición Personal', price: Number(total), origin: await siteOrigin() })).url;
   } catch (e) {
     console.error('Pago de Mercado Pago', e instanceof Error ? e.message : e);
     back('No se pudo conectar con Mercado Pago. Probá de nuevo en un rato.');

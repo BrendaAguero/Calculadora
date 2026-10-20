@@ -12,7 +12,7 @@ import { FIRED_KEY, TIMERS_KEY } from "@/lib/timers";
 import { HIDDEN_AT_KEY, RELOCK_AFTER_MS, UNLOCKED_KEY, UNLOCKED_PATHS, checkBiometric, checkPin, readLock, saveLock, type LockConfig } from "@/lib/app-lock";
 
 type Alert = { id: string; place_a: string | null; place_b: string | null };
-// Pantallas que se guardan de antemano para usarlas sin conexión (Mensualidad Plus).
+// Pantallas que se guardan de antemano para usarlas sin conexión (Personal Plus).
 const WARM_URLS = ["/", "/calcular", "/calcular/resina", "/calcular/jesmonite", "/calcular/cemento", "/ventas", "/ventas/nueva", "/stock", "/materials", "/gestion/productos", "/historial", "/mas"];
 let warmed = false;
 
