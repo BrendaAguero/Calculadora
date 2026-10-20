@@ -34,7 +34,7 @@ const EXTRAS = [
 ];
 const FAQ = [
   { q: '¿Tengo que pagar para probarla?', a: 'No. La versión gratis no vence y no pide tarjeta. Tiene límites (por ejemplo, 5 materiales y 2 productos) y un aviso de publicidad.' },
-  { q: '¿La Edición Personal es un pago mensual?', a: 'No: es un pago único y es tuya. Si preferís pagar por mes, está la Mensualidad Plus con todo incluido: es una u otra, nunca las dos.' },
+  { q: '¿La Edición Personal es un pago mensual?', a: 'No: es un pago único y es tuya, con sus actualizaciones. Si preferís una suscripción, está Personal Plus (por mes o por año) con todo incluido y las funciones nuevas: es una u otra, nunca las dos.' },
   { q: '¿Tengo que comprar extras?', a: 'No. La Edición Personal trae todo lo del taller. Los extras son solo para casos puntuales: el Pack Ventas y Stock si vendés, un aparato más o una segunda actividad.' },
   { q: '¿Funciona en el celular?', a: 'Sí, en el celular y en la computadora. Podés instalarla como una app desde el navegador.' },
   { q: '¿Cómo pago?', a: 'Con Mercado Pago, por transferencia o por MercadoLibre.' },
@@ -44,9 +44,10 @@ const FAQ = [
 // Página para quien todavía no tiene cuenta: qué hace la app, precios y cómo empezar.
 export default async function LandingPage() {
   const supabase = await createClient();
-  const [{ data: prices }, { data: monthly }] = await Promise.all([
+  const [{ data: prices }, { data: monthly }, { data: annual }] = await Promise.all([
     supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_regular']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
+    supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).eq('active', true).maybeSingle(),
   ]);
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
   const personal = price('personal_price_online', 15000);
@@ -111,19 +112,20 @@ export default async function LandingPage() {
               <p className="mt-1 text-3xl font-bold">{money(personal)}</p>
               <p className="text-sm text-white/80">pago único</p>
               <ul className="mt-4 space-y-1.5 text-sm">
-                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'Recetas de color y Cuaderno de pruebas', 'En 2 aparatos'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
+                {['Todo lo de la versión gratis', 'Hasta 100 materiales y 50 productos', 'Fórmulas, moldes e historial', 'Recetas de color y Cuaderno de pruebas', 'En 2 aparatos', 'Actualizaciones incluidas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-resina" />{t}</li>)}
               </ul>
               <Link href="/comprar" className="mt-5 block rounded-2xl bg-resina px-4 py-3 text-center font-bold text-resina-dark">Comprar</Link>
             </article>
             <article className="rounded-3xl bg-white p-6 dark:bg-neutral-900">
-              <h3 className="text-lg font-semibold">Mensualidad Plus</h3>
-              <p className="text-sm text-neutral-500">O, en vez del pago único, pagá por mes</p>
-              <p className="mt-1 text-3xl font-bold">{money(Number(monthly?.price ?? 4900))}<span className="text-base font-normal text-neutral-500"> /mes</span></p>
+              <h3 className="text-lg font-semibold">Personal Plus</h3>
+              <p className="text-sm text-neutral-500">O, en vez del pago único, una suscripción</p>
+              <p className="mt-1 text-3xl font-bold">{money(Number(monthly?.price ?? 6900))}<span className="text-base font-normal text-neutral-500"> /mes</span></p>
+              {annual && <p className="text-sm text-neutral-600 dark:text-neutral-300">o {money(Number(annual.price))} por año</p>}
               <ul className="mt-4 space-y-1.5 text-sm">
-                {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
+                {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión', 'Todas las funciones nuevas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
               <Link href="/registro" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
-              <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y la elegís en «Mi acceso». La cancelás cuando quieras.</p>
+              <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.</p>
             </article>
           </div>
         </section>

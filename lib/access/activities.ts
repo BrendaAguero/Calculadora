@@ -31,7 +31,7 @@ export async function ownsActivity(supabase: Supabase, userId: string, activityI
   return activities.some((activity) => activity.id === activityId);
 }
 
-// Se puede usar una actividad si se la compró, o con Mensualidad Plus, la administración o la cuenta de prueba.
+// Se puede usar una actividad si se la compró, o con Personal Plus, la administración o la cuenta de prueba.
 export async function canUseActivity(supabase: Supabase, userId: string, code: string): Promise<{ allowed: boolean; activityId: string | null }> {
   const [{ activities }, snapshot] = await Promise.all([getOwnedActivities(supabase, userId), getAccessSnapshot()]);
   const owned = activities.find((a) => a.code === code);

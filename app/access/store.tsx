@@ -41,13 +41,13 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
             <p className="font-semibold">Edición Personal</p>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>una sola vez</strong> y es tuya: calculadora, materiales, fórmulas, moldes, productos, Recetas de color y Cuaderno de pruebas, en 2 aparatos. Si vendés, después sumás el Pack Ventas y Stock.</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>una sola vez</strong> y es tuya: calculadora, materiales, fórmulas, moldes, productos, Recetas de color y Cuaderno de pruebas, en 2 aparatos, con sus actualizaciones. Si vendés, después sumás el Pack Ventas y Stock.</p>
             <Link href="/comprar" className="mt-3 inline-block rounded-xl bg-orange-700 px-4 py-2 text-sm font-semibold text-white">Comprar</Link>
           </div>
           <div className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
-            <p className="font-semibold">Mensualidad Plus</p>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>por mes</strong> y tenés todo incluido mientras esté activa: todas las actividades, el Pack Ventas y Stock, sin límites ni publicidad. La cancelás cuando quieras.</p>
-            <Link href="#emprendedor" className="mt-3 inline-block rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold dark:border-neutral-700">Ver la mensualidad</Link>
+            <p className="font-semibold">Personal Plus</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Pagás <strong>por mes o por año</strong> y tenés todo incluido mientras esté activo: todas las actividades, el Pack Ventas y Stock, sin límites ni publicidad, y las funciones nuevas. El mensual lo cancelás cuando quieras.</p>
+            <Link href="#emprendedor" className="mt-3 inline-block rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold dark:border-neutral-700">Ver Personal Plus</Link>
           </div>
         </div>
       </section>
@@ -58,7 +58,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
     <>
       <section id="planes" className={cardClass}>
         <h2 className="font-semibold">Tienda (pago único)</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con la Mensualidad Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
 
         {(pending ?? []).length > 0 && (
           <div className="mt-4 space-y-2">
@@ -99,7 +99,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
 
       <section id="actividades" className={cardClass}>
         <h2 className="font-semibold">Actividades</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Mensualidad Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(activities ?? []).map((activity) => {
             const mine = owned?.find((o) => o.activity_id === activity.id);

@@ -62,7 +62,7 @@ async function checkout(subscriptionId: string, formData: FormData): Promise<nev
     redirect(url!);
   }
 
-  const plan = sub!.duration_months === 1 ? 'Mensualidad Plus' : `Mensualidad Plus · ${sub!.duration_months} meses`;
+  const plan = sub!.duration_months === 1 ? 'Personal Plus' : `Personal Plus · ${sub!.duration_months} meses`;
   let initPoint: string;
   try {
     const preference = await createPreference({

@@ -265,3 +265,21 @@ begin
   return v_purchase;
 end;
 $$;
+
+-- 5) Personal Plus (nuevo nombre): $6.900 por mes o $69.000 por año, con precio anual editable.
+update public.subscription_plans_catalog set price = 6900 where duration_months = 1;
+update public.subscription_plans_catalog set price = 69000, active = true where duration_months = 12;
+update public.auto_notices set title = 'Tu Personal Plus está por terminar', body = 'Tu Personal Plus termina el {fin}. Renovala para no perder las actividades, el pack, sin límites y las funciones nuevas.' where code = 'plus_ending';
+
+create or replace function public.admin_set_plus_annual_price(p_price numeric) returns void
+language plpgsql security definer set search_path to 'public'
+as $$
+begin
+  if not public.is_admin() then raise exception 'Solo la administración puede hacer esto.'; end if;
+  if p_price is null or p_price <= 0 then raise exception 'Precio inválido.'; end if;
+  update subscription_plans_catalog set price = p_price, active = true where duration_months = 12;
+  perform public.log_audit('prices.plus_annual', 'pricing', null, null, jsonb_build_object('price', p_price));
+end;
+$$;
+revoke all on function public.admin_set_plus_annual_price(numeric) from public, anon;
+grant execute on function public.admin_set_plus_annual_price(numeric) to authenticated;

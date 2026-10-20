@@ -26,7 +26,7 @@ export async function saveCalculation(input: SaveInput): Promise<SaveResult> {
   if (!user) return { ok: false, error: 'Iniciá sesión para guardar el cálculo.' };
 
   const access = await canUseActivity(supabase, user.id, 'YESO');
-  if (!access.allowed || !access.activityId) return { ok: false, error: 'La calculadora de Yeso requiere tener la actividad Yeso o Mensualidad Plus.' };
+  if (!access.allowed || !access.activityId) return { ok: false, error: 'La calculadora de Yeso requiere tener la actividad Yeso o Personal Plus.' };
   const yeso = { id: access.activityId };
 
   const values: CalcInput = { ...input };

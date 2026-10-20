@@ -5,7 +5,7 @@ export type Banner = { title: string; text: string; link: string | null; button:
 // Banner por defecto (si la administración todavía no cargó uno): promociona los planes pagos.
 export const DEFAULT_BANNER: Banner = {
   title: "Sin publicidad, sin límites y sin conexión",
-  text: "Con Mensualidad Plus también tenés todas las actividades y módulos.",
+  text: "Con Personal Plus también tenés todas las actividades y módulos.",
   link: "/access#emprendedor",
   button: "Ver Plus",
   image: null,

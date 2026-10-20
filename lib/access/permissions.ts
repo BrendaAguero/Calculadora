@@ -84,7 +84,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
   const activeLicense = baseLicenses.find((license) => one(license.plans)?.code === "ADVANCED") ?? baseLicenses[0];
   const plan = one(activeLicense?.plans)?.code;
 
-  // Mensualidad Plus vale mientras no venza. Es otra forma de pagar: no hace falta la Edición Personal.
+  // Personal Plus vale mientras no venza. Es otra forma de pagar: no hace falta la Edición Personal.
   // Al vencer, la persona vuelve sola a lo que tenga (Edición Personal o versión gratis).
   const now = new Date();
   const entrepreneurExpiresAt =
@@ -133,7 +133,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
 });
 
 // Pack Ventas y Stock: ventas, resumen, stock, producción, compras y proveedores van juntos.
-// Se compra en la tienda de la app (pago único) como extra de la Edición Personal; la Mensualidad Plus lo incluye.
+// Se compra en la tienda de la app (pago único) como extra de la Edición Personal; Personal Plus lo incluye.
 export const PACK_CODE = "PACK_VENTAS";
 const PACK_FEATURES = new Set(["VENTAS", "PRODUCCION", "ESTADISTICAS", "STOCK_BASICO", "PROVEEDORES_BASICO"]);
 // Herramientas del taller que vienen incluidas en la Edición Personal.
@@ -148,7 +148,7 @@ export async function hasPackAccess() {
 export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   if (snapshot.isAdmin || snapshot.isTester) return true;
   if (snapshot.accountStatus !== "active") return false;
-  // Mensualidad Plus desbloquea todo, tenga o no la Edición Personal.
+  // Personal Plus desbloquea todo, tenga o no la Edición Personal.
   if (snapshot.entrepreneurActive) return true;
   if (!snapshot.baseLicenseActive) return false;
   if (INCLUDED_WITH_LICENSE.has(feature)) return true;
@@ -156,7 +156,7 @@ export function hasFeature(snapshot: AccessSnapshot, feature: string): boolean {
   return snapshot.modules.includes(feature) || (PACK_FEATURES.has(feature) && snapshot.modules.includes(PACK_CODE));
 }
 
-// Publicidad: la ven todas las cuentas salvo las que tienen Mensualidad Plus (y administración / prueba).
+// Publicidad: la ven todas las cuentas salvo las que tienen Personal Plus (y administración / prueba).
 export function showsAds(snapshot: AccessSnapshot) {
   return !snapshot.isAdmin && !snapshot.isTester && !snapshot.entrepreneurActive;
 }
@@ -192,7 +192,7 @@ export async function createLimitError(supabase: Supabase, userId: string, resou
   const { count, error } = await countActive(supabase, userId, resource);
   if (error) return `No se pudo comprobar el límite de tu plan: ${error}`;
   if (count < limit) return null;
-  if (!snapshot.basePlan) return `Llegaste al límite: ${limit} ${label}. Con la Edición Personal (pago único) o la Mensualidad Plus podés guardar muchos más.`;
+  if (!snapshot.basePlan) return `Llegaste al límite: ${limit} ${label}. Con la Edición Personal (pago único) o Personal Plus podés guardar muchos más.`;
   return `Llegaste al límite de tu Edición Personal: ${limit} ${label} activos. Podés archivar alguno que no uses.`;
 }
 

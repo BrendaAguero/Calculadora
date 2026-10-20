@@ -5,7 +5,7 @@ import { OFFLINE_PLUS_KEY } from "@/lib/outbox";
 
 export const SW_PLUS_EVENT = "calculadora-sw-plus";
 
-// Registra el service worker. Con Mensualidad Plus se registra en modo «sin conexión» (sw.js?plus=1).
+// Registra el service worker. Con Personal Plus se registra en modo «sin conexión» (sw.js?plus=1).
 function register() {
   if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") return;
   let plus = false;

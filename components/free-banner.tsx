@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getAccessSnapshot, showsAds } from "@/lib/access/permissions";
 import { getBanner } from "@/lib/banner";
 
-// Banner fijo de la Edición Personal. Lo ocultan Mensualidad Plus, la administración y la cuenta de prueba. Sin cookies ni anuncios de terceros.
+// Banner fijo de la Edición Personal. Lo ocultan Personal Plus, la administración y la cuenta de prueba. Sin cookies ni anuncios de terceros.
 export async function FreeBanner() {
   const snapshot = await getAccessSnapshot();
   if (!snapshot || !showsAds(snapshot)) return null;

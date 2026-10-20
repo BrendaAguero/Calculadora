@@ -16,7 +16,7 @@ export function saleFromForm(form: HTMLFormElement) {
   };
 }
 
-// Guarda la venta en el aparato si no hay conexión (Mensualidad Plus). Devuelve true si la guardó.
+// Guarda la venta en el aparato si no hay conexión (Personal Plus). Devuelve true si la guardó.
 export async function queueSaleIfOffline(form: HTMLFormElement, productName: string) {
   if (!isOffline() || !offlineEnabled()) return false;
   const sale = saleFromForm(form);

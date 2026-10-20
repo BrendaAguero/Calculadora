@@ -158,6 +158,11 @@ export async function setPrices(formData: FormData) {
   await rpc('/admin/precios', 'admin_set_prices', { p_online: n('online'), p_transfer: n('transfer'), p_mercadolibre: n('mercadolibre'), p_monthly: n('monthly'), p_extra_device: n('extra_device') }, 'Precios guardados.');
 }
 
+export async function setPlusAnnualPrice(formData: FormData) {
+  const n = Number(text(formData, 'annual').replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/precios', 'admin_set_plus_annual_price', { p_price: n }, 'Precio anual de Personal Plus guardado.');
+}
+
 export async function setPackPrices(formData: FormData) {
   const n = (key: string) => Number(text(formData, key).replace(/\./g, '').replace(',', '.'));
   await rpc('/admin/precios', 'admin_set_pack_prices', { p_pack: n('pack'), p_with_personal: n('with_personal') }, 'Precios del pack guardados.');

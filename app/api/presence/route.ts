@@ -53,7 +53,7 @@ export async function POST() {
     }
   }
 
-  // El modo sin conexión es de Mensualidad Plus (también la administración y la cuenta de prueba).
+  // El modo sin conexión es de Personal Plus (también la administración y la cuenta de prueba).
   const snapshot = await getAccessSnapshot();
   const plus = Boolean(snapshot && (snapshot.entrepreneurActive || snapshot.isAdmin || snapshot.isTester));
   const { data: open } = await supabase.from("session_alerts").select("id,place_a,place_b,created_at").eq("user_id", user.id).eq("status", "open").order("created_at", { ascending: false }).limit(1).maybeSingle();

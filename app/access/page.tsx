@@ -26,8 +26,8 @@ const labels: Record<string, string> = {
 };
 
 const RESOURCES: Resource[] = ["materials", "products", "formulas", "molds"];
-// Mensualidad Plus: solo plazo mensual (6 y 12 meses quedaron desactivados).
-const MONTHS = [1] as const;
+// Personal Plus: por mes (se renueva solo) o por año (un pago). El plazo de 6 meses quedó desactivado.
+const MONTHS = [1, 12] as const;
 const cardClass = "rounded-3xl bg-white p-5 dark:bg-neutral-900";
 
 type Quote = { ok: true; price: number; discount_pct: number; final_price: number; age_pct: number; recent_pct: number } | { ok: false; error: string };
@@ -87,7 +87,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           <Link href="/mas" className="text-sm underline">← Volver</Link>
           <h1 className="mt-3 text-3xl font-semibold">Mi acceso</h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Tu Edición Personal, la Mensualidad Plus, extras y aparatos.
+            Tu Edición Personal, Personal Plus, extras y aparatos.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           <h2 className="font-semibold">Tu plan</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p>{snapshot.licenseExpiresAt && <p className="text-xs text-amber-700 dark:text-amber-300">De regalo hasta el {date(snapshot.licenseExpiresAt)}</p>}</div>
-            <div><span className="text-neutral-500">Mensualidad Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
+            <div><span className="text-neutral-500">Personal Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
@@ -111,9 +111,9 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         <PlanStore snapshot={snapshot} userId={user.id} referral={referral} />
 
         <section id="emprendedor" className={cardClass}>
-          <h2 className="font-semibold">Mensualidad Plus</h2>
+          <h2 className="font-semibold">Personal Plus</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            La otra forma de pagar: en vez de comprar la Edición Personal, pagás por mes y tenés <strong>todo incluido</strong> mientras esté activa (todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad y sin conexión). No hace falta tener la Edición Personal. Se cobra sola cada mes y la cancelás cuando quieras: no se borra nada.
+            El plan por suscripción, en lugar de comprar la Edición Personal: pagás <strong>por mes o por año</strong> y tenés <strong>todo incluido</strong> mientras esté activo (todas las actividades, el Pack Ventas y Stock, sin límites, sin publicidad y sin conexión) y <strong>todas las funciones nuevas</strong> que vayamos sumando. No hace falta tener la Edición Personal. El mensual se cobra solo cada mes y lo cancelás cuando quieras; el anual es un solo pago. No se borra nada.
             {snapshot.baseLicenseActive && !snapshot.entrepreneurActive && <> Como ya tenés la Edición Personal, no la necesitás: si querés algo puntual (por ejemplo, el Pack Ventas y Stock), lo comprás suelto arriba, de una sola vez.</>}
           </p>
 

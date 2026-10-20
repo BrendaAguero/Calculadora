@@ -57,7 +57,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
                 </form>
               ))}
             </div>
-            <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">La elección es definitiva para la actividad incluida. Con la Mensualidad Plus tenés todas.</p>
+            <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">La elección es definitiva para la actividad incluida. Con Personal Plus tenés todas.</p>
           </>
         ) : (
           <>

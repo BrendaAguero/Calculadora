@@ -10,7 +10,7 @@ import { readPhoto } from '@/lib/photo';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 
-// Recetas de color: viene con la Edición Personal o la Mensualidad Plus. Se comprueba en cada acción (y en la base).
+// Recetas de color: viene con la Edición Personal o Personal Plus. Se comprueba en cada acción (y en la base).
 async function auth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

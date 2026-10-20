@@ -39,7 +39,7 @@ export function SaleForm({ productId, productName, quantity, suggestedPrice, pri
 
   return (
     <form action={registerSale} onSubmit={async (event) => {
-      // Sin conexión (Mensualidad Plus): se guarda en el aparato en lugar de mandarla al servidor.
+      // Sin conexión (Personal Plus): se guarda en el aparato en lugar de mandarla al servidor.
       if (!isOffline() || !offlineEnabled()) return;
       event.preventDefault();
       if (await queueSaleIfOffline(event.currentTarget, productName)) setQueued(true);

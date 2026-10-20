@@ -31,7 +31,7 @@ export default async function ColorsPage({ searchParams }: { searchParams: Promi
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {(error || loadError) && <div role="alert" className={errorBox}>{error ?? 'No se pudieron cargar tus recetas.'}</div>}
 
-      {!allowed && <FeatureLocked title="Recetas de color viene con la Edición Personal." note="También con la Mensualidad Plus." linkLabel="Ver cómo tenerla">Guardá cada color con su pigmento y su foto, y la app te dice cuánto poner para cualquier cantidad de mezcla.</FeatureLocked>}
+      {!allowed && <FeatureLocked title="Recetas de color viene con la Edición Personal." note="También con Personal Plus." linkLabel="Ver cómo tenerla">Guardá cada color con su pigmento y su foto, y la app te dice cuánto poner para cualquier cantidad de mezcla.</FeatureLocked>}
 
       {Boolean(recipes?.length) && (
         <section className="grid gap-3 sm:grid-cols-2">
