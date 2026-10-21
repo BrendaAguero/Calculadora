@@ -13,7 +13,7 @@ const number = (value: string) => {
   return Number.isFinite(parsed) ? parsed : NaN;
 };
 
-// Stock es parte del módulo «Stock básico» o de Emprendedor. Se comprueba en el servidor en cada acción.
+// Stock es parte del módulo «Stock básico» o de Personal Plus. Se comprueba en el servidor en cada acción.
 async function auth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

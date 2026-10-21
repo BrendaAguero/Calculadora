@@ -93,7 +93,7 @@ export async function requestEntrepreneur(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Si ya tiene Emprendedor vigente, primero se pide confirmación (y se ofrece actualizar si conviene).
+  // Si ya tiene Personal Plus vigente, primero se pide confirmación (y se ofrece actualizar si conviene).
   if (formData.get('confirmed') !== '1') {
     const { count } = await supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'active').gt('expires_at', new Date().toISOString());
     if (count) redirect(`/access?confirmar=${months}#emprendedor`);
@@ -139,7 +139,7 @@ export async function cancelEntrepreneurRequest(formData: FormData) {
   back('ok', 'Pedido cancelado.');
 }
 
-// Cancela la renovación de la suscripción mensual; Emprendedor sigue activo hasta que vence.
+// Cancela la renovación de la suscripción mensual; Personal Plus sigue activo hasta que vence.
 export async function cancelEntrepreneurAutoRenew(formData: FormData) {
   const subscriptionId = String(formData.get('subscription_id') ?? '');
   const supabase = await createClient();

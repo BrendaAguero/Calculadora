@@ -21,7 +21,7 @@ export default async function AdminHome() {
     ['/admin/emails', 'Edición Personal: emails', 'Aprobar emails (transferencia, MercadoLibre), revocar y liberar aparatos.'],
     ['/admin/precios', 'Precios', 'Edición Personal, Personal Plus, actividades y aparato extra.'],
     ['/admin/revendedoras', 'Revendedoras', 'Precios por cantidad, contacto, recursos de venta y saldos.'],
-    ['/admin/usuarios', 'Usuarios', 'Cuentas, licencias, Emprendedor; suspender y dar licencias de cortesía.', users],
+    ['/admin/usuarios', 'Usuarios', 'Cuentas, licencias, Personal Plus; suspender y dar licencias de cortesía.', users],
     ['/admin/emprendedor', 'Pedidos de Personal Plus', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
     ['/admin/ventas', 'Ventas de la plataforma', 'Compras, pagos de Mercado Pago y suscripciones.'],
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],

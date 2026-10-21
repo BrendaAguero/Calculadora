@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createPreference, mercadoPagoReady } from '@/lib/mercadopago';
 import { siteOrigin } from '@/lib/origin';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { allowAttempt, TOO_MANY } from '@/lib/rate-limit';
 
 const back = (message: string): never => redirect(`/comprar?error=${encodeURIComponent(message.slice(0, 300))}`);
@@ -17,8 +17,10 @@ export async function buyPersonal(formData: FormData) {
   if (!(await allowAttempt('comprar', 10, 3600))) back(TOO_MANY);
   if (!mercadoPagoReady()) back('La compra online no está disponible en este momento. Escribinos y te ayudamos.');
 
-  const supabase = await createClient();
-  const { data: order, error } = await supabase.rpc('create_personal_order_v2', { p_email: email, p_full_name: fullName, p_with_pack: false }); // el Pack Ventas y Stock se compra después, en la tienda de la app
+  // El pedido se crea solo desde el servidor (la base no acepta pedidos directos), así cuenta el límite de intentos.
+  const admin = createAdminClient();
+  if (!admin) back('La compra online no está disponible en este momento. Escribinos y te ayudamos.');
+  const { data: order, error } = await admin!.rpc('create_personal_order_v2', { p_email: email, p_full_name: fullName, p_with_pack: false }); // el Pack Ventas y Stock se compra después, en la tienda de la app
   const { id: orderId, total } = (order ?? {}) as { id?: string; total?: number };
   if (error || !orderId || !total) back(error?.message ?? 'No se pudo crear el pedido.');
 
