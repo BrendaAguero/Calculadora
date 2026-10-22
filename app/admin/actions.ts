@@ -338,3 +338,44 @@ export async function setAnnouncementActive(formData: FormData) {
   const active = text(formData, 'active') === '1';
   await rpc('/admin/avisos', 'admin_set_announcement_active', { p_id: text(formData, 'id'), p_active: active }, active ? 'Aviso activado.' : 'Aviso pausado: ya no aparece.');
 }
+
+// ---------------------------------------------------------------------------------------------
+// Códigos de descuento.
+
+const DISCOUNT_PATH = '/admin/descuentos';
+
+export async function createDiscountCodes(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  if (!(await hasStaffSession(user.id))) redirect(`${STAFF_LOGIN_PATH}?next=/admin`);
+  const num = (k: string) => { const v = text(formData, k).replace(/\./g, '').replace(',', '.'); return v ? Number(v) : null; };
+  const count = text(formData, 'mode') === 'batch' ? num('count') ?? 0 : 1;
+  const appliesTo = formData.getAll('applies_to').map(String);
+  const startDay = text(formData, 'starts_on');
+  const endDay = text(formData, 'expires_on');
+  const { data, error } = await supabase.rpc('admin_create_discount_codes', {
+    p_code: text(formData, 'code'),
+    p_count: count,
+    p_kind: text(formData, 'kind'),
+    p_value: num('value'),
+    p_applies_to: appliesTo,
+    p_starts_at: startDay ? fromLocalAR(`${startDay}T00:00`) : null,
+    p_expires_at: endDay ? fromLocalAR(`${endDay}T23:59`) : null,
+    p_max_uses: count > 1 ? 1 : num('max_uses'),
+    p_once_per_person: formData.get('once_per_person') === 'on',
+    p_first_purchase_only: formData.get('first_purchase_only') === 'on',
+    p_only_email: text(formData, 'only_email') || null,
+    p_note: text(formData, 'note') || null,
+  });
+  if (error) back(DISCOUNT_PATH, 'error', error.message);
+  const codes = (data ?? []) as string[];
+  revalidatePath(DISCOUNT_PATH);
+  if (codes.length > 1) redirect(`${DISCOUNT_PATH}?nuevos=${encodeURIComponent(codes.join(','))}#nuevos`);
+  back(DISCOUNT_PATH, 'ok', `Código ${codes[0]} creado.`);
+}
+
+export async function setDiscountCodeActive(formData: FormData) {
+  const active = text(formData, 'active') === '1';
+  await rpc(DISCOUNT_PATH, 'admin_set_discount_code_active', { p_id: text(formData, 'id') || null, p_batch: text(formData, 'batch') || null, p_active: active }, active ? 'Código activado.' : 'Código pausado: ya no se puede usar.');
+}

@@ -3,7 +3,9 @@ import { SubmitButton } from '@/components/submit-button';
 import type { AccessSnapshot } from '@/lib/access/permissions';
 import { mercadoPagoReady } from '@/lib/mercadopago';
 import { createClient } from '@/lib/supabase/server';
-import { buyActivity, buyModule, cancelPurchase, payPurchase, releaseDevice } from './actions';
+import { cookies } from 'next/headers';
+import { PROMO_COOKIE } from '@/lib/promo';
+import { buyActivity, buyModule, cancelPurchase, clearPromoCode, payPurchase, releaseDevice, setPromoCode } from './actions';
 import { signOutEverywhere } from '../seguridad/actions';
 
 const money = (value: number | string) => Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
@@ -32,6 +34,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   ]);
   const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? activities?.find((a) => a.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
   const online = mercadoPagoReady();
+  const promo = (await cookies()).get(PROMO_COOKIE)?.value ?? null;
   // Durante la prueba gratis la tienda se muestra como para cualquier cuenta: lo que compre le queda al terminar.
   const paidPlus = snapshot.entrepreneurActive && !snapshot.plusTrialEndsAt;
   // Comparación para la Edición Personal: todos los extras sueltos frente a un año de Personal Plus.
@@ -69,6 +72,20 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
       <section id="planes" className={cardClass}>
         <h2 className="font-semibold">Tienda (pago único)</h2>
         <p className="mt-1 text-xs text-neutral-500">{paidPlus ? 'Con Personal Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
+
+        {promo ? (
+          <form action={clearPromoCode} className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+            <span>🎟️ Código <strong className="font-mono">{promo}</strong>: se aplica al pagar, si sirve para esa compra.</span>
+            <SubmitButton className="text-xs font-medium underline">Quitar</SubmitButton>
+          </form>
+        ) : (
+          <form action={setPromoCode} className="mt-3 flex flex-wrap items-end gap-2">
+            <label className="grid gap-1 text-xs text-neutral-500 dark:text-neutral-400">¿Tenés un código de descuento?
+              <input name="promo" maxLength={20} autoCapitalize="characters" placeholder="Ej.: NAVIDAD26" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
+            </label>
+            <SubmitButton className="rounded-xl border border-neutral-300 px-3 py-2 text-sm font-medium dark:border-neutral-700">Aplicar</SubmitButton>
+          </form>
+        )}
 
         {(pending ?? []).length > 0 && (
           <div className="mt-4 space-y-2">
