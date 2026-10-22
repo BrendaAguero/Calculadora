@@ -127,7 +127,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <ul>
           <li>Ganás un porcentaje (15 % o 20 %, según se te asigne) de cada compra pagada que llegue con tu código o enlace. El enlace guarda tu código por 30 días en el navegador de quien lo abre.</li>
           <li><strong>PRO:</strong> si lográs 10 ventas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 %.</li>
-          <li>La comisión se calcula sobre el monto efectivamente pagado. En la suscripción mensual se genera con el primer pago.</li>
+          <li>La comisión se calcula sobre el monto efectivamente pagado. Vale para la Edición Personal (también si se compra desde la página, sin cuenta), los extras y Personal Plus. En Personal Plus mensual cobrás también las renovaciones del primer año (el primer pago y los 11 siguientes, mientras la clienta siga pagando); en el anual, sobre el pago del año.</li>
           <li>Cada comisión queda <strong>retenida 11 días</strong> (el plazo de arrepentimiento más un margen). Si la compra se devuelve o anula, la comisión se anula. Después pasa a disponible.</li>
         </ul>
         <h2>3. Retiros</h2>

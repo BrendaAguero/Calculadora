@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createPreference, mercadoPagoReady } from '@/lib/mercadopago';
 import { siteOrigin } from '@/lib/origin';
@@ -23,6 +24,10 @@ export async function buyPersonal(formData: FormData) {
   const { data: order, error } = await admin!.rpc('create_personal_order_v2', { p_email: email, p_full_name: fullName, p_with_pack: false }); // el Pack Ventas y Stock se compra después, en la tienda de la app
   const { id: orderId, total } = (order ?? {}) as { id?: string; total?: number };
   if (error || !orderId || !total) back(error?.message ?? 'No se pudo crear el pedido.');
+
+  // Si la persona llegó con el enlace de una afiliada, el pedido queda a su nombre (la base valida el código).
+  const ref = (await cookies()).get('ref')?.value;
+  if (ref) await admin!.rpc('attach_affiliate_to_order', { p_order_id: orderId, p_code: ref });
 
   let url: string;
   try {

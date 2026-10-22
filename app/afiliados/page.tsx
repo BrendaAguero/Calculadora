@@ -59,7 +59,8 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
         <form action={applyAffiliate} className={`${cardClass} grid gap-3`}>
           <h2 className="font-semibold">Cómo funciona</h2>
           <ul className="list-inside list-disc text-sm text-neutral-600 dark:text-neutral-300">
-            <li>Comisión del 15 % o 20 % de cada compra pagada con tu código (25 % si llegás a PRO).</li>
+            <li>Comisión del 15 % o 20 % de cada compra pagada con tu código o enlace (25 % si llegás a PRO).</li>
+            <li>En Personal Plus mensual también cobrás cada renovación del primer año; en el anual, sobre el pago del año.</li>
             <li>La comisión queda retenida 11 días por si hay devoluciones; después pasa a disponible.</li>
             <li>Podés pedir el retiro desde $20.000 disponibles ($10.000 si sos PRO).</li>
             <li>PRO: 10 ventas válidas por mes durante 3 meses seguidos.</li>
