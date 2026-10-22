@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // Rutas que se pueden abrir sin sesión. /auth/* recibe los enlaces del correo: si se bloquea,
 // la persona vuelve a /login sin que se procese el enlace y nunca puede crear su contraseña.
 // Ayuda, legales y arrepentimiento son públicos: la ley pide que se puedan usar sin cuenta.
-const PUBLIC_PATHS = ["/login", "/registro", "/conocer", "/equipo-ingreso", "/auth/", "/api/mercadopago/", "/api/push/enviar", "/r/", "/ayuda", "/legal", "/arrepentimiento", "/baja", "/comprar", "/sw.js", "/manifest.webmanifest", "/offline.html", "/icons/"];
+const PUBLIC_PATHS = ["/login", "/registro", "/conocer", "/equipo-ingreso", "/auth/", "/api/mercadopago/", "/api/push/enviar", "/r/", "/codigo/", "/ayuda", "/legal", "/arrepentimiento", "/baja", "/comprar", "/sw.js", "/manifest.webmanifest", "/offline.html", "/icons/"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

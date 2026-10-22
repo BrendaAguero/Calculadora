@@ -24,6 +24,7 @@ export default async function AdminHome() {
     ['/admin/usuarios', 'Usuarios', 'Cuentas, licencias, Personal Plus; suspender y dar licencias de cortesía.', users],
     ['/admin/emprendedor', 'Pedidos de Personal Plus', 'Pedidos pendientes de pago para activar a mano.', entrepreneur],
     ['/admin/ventas', 'Ventas de la plataforma', 'Compras, pagos de Mercado Pago y suscripciones.'],
+    ['/admin/descuentos', 'Códigos de descuento', 'Crear uno o varios, con vencimiento, y sugerencias por fechas especiales.'],
     ['/admin/afiliados', 'Afiliadas', 'Solicitudes, códigos, comisiones y retiros.', applications + withdrawals],
     ['/admin/arrepentimiento', 'Arrepentimiento y bajas', 'Pedidos para revocar una compra (10 días) o dar de baja la suscripción.', regrets],
     ['/admin/banner', 'Banner de publicidad', 'El aviso que ve quien no tiene Personal Plus: tus planes o un sponsor.'],

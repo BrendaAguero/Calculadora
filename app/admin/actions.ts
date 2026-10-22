@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/admin';
 import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
+import { notifyAffiliate } from '@/lib/notify';
 import { resellerSaleRange } from '@/lib/reseller';
 import { CONTACT_EMAIL } from '@/lib/legal';
 import { fromLocalAR } from '@/lib/announcements';
@@ -17,13 +18,15 @@ const text = (formData: FormData, key: string) => String(formData.get(key) ?? ''
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
 
 // Todas las acciones pasan por funciones de la base que comprueban que sea administradora y dejan registro.
-async function rpc(path: string, fn: string, args: Record<string, unknown>, ok: string) {
+async function rpc(path: string, fn: string, args: Record<string, unknown>, ok: string, after?: () => Promise<unknown>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   if (!(await hasStaffSession(user.id))) redirect(`${STAFF_LOGIN_PATH}?next=/admin`);
   const { error } = await supabase.rpc(fn, args);
   if (error) back(path, 'error', error.message);
+  // Lo que se hace después de guardar (por ejemplo, avisar por correo) no debe deshacer lo guardado.
+  if (after) await after().catch((e) => console.error('[admin] aviso posterior', e instanceof Error ? e.message : e));
   revalidatePath(path.split('?')[0]);
   back(path, 'ok', ok);
 }
@@ -41,9 +44,42 @@ export async function grantLicense(formData: FormData) {
   }, months === '1' ? 'Licencia de cortesía otorgada por 1 mes.' : months === '2' ? 'Licencia de cortesía otorgada por 2 meses.' : 'Licencia de cortesía otorgada sin vencimiento.');
 }
 
+// Email de la afiliada (para avisarle). Solo la administración llega acá.
+async function affiliateEmail(affiliateId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from('affiliates').select('profiles(email)').eq('id', affiliateId).maybeSingle();
+  const profile = data?.profiles as { email?: string } | { email?: string }[] | null | undefined;
+  return (Array.isArray(profile) ? profile[0]?.email : profile?.email) ?? null;
+}
+
 export async function reviewAffiliate(formData: FormData) {
   const approve = text(formData, 'decision') === 'approve';
-  await rpc('/admin/afiliados', 'admin_review_affiliate', { p_affiliate_id: text(formData, 'affiliate_id'), p_approve: approve, p_percentage: Number(text(formData, 'percentage') || 15) }, approve ? 'Afiliada aprobada: ya tiene su código.' : 'Solicitud rechazada.');
+  const affiliateId = text(formData, 'affiliate_id');
+  const pct = Number(text(formData, 'percentage') || 15);
+  await rpc('/admin/afiliados', 'admin_review_affiliate', { p_affiliate_id: affiliateId, p_approve: approve, p_percentage: pct }, approve ? 'Afiliada aprobada: ya tiene su código y le avisamos por correo.' : 'Solicitud rechazada.', async () => {
+    const to = await affiliateEmail(affiliateId);
+    await notifyAffiliate(to, approve ? 'Ya sos afiliada' : 'Tu solicitud de afiliada', approve
+      ? [`Aprobamos tu solicitud: ya tenés tu código y tu enlace para compartir, con una comisión del ${pct} % por cada compra.`, 'En tu panel encontrás textos listos para redes y WhatsApp.']
+      : ['Por ahora no pudimos aprobar tu solicitud para el programa de afiliadas. Si querés contarnos más, respondé este correo.']);
+  });
+}
+
+export async function setAffiliatePercentage(formData: FormData) {
+  await rpc('/admin/afiliados', 'admin_set_affiliate_percentage', { p_affiliate_id: text(formData, 'affiliate_id'), p_pct: Number(text(formData, 'pct').replace(',', '.')) }, 'Comisión actualizada: rige para las ventas nuevas.');
+}
+
+export async function cancelAffiliateCommissions(formData: FormData) {
+  if (formData.get('confirm') !== 'on') back('/admin/afiliados', 'error', 'Marcá la casilla para confirmar que querés anular sus comisiones pendientes.');
+  await rpc('/admin/afiliados', 'admin_cancel_affiliate_commissions', { p_affiliate_id: text(formData, 'affiliate_id'), p_reason: text(formData, 'reason') }, 'Comisiones pendientes anuladas. Las ya pagadas no cambian.');
+}
+
+export async function setAffiliateWithdrawalMin(formData: FormData) {
+  const n = (k: string) => Number(text(formData, k).replace(/\./g, '').replace(',', '.'));
+  await rpc('/admin/afiliados', 'admin_set_affiliate_withdrawal_min', { p_min: n('min'), p_min_pro: n('min_pro') }, 'Mínimos de retiro guardados.');
+}
+
+export async function setAffiliateAnnualDiscount(formData: FormData) {
+  await rpc('/admin/afiliados', 'admin_set_affiliate_annual_discount', { p_pct: Number(text(formData, 'pct').replace(',', '.')) }, 'Descuento del plan anual con código guardado.');
 }
 
 export async function setAffiliateStatus(formData: FormData) {
@@ -53,7 +89,17 @@ export async function setAffiliateStatus(formData: FormData) {
 
 export async function updateWithdrawal(formData: FormData) {
   const status = text(formData, 'status');
-  await rpc('/admin/afiliados', 'admin_update_withdrawal', { p_withdrawal_id: text(formData, 'withdrawal_id'), p_status: status, p_notes: text(formData, 'notes') }, status === 'paid' ? 'Retiro marcado como pagado.' : 'Retiro actualizado.');
+  const withdrawalId = text(formData, 'withdrawal_id');
+  await rpc('/admin/afiliados', 'admin_update_withdrawal', { p_withdrawal_id: withdrawalId, p_status: status, p_notes: text(formData, 'notes') }, status === 'paid' ? 'Retiro marcado como pagado. Le avisamos por correo.' : 'Retiro actualizado.', async () => {
+    if (status !== 'paid' && status !== 'rejected') return;
+    const supabase = await createClient();
+    const { data: w } = await supabase.from('withdrawals').select('amount,affiliate_id,notes').eq('id', withdrawalId).maybeSingle();
+    if (!w) return;
+    const amount = Number(w.amount).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+    await notifyAffiliate(await affiliateEmail(w.affiliate_id), status === 'paid' ? `Te pagamos ${amount}` : 'Tu pedido de retiro', status === 'paid'
+      ? [`Te transferimos ${amount} de tus comisiones de afiliada.${w.notes ? ` Referencia: ${w.notes}.` : ''}`, 'Si en unos días no lo ves en tu cuenta, avisanos.']
+      : ['No pudimos hacer tu retiro con los datos que nos pasaste. Tus comisiones volvieron a estar disponibles: revisá tus datos de cobro y pedilo de nuevo.', ...(w.notes ? [`Detalle: ${w.notes}`] : [])]);
+  });
 }
 
 export async function resolveRegret(formData: FormData) {
@@ -291,4 +337,45 @@ export async function saveAutoNotice(formData: FormData) {
 export async function setAnnouncementActive(formData: FormData) {
   const active = text(formData, 'active') === '1';
   await rpc('/admin/avisos', 'admin_set_announcement_active', { p_id: text(formData, 'id'), p_active: active }, active ? 'Aviso activado.' : 'Aviso pausado: ya no aparece.');
+}
+
+// ---------------------------------------------------------------------------------------------
+// Códigos de descuento.
+
+const DISCOUNT_PATH = '/admin/descuentos';
+
+export async function createDiscountCodes(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  if (!(await hasStaffSession(user.id))) redirect(`${STAFF_LOGIN_PATH}?next=/admin`);
+  const num = (k: string) => { const v = text(formData, k).replace(/\./g, '').replace(',', '.'); return v ? Number(v) : null; };
+  const count = text(formData, 'mode') === 'batch' ? num('count') ?? 0 : 1;
+  const appliesTo = formData.getAll('applies_to').map(String);
+  const startDay = text(formData, 'starts_on');
+  const endDay = text(formData, 'expires_on');
+  const { data, error } = await supabase.rpc('admin_create_discount_codes', {
+    p_code: text(formData, 'code'),
+    p_count: count,
+    p_kind: text(formData, 'kind'),
+    p_value: num('value'),
+    p_applies_to: appliesTo,
+    p_starts_at: startDay ? fromLocalAR(`${startDay}T00:00`) : null,
+    p_expires_at: endDay ? fromLocalAR(`${endDay}T23:59`) : null,
+    p_max_uses: count > 1 ? 1 : num('max_uses'),
+    p_once_per_person: formData.get('once_per_person') === 'on',
+    p_first_purchase_only: formData.get('first_purchase_only') === 'on',
+    p_only_email: text(formData, 'only_email') || null,
+    p_note: text(formData, 'note') || null,
+  });
+  if (error) back(DISCOUNT_PATH, 'error', error.message);
+  const codes = (data ?? []) as string[];
+  revalidatePath(DISCOUNT_PATH);
+  if (codes.length > 1) redirect(`${DISCOUNT_PATH}?nuevos=${encodeURIComponent(codes.join(','))}#nuevos`);
+  back(DISCOUNT_PATH, 'ok', `Código ${codes[0]} creado.`);
+}
+
+export async function setDiscountCodeActive(formData: FormData) {
+  const active = text(formData, 'active') === '1';
+  await rpc(DISCOUNT_PATH, 'admin_set_discount_code_active', { p_id: text(formData, 'id') || null, p_batch: text(formData, 'batch') || null, p_active: active }, active ? 'Código activado.' : 'Código pausado: ya no se puede usar.');
 }

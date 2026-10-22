@@ -90,6 +90,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
           <li><strong>Herramientas del taller</strong> (Recetas de color y Cuaderno de pruebas): vienen incluidas en la Edición Personal y en Personal Plus. Quien las haya comprado sueltas antes las conserva. Los Temporizadores de curado son gratis. Los tiempos y consejos que muestra la app son referencias generales: siempre valen las indicaciones del fabricante de cada material.</li>
           <li><strong>Extras:</strong> pago único y permanentes (por ejemplo, «Aparato extra» para usar la app en un aparato más).</li>
           <li><strong>Personal Plus:</strong> suscripción mensual (cobro automático) o anual (un pago por 12 meses), como alternativa a comprar la Edición Personal (no hace falta tenerla). Mientras esté activa incluye todo lo de la Edición Personal y las funciones nuevas que se sumen a la app, y además quita la publicidad, desbloquea todas las actividades, el Pack Ventas y Stock, los módulos del taller y los demás módulos disponibles, elimina los límites de altas y permite usar la app sin conexión.</li>
+          <li><strong>Códigos de descuento:</strong> cada código indica para qué compras sirve, hasta cuándo y cuántas veces se puede usar. Se aplica antes de pagar y no se acumula con otros descuentos: se usa el mayor. No sirve para Personal Plus mensual ni para pasar a un plan más largo, y no se canjea por dinero.</li>
         </ul>
         <p>El precio final se muestra siempre antes de pagar. Los precios están en pesos argentinos e incluyen los impuestos que correspondan. Según el medio de pago el precio de la Edición Personal puede variar (online, transferencia o MercadoLibre).</p>
         <h2>2. Pago, aprobación y acceso</h2>
@@ -125,13 +126,15 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Cualquier persona con cuenta puede pedir sumarse desde <Link href="/afiliados">Programa de afiliadas</Link>. La administración revisa cada solicitud y puede aprobarla o rechazarla. Al aprobarla recibís un código y un enlace personal.</p>
         <h2>2. Comisiones</h2>
         <ul>
-          <li>Ganás un porcentaje (15 % o 20 %, según se te asigne) de cada compra pagada que llegue con tu código o enlace. El enlace guarda tu código por 30 días en el navegador de quien lo abre.</li>
-          <li><strong>PRO:</strong> si lográs 10 ventas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 %.</li>
-          <li>La comisión se calcula sobre el monto efectivamente pagado. En la suscripción mensual se genera con el primer pago.</li>
+          <li>Ganás un porcentaje (15 % o 20 %, según se te asigne) de cada compra pagada que llegue con tu código o enlace. El enlace guarda tu código por 30 días en el navegador de quien lo abre; si la persona abre los enlaces de varias afiliadas, vale el último. Si crea su cuenta llegando por tu enlace, queda asociada a vos por 90 días y las compras que haga en ese plazo te generan comisión.</li>
+          <li><strong>PRO:</strong> si lográs 10 ventas nuevas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 % (las renovaciones mensuales no cuentan para PRO, aunque sí te generan comisión).</li>
+          <li>La comisión se calcula sobre el monto efectivamente pagado. Vale para la Edición Personal (también si se compra desde la página, sin cuenta), los extras y Personal Plus. En Personal Plus mensual cobrás también las renovaciones del primer año (el primer pago y los 11 siguientes, mientras la clienta siga pagando); en el anual, sobre el pago del año.</li>
           <li>Cada comisión queda <strong>retenida 11 días</strong> (el plazo de arrepentimiento más un margen). Si la compra se devuelve o anula, la comisión se anula. Después pasa a disponible.</li>
+          <li>Si una compra se devuelve o tiene un contracargo <strong>después</strong> de que cobraste o pediste su comisión, ese monto se descuenta de tu próximo retiro. Lo ves en tu panel, en «Descuentos por ventas devueltas».</li>
+          <li><strong>Beneficio para quien compra:</strong> quien contrata Personal Plus anual con tu código o enlace paga un porcentaje menos (lo ves en tu panel; si ya tiene un descuento mayor, vale ese). Tu comisión se calcula sobre lo que efectivamente paga.</li>
         </ul>
         <h2>3. Retiros</h2>
-        <p>Podés pedir el retiro cuando tengas al menos $20.000 disponibles ($10.000 si sos PRO). Se paga por transferencia a los datos que indiques; la administración puede pedirte datos para verificar tu identidad y emitir los comprobantes que correspondan. Sos responsable de tus obligaciones impositivas por lo que cobres.</p>
+        <p>Podés pedir el retiro cuando tengas disponible al menos el mínimo que se muestra en tu panel (más bajo si sos PRO). Se paga por transferencia o Mercado Pago a los datos que indiques; la administración puede pedirte datos para verificar tu identidad y emitir los comprobantes que correspondan. Sos responsable de tus obligaciones impositivas por lo que cobres.</p>
         <h2>4. Qué no está permitido</h2>
         <ul>
           <li>Usar tu propio código o crear cuentas falsas.</li>

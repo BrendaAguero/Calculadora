@@ -7,6 +7,8 @@ import { cardClass, errorBox, inputClass, labelClass } from '@/lib/ui';
 import { buyPersonal } from './actions';
 import { PlusPrices } from '@/components/plus-prices';
 import { launchLastDay } from '@/lib/launch';
+import { cookies } from 'next/headers';
+import { PROMO_COOKIE } from '@/lib/promo';
 
 export const metadata = { title: 'Comprar · Calculadora Emprender' };
 
@@ -31,6 +33,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
   const offer = ((offers ?? []) as { discount_pct: number; expires_at: string }[])[0] ?? null;
   const listPrice = price('personal_price_online', 15000);
   const finalPrice = offer ? Math.round(listPrice * (100 - offer.discount_pct) / 100) : listPrice;
+  const promo = (await cookies()).get(PROMO_COOKIE)?.value ?? '';
   const offerUntil = offer ? new Date(offer.expires_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', timeZone: 'America/Argentina/Buenos_Aires' }) : '';
 
   return (
@@ -63,6 +66,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
         <form action={buyPersonal} className="mt-4 grid gap-3">
           <label className={labelClass}>Tu nombre<input name="full_name" maxLength={120} autoComplete="name" className={inputClass} /></label>
           <label className={labelClass}>Tu email (ahí te mandamos tu clave de acceso)<input name="email" type="email" required maxLength={200} autoComplete="email" defaultValue={user?.email ?? ''} className={inputClass} /></label>
+          <label className={labelClass}>Código de descuento (opcional)<input name="discount_code" maxLength={20} autoCapitalize="characters" defaultValue={promo} placeholder="Ej.: NAVIDAD26" className={`${inputClass} uppercase`} /><span>Se aplica antes de pagar. Si ya tenés un descuento mayor, queda ese.</span></label>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="terms" className="mt-1" required /><span>Acepto los <Link href="/legal/terminos" className="underline">términos</Link>, la <Link href="/legal/privacidad" className="underline">privacidad</Link> y las <Link href="/legal/compras" className="underline">condiciones de compra</Link>.</span></label>
           <div><SubmitButton className="rounded-xl bg-orange-700 px-5 py-2.5 font-semibold text-white hover:bg-orange-800" pendingText="Yendo a Mercado Pago…">Comprar con Mercado Pago</SubmitButton></div>
         </form>

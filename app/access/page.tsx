@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
+import { PROMO_COOKIE } from "@/lib/promo";
 import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade, startPlusTrial } from "./actions";
 import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
 import { PlanStore } from "./store";
@@ -82,7 +83,11 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
 
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
   const hasMonthly = Boolean(monthly?.auto_renew);
-  const referral = (await cookies()).get("ref")?.value ?? "";
+  // Código de afiliada: el del enlace con el que llegó o el de quien la refirió al crear la cuenta (90 días).
+  const promo = (await cookies()).get(PROMO_COOKIE)?.value ?? null;
+  const referral = (await cookies()).get("ref")?.value || ((await supabase.rpc("my_referral_code")).data as string | null) || "";
+  const { data: annualCfg } = await supabase.from("pricing_config").select("value_numeric").eq("key", "affiliate_annual_discount_pct").maybeSingle();
+  const annualAffiliatePct = Number(annualCfg?.value_numeric ?? 0);
   const planLabel = snapshot.basePlan === "ADVANCED" ? "Edición Personal" : snapshot.basePlan === "BASIC" ? "Básico (plan anterior)" : "Sin Edición Personal";
 
   return (
@@ -240,8 +245,11 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                 })}
               </div>
               
-              <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
+              <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de descuento o de afiliada (opcional)
                 <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
+                {annualAffiliatePct > 0 && <span>Con el código de una afiliada, el plan anual sale {annualAffiliatePct} % menos (si no tenés un descuento mayor).</span>}
+                <span>Los códigos de descuento sirven para el plan anual o de 6 meses. Se usa el mejor descuento que tengas.</span>
+                {promo && <span className="font-medium text-emerald-700 dark:text-emerald-400">🎟️ Tenés el código {promo}: se aplica al pagar si sirve para el plazo que elijas.</span>}
               </label>
               {mercadoPagoReady() && !paidPlus && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
               <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Plus'}</SubmitButton>
