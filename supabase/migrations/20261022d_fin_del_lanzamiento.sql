@@ -40,18 +40,26 @@ as $$
 declare
   v_end text;
   v_regular numeric;
+  v_online numeric;
 begin
   select value_text into v_end from pricing_config where key = 'launch_ends_at';
   if v_end is null or v_end::timestamptz > now() then return false; end if;
   select value_numeric into v_regular from pricing_config where key = 'personal_price_regular';
+  select value_numeric into v_online from pricing_config where key = 'personal_price_online';
   if coalesce(v_regular, 0) > 0 then
     update pricing_config set value_numeric = v_regular, updated_at = now()
      where key in ('personal_price_online', 'personal_price_transfer') and coalesce(value_numeric, 0) < v_regular;
+    -- El precio de revendedora sube en la misma proporción (por ejemplo, de 15.000 a 30.000 → el doble),
+    -- redondeado a $100. Va después del precio al público, así el control de margen ya ve el precio nuevo.
+    if coalesce(v_online, 0) > 0 and v_regular > v_online then
+      update pricing_config set value_numeric = round(value_numeric * v_regular / v_online / 100) * 100, updated_at = now()
+       where key = 'reseller_unit_price' and coalesce(value_numeric, 0) > 0;
+    end if;
     update plans set price = (select value_numeric from pricing_config where key = 'personal_price_online'), updated_at = now() where code = 'ADVANCED';
     update pricing_config set value_numeric = 0, updated_at = now() where key = 'personal_price_regular';
   end if;
   update pricing_config set value_text = null, updated_at = now() where key = 'launch_ends_at';
-  perform public.log_audit('prices.launch_ended', 'pricing', null, null, jsonb_build_object('price', v_regular));
+  perform public.log_audit('prices.launch_ended', 'pricing', null, null, jsonb_build_object('price', v_regular, 'reseller', (select value_numeric from pricing_config where key = 'reseller_unit_price')));
   return true;
 end;
 $$;
