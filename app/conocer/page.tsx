@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet, X } from 'lucide-react';
 import { LegalLinks } from '@/components/legal-links';
 import { annualSavings, PlusPrices } from '@/components/plus-prices';
+import { launchLastDay } from '@/lib/launch';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -61,13 +62,14 @@ const COMPARE: [string, boolean | string, boolean | string, boolean | string][] 
 export default async function LandingPage() {
   const supabase = await createClient();
   const [{ data: prices }, { data: monthly }, { data: annual }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_regular', 'plus_trial_days']),
+    supabase.from('pricing_config').select('key,value_numeric,value_text').in('key', ['personal_price_online', 'personal_price_regular', 'plus_trial_days', 'launch_ends_at']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).eq('active', true).maybeSingle(),
   ]);
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
   const personal = price('personal_price_online', 15000);
   const regular = price('personal_price_regular', 0);
+  const launchEnd = launchLastDay(prices?.find((p) => p.key === 'launch_ends_at')?.value_text);
   const plusMonthly = Number(monthly?.price ?? 6900);
   const trialDays = price('plus_trial_days', 0);
   const plusAnnual = annual ? Number(annual.price) : null;
@@ -128,7 +130,7 @@ export default async function LandingPage() {
             </article>
             <article className="rounded-3xl bg-orange-800 p-6 text-white ring-4 ring-resina dark:bg-orange-900">
               <h3 className="text-lg font-semibold">Edición Personal</h3>
-              {regular > personal && <p className="mt-1 text-sm"><span className="line-through opacity-70">{money(regular)}</span> <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">Precio de lanzamiento</span></p>}
+              {regular > personal && <p className="mt-1 text-sm"><span className="line-through opacity-70">{money(regular)}</span> <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">Precio de lanzamiento{launchEnd ? ` hasta el ${launchEnd}` : ''}</span></p>}
               <p className="mt-1 text-3xl font-bold">{money(personal)}</p>
               <p className="text-sm text-white/80">pago único</p>
               <ul className="mt-4 space-y-1.5 text-sm">

@@ -212,7 +212,10 @@ export async function givePack(formData: FormData) {
 
 export async function setRegularPrice(formData: FormData) {
   const n = Number(text(formData, 'regular').replace(/\./g, '').replace(',', '.') || 0);
-  await rpc('/admin/precios', 'admin_set_regular_price', { p_price: n }, n > 0 ? 'Precio normal guardado: se muestra tachado en la compra.' : 'Precio tachado quitado.');
+  const lastDay = text(formData, 'last_day');
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(lastDay) && n > 0 ? lastDay : null;
+  await rpc('/admin/precios', 'admin_set_launch', { p_regular: n, p_last_day: day },
+    n > 0 ? (day ? 'Listo: el lanzamiento termina solo en la fecha elegida y el precio pasa al normal.' : 'Precio normal guardado: se muestra tachado en la compra.') : 'Precio tachado quitado.');
 }
 
 export async function setActivityPrices(formData: FormData) {
