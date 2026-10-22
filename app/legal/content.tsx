@@ -129,6 +129,8 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
           <li><strong>PRO:</strong> si lográs 10 ventas nuevas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 % (las renovaciones mensuales no cuentan para PRO, aunque sí te generan comisión).</li>
           <li>La comisión se calcula sobre el monto efectivamente pagado. Vale para la Edición Personal (también si se compra desde la página, sin cuenta), los extras y Personal Plus. En Personal Plus mensual cobrás también las renovaciones del primer año (el primer pago y los 11 siguientes, mientras la clienta siga pagando); en el anual, sobre el pago del año.</li>
           <li>Cada comisión queda <strong>retenida 11 días</strong> (el plazo de arrepentimiento más un margen). Si la compra se devuelve o anula, la comisión se anula. Después pasa a disponible.</li>
+          <li>Si una compra se devuelve o tiene un contracargo <strong>después</strong> de que cobraste o pediste su comisión, ese monto se descuenta de tu próximo retiro. Lo ves en tu panel, en «Descuentos por ventas devueltas».</li>
+          <li><strong>Beneficio para quien compra:</strong> quien contrata Personal Plus anual con tu código o enlace paga un porcentaje menos (lo ves en tu panel; si ya tiene un descuento mayor, vale ese). Tu comisión se calcula sobre lo que efectivamente paga.</li>
         </ul>
         <h2>3. Retiros</h2>
         <p>Podés pedir el retiro cuando tengas disponible al menos el mínimo que se muestra en tu panel (más bajo si sos PRO). Se paga por transferencia o Mercado Pago a los datos que indiques; la administración puede pedirte datos para verificar tu identidad y emitir los comprobantes que correspondan. Sos responsable de tus obligaciones impositivas por lo que cobres.</p>

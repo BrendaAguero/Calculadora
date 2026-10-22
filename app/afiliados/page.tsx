@@ -14,13 +14,15 @@ const COMMISSION_LABELS: Record<string, string> = {
 const WITHDRAWAL_LABELS: Record<string, string> = { requested: 'Pedido', reviewing: 'En revisión', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
 
 // Textos sugeridos para que las afiliadas compartan su enlace.
-function promoTexts(link: string, code: string): [string, string][] {
-  return [
+function promoTexts(link: string, code: string, annualPct: number): [string, string][] {
+  const texts: [string, string][] = [
     ['Post para redes', `¿Trabajás con yeso, resina o cemento? 🧮 Yo calculo materiales, costos y precios con la Calculadora Emprender: sé cuánto gasto en cada pieza y cuánto gano.\n\nProbala con mi enlace: ${link}`],
     ['Mensaje de WhatsApp', `¡Hola! Te paso la app que uso para calcular cuánto material lleva cada pieza y a qué precio vender: ${link}\nSi comprás, usá mi código ${code}.`],
     ['Para talleres y clases', `Para calcular las mezclas y los costos de lo que hagan, les recomiendo la Calculadora Emprender. Entren desde ${link} o usen el código ${code} al comprar.`],
     ['Historia corta', `Dejé de calcular a ojo 🙌 Costos, mezclas y ganancia en un solo lugar → ${link}`],
   ];
+  if (annualPct > 0) texts.push(['Plan anual con descuento', `Si te pasás a Personal Plus anual con mi código ${code}, te sale ${annualPct} % menos. Entrá desde ${link}`]);
+  return texts;
 }
 
 export default async function AffiliatesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
@@ -34,15 +36,19 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
   const { data: affiliate } = await supabase.from('affiliates').select('id,status,commission_percentage,is_pro,valid_sales_count,approved_at,affiliate_codes(code,active)').eq('user_id', user.id).maybeSingle();
   const active = affiliate?.status === 'approved' || affiliate?.status === 'suspended';
   const since = new Date(new Date().getTime() - 30 * 86400000).toISOString().slice(0, 10);
-  const [{ data: commissionRows }, { data: withdrawals }, { data: visitRows }, { data: mins }] = active
+  const [{ data: commissionRows }, { data: withdrawals }, { data: visitRows }, { data: mins }, { data: adjustments }] = active
     ? await Promise.all([
       // Cada comisión con qué se compró (sin datos de quien compró).
       supabase.rpc('my_commissions'),
       supabase.from('withdrawals').select('id,amount,status,payout_method,requested_at,paid_at').eq('affiliate_id', affiliate!.id).order('requested_at', { ascending: false }).limit(20),
       supabase.from('affiliate_link_visits').select('visits').eq('affiliate_id', affiliate!.id).gte('day', since),
-      supabase.from('pricing_config').select('key,value_numeric').in('key', ['affiliate_min_withdrawal', 'affiliate_min_withdrawal_pro']),
+      supabase.from('pricing_config').select('key,value_numeric').in('key', ['affiliate_min_withdrawal', 'affiliate_min_withdrawal_pro', 'affiliate_annual_discount_pct']),
+      // Descuentos por ventas devueltas después de haber cobrado su comisión.
+      supabase.from('affiliate_adjustments').select('id,amount,reason,withdrawal_id,created_at').eq('affiliate_id', affiliate!.id).order('created_at', { ascending: false }).limit(50),
     ])
-    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+  const pendingDebt = (adjustments ?? []).filter((a) => !a.withdrawal_id).reduce((acc, a) => acc + Number(a.amount), 0);
+  const annualPct = Number(mins?.find((m) => m.key === 'affiliate_annual_discount_pct')?.value_numeric ?? 0);
   const commissions = (commissionRows ?? []) as { id: string; created_at: string; gross_sale_amount: number; percentage: number; commission_amount: number; status: string; hold_until: string | null; label: string }[];
   const visits30 = (visitRows ?? []).reduce((acc, v) => acc + Number(v.visits), 0);
 
@@ -69,6 +75,8 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
           <ul className="list-inside list-disc text-sm text-neutral-600 dark:text-neutral-300">
             <li>Comisión del 15 % o 20 % de cada compra pagada con tu código o enlace (25 % si llegás a PRO).</li>
             <li>En Personal Plus mensual también cobrás cada renovación del primer año; en el anual, sobre el pago del año.</li>
+            <li>Quien contrata Personal Plus anual con tu código o enlace tiene un descuento, así le conviene usarlo.</li>
+            <li>Si una venta se devuelve después de que cobraste su comisión, se descuenta de tu próximo retiro.</li>
             <li>La comisión queda retenida 11 días por si hay devoluciones; después pasa a disponible.</li>
             <li>Podés pedir el retiro cuando juntes el mínimo disponible (más bajo si sos PRO). Te pagamos por transferencia o Mercado Pago.</li>
             <li>PRO: 10 ventas nuevas por mes durante 3 meses seguidos (las renovaciones no cuentan para PRO).</li>
@@ -99,6 +107,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
               </div>
             )}
             <p className="mt-3 text-xs text-neutral-500">Si alguien crea su cuenta con tu enlace, queda asociada a vos 90 días: si compra en ese tiempo, la comisión es tuya aunque no vuelva a usar el enlace.</p>
+            {annualPct > 0 && <p className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">Dato para compartir: con tu código, Personal Plus anual sale {annualPct} % menos.</p>}
           </section>
 
           {link && code && (
@@ -106,7 +115,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
               <h2 className="font-semibold">Material para compartir</h2>
               <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Textos listos para redes, WhatsApp o tus talleres. Copialos y adaptalos a tu forma de hablar.</p>
               <ul className="mt-3 grid gap-3">
-                {promoTexts(link, code).map(([title, body]) => (
+                {promoTexts(link, code, annualPct).map(([title, body]) => (
                   <li key={title} className="rounded-xl border border-neutral-200 p-3 text-sm dark:border-neutral-800">
                     <div className="flex items-center justify-between gap-2"><p className="font-medium">{title}</p><CopyButton text={body} /></div>
                     <p className="mt-2 whitespace-pre-line text-neutral-600 dark:text-neutral-300">{body}</p>
@@ -118,7 +127,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
           )}
 
           <section className="grid grid-cols-3 gap-3">
-            {[['Retenidas', sum('held')], ['Disponibles', sum('available')], ['Pagadas', sum('paid')]].map(([label, value]) => (
+            {[['Retenidas', sum('held')], ['Disponibles', Math.max(sum('available') + pendingDebt, 0)], ['Pagadas', sum('paid')]].map(([label, value]) => (
               <div key={label as string} className={cardClass}><p className="text-xs text-neutral-500">{label}</p><p className="mt-1 text-lg font-semibold">{money(value as number)}</p></div>
             ))}
           </section>
@@ -130,7 +139,7 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
               <select name="method" className={inputClass}><option>Mercado Pago</option><option>Transferencia (CBU/CVU)</option></select>
             </label>
             <label className={labelClass}>Alias, CBU/CVU o email de Mercado Pago<input name="reference" required maxLength={120} className={inputClass} placeholder="mi.alias.mp" /><span className="text-xs font-normal text-neutral-500">CBU o CVU: 22 números. Alias: 6 a 20 letras, números, puntos o guiones.</span></label>
-            <div className="sm:col-span-2"><button type="submit" disabled={openWithdrawal || sum('available') < minimum} className={`${primaryButton} disabled:opacity-40`}>Pedir retiro</button></div>
+            <div className="sm:col-span-2"><button type="submit" disabled={openWithdrawal || sum('available') + pendingDebt < minimum} className={`${primaryButton} disabled:opacity-40`}>Pedir retiro</button></div>
           </form>
 
           <section className={cardClass}>
@@ -144,6 +153,16 @@ export default async function AffiliatesPage({ searchParams }: { searchParams: P
               ))}</ul>
             )}
           </section>
+
+          {(adjustments ?? []).length > 0 && (
+            <section className={cardClass}>
+              <h2 className="font-semibold">Descuentos por ventas devueltas</h2>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Si una venta se devuelve o se desconoce el pago después de que cobraste su comisión, se descuenta de tu próximo retiro.</p>
+              <ul className="mt-2 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">{adjustments!.map((a) => (
+                <li key={a.id} className="flex justify-between gap-3 py-2"><span>{dateOnly(a.created_at)} · {a.reason}</span><span className="text-right"><strong>{money(Number(a.amount))}</strong><span className="block text-xs text-neutral-500">{a.withdrawal_id ? 'Descontado' : 'Se descuenta en tu próximo retiro'}</span></span></li>
+              ))}</ul>
+            </section>
+          )}
 
           {(withdrawals ?? []).length > 0 && (
             <section className={cardClass}>

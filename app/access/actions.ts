@@ -107,6 +107,8 @@ export async function requestEntrepreneur(formData: FormData) {
   const { data: subscriptionId, error } = await supabase.rpc('request_entrepreneur', { p_months: months });
   if (error) back('error', error.message);
   await attribute(supabase, subscriptionId as string, code);
+  // Anual con código de afiliada: descuento (la base comprueba que la compra quedó a nombre de una afiliada).
+  if (months === 12 && code) await supabase.rpc('apply_affiliate_annual_discount', { p_subscription_id: subscriptionId });
   revalidatePath('/access');
   if (mercadoPagoReady()) await checkout(subscriptionId as string, formData);
   back('ok', `Pedido enviado. ${MANUAL}`);

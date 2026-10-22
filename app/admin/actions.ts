@@ -78,6 +78,10 @@ export async function setAffiliateWithdrawalMin(formData: FormData) {
   await rpc('/admin/afiliados', 'admin_set_affiliate_withdrawal_min', { p_min: n('min'), p_min_pro: n('min_pro') }, 'Mínimos de retiro guardados.');
 }
 
+export async function setAffiliateAnnualDiscount(formData: FormData) {
+  await rpc('/admin/afiliados', 'admin_set_affiliate_annual_discount', { p_pct: Number(text(formData, 'pct').replace(',', '.')) }, 'Descuento del plan anual con código guardado.');
+}
+
 export async function setAffiliateStatus(formData: FormData) {
   const status = text(formData, 'status');
   await rpc('/admin/afiliados', 'admin_set_affiliate_status', { p_affiliate_id: text(formData, 'affiliate_id'), p_status: status }, status === 'approved' ? 'Afiliada reactivada.' : 'Afiliada suspendida.');

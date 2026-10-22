@@ -3,7 +3,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { one, requireAdmin } from '@/lib/admin';
 import { money } from '@/app/stock/constants';
 import { cardClass, dateOnly, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { cancelAffiliateCommissions, reviewAffiliate, setAffiliatePercentage, setAffiliateStatus, setAffiliateWithdrawalMin, updateWithdrawal } from '../actions';
+import { cancelAffiliateCommissions, reviewAffiliate, setAffiliateAnnualDiscount, setAffiliatePercentage, setAffiliateStatus, setAffiliateWithdrawalMin, updateWithdrawal } from '../actions';
 
 const AFF: Record<string, string> = { pending: 'Pendiente', approved: 'Activa', suspended: 'Suspendida', rejected: 'Rechazada' };
 const WD: Record<string, string> = { requested: 'Pedido', reviewing: 'En revisión', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
@@ -13,12 +13,13 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
   const since = new Date(new Date().getTime() - 30 * 86400000).toISOString().slice(0, 10);
-  const [{ data: affiliates }, { data: withdrawals }, { data: commissions }, { data: visits }, { data: mins }] = await Promise.all([
+  const [{ data: affiliates }, { data: withdrawals }, { data: commissions }, { data: visits }, { data: mins }, { data: adjustments }] = await Promise.all([
     supabase.from('affiliates').select('id,status,commission_percentage,is_pro,valid_sales_count,application_note,created_at,profiles(email,full_name),affiliate_codes(code,active)').order('created_at', { ascending: false }),
     supabase.from('withdrawals').select('id,amount,status,payout_method,payout_reference,requested_at,paid_at,affiliates(profiles(email))').order('requested_at', { ascending: false }).limit(100),
     supabase.from('commissions').select('affiliate_id,commission_amount,status'),
     supabase.from('affiliate_link_visits').select('affiliate_id,visits').gte('day', since),
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['affiliate_min_withdrawal', 'affiliate_min_withdrawal_pro']),
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['affiliate_min_withdrawal', 'affiliate_min_withdrawal_pro', 'affiliate_annual_discount_pct']),
+    supabase.from('affiliate_adjustments').select('affiliate_id,amount').is('withdrawal_id', null),
   ]);
   const visits30 = new Map<string, number>();
   for (const v of visits ?? []) visits30.set(v.affiliate_id, (visits30.get(v.affiliate_id) ?? 0) + Number(v.visits));
@@ -32,6 +33,9 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
     if (c.status === 'paid') t.paid += Number(c.commission_amount);
     totals.set(c.affiliate_id, t);
   }
+  // Ventas devueltas después de cobrada la comisión: se descuentan del próximo retiro.
+  const debts = new Map<string, number>();
+  for (const d of adjustments ?? []) debts.set(d.affiliate_id, (debts.get(d.affiliate_id) ?? 0) - Number(d.amount));
   const pending = (affiliates ?? []).filter((a) => a.status === 'pending');
   const others = (affiliates ?? []).filter((a) => a.status !== 'pending');
   const openWithdrawals = (withdrawals ?? []).filter((w) => ['requested', 'reviewing', 'approved'].includes(w.status));
@@ -76,7 +80,7 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
               </form>
               <form action={updateWithdrawal}><input type="hidden" name="withdrawal_id" value={w.id} /><input type="hidden" name="status" value="rejected" /><SubmitButton className={btn}>Rechazar</SubmitButton></form>
             </div>
-            <p className="mt-1 text-xs text-neutral-500">Primero hacé la transferencia y después marcalo como pagado. Si lo rechazás, las comisiones vuelven a estar disponibles.</p>
+            <p className="mt-1 text-xs text-neutral-500">Primero hacé la transferencia y después marcalo como pagado. Si lo rechazás, las comisiones vuelven a estar disponibles. El monto ya trae restadas las ventas devueltas, si las hubo.</p>
           </div>
         ))}
       </section>
@@ -98,6 +102,13 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar mínimos</SubmitButton></div>
       </form>
 
+      <form action={setAffiliateAnnualDiscount} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
+        <h2 className="font-semibold sm:col-span-2">Descuento del plan anual con código</h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Quien contrata Personal Plus anual con el código o el enlace de una afiliada paga este porcentaje menos. Si ya tiene un descuento mayor (por antigüedad), vale ese. Poné 0 para no dar descuento.</p>
+        <label className={labelClass}>Descuento (%)<input name="pct" inputMode="decimal" required defaultValue={min('affiliate_annual_discount_pct', 5)} className={inputClass} /></label>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar descuento</SubmitButton></div>
+      </form>
+
       <section className={cardClass}>
         <h2 className="font-semibold">Afiliadas</h2>
         {!others.length ? <p className="mt-2 text-sm text-neutral-500">Todavía no hay afiliadas.</p> : (
@@ -106,7 +117,7 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
             const code = (a.affiliate_codes ?? []).find((c) => c.active)?.code ?? (a.affiliate_codes ?? [])[0]?.code;
             return (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span><strong>{code ?? '—'}</strong> · {one(a.profiles)?.email} · {Number(a.commission_percentage)} %{a.is_pro ? ' · PRO' : ''} · {a.valid_sales_count} ventas · {visits30.get(a.id) ?? 0} visitas (30 días) · {AFF[a.status]}<br /><span className="text-xs text-neutral-500">retenido {money(t.held)} · disponible {money(t.available)} · pagado {money(t.paid)}</span></span>
+                <span><strong>{code ?? '—'}</strong> · {one(a.profiles)?.email} · {Number(a.commission_percentage)} %{a.is_pro ? ' · PRO' : ''} · {a.valid_sales_count} ventas · {visits30.get(a.id) ?? 0} visitas (30 días) · {AFF[a.status]}<br /><span className="text-xs text-neutral-500">retenido {money(t.held)} · disponible {money(t.available)} · pagado {money(t.paid)}{debts.get(a.id) ? ` · a descontar ${money(debts.get(a.id) ?? 0)} por ventas devueltas` : ''}</span></span>
                 {(a.status === 'approved' || a.status === 'suspended') && (
                   <div className="flex flex-wrap items-center gap-2">
                     <form action={setAffiliatePercentage} className="flex items-center gap-1">
