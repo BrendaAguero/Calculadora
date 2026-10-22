@@ -68,12 +68,12 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
     Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null)),
     // Actualizar a un plan más largo (solo con un único plan activo y pagado; la base lo comprueba).
     snapshot.entrepreneurActive
-      ? Promise.all(([6, 12] as const).map(async (months) => (await supabase.rpc("quote_entrepreneur_upgrade", { p_months: months })).data as UpgradeQuote | null))
+      ? Promise.all(([12] as const).map(async (months) => (await supabase.rpc("quote_entrepreneur_upgrade", { p_months: months })).data as UpgradeQuote | null))
       : Promise.resolve([]),
   ]);
   const upgrades = upgradeQuotes.flatMap((quote) => (quote?.ok ? [quote] : []));
   const confirmMonths = Number(confirmar);
-  const confirming = snapshot.entrepreneurActive && !pending && [6, 12].includes(confirmMonths) ? confirmMonths : null;
+  const confirming = snapshot.entrepreneurActive && !pending && confirmMonths === 12 ? confirmMonths : null;
   const addMonths = (iso: string, months: number) => { const d = new Date(iso); d.setMonth(d.getMonth() + months); return d.toISOString(); };
 
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
@@ -201,7 +201,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             </div>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
-              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pedís 6 o 12 meses, se suman al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
+              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pagás un año, se suma al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
               <div className="grid gap-2 sm:grid-cols-2">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
@@ -214,7 +214,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                   const savings = monthlyQuote && months > 1 ? Number(monthlyQuote.final_price) * months - Number(quote.final_price) : 0;
                   return (
                     <label key={months} className="flex cursor-pointer flex-col rounded-xl border border-neutral-300 p-3 text-sm has-[:checked]:border-violet-500 has-[:checked]:ring-2 has-[:checked]:ring-violet-500/30 dark:border-neutral-700">
-                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 6 : 1)} required />{title}</span>
+                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 12 : 1)} required />{title}</span>
                       {Number(quote.discount_pct) > 0 && <span className="mt-1 text-neutral-500 line-through">{money(quote.price)}</span>}
                       <strong className="text-lg">{money(quote.final_price)}</strong>
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}

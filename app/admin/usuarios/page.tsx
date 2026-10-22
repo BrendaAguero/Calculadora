@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
 import { requireAdmin } from '@/lib/admin';
 import { cardClass, dateOnly, errorBox, inputClass, okBox, pageClass } from '@/lib/ui';
-import { grantLicense, setAccountStatus } from '../actions';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { grantLicense, setAccountStatus, setMaxFreeAccounts } from '../actions';
 
 const STATUS: Record<string, string> = { active: 'Activa', suspended: 'Suspendida', blocked: 'Bloqueada' };
 
@@ -13,6 +14,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   let query = supabase.from('profiles').select('id,email,full_name,role,account_status,is_tester,created_at').order('created_at', { ascending: false }).limit(200);
   if (q) query = query.ilike('email', `%${q.replace(/[%_]/g, '')}%`);
   const { data: users, error: loadError } = await query;
+  // Cuántas cuentas gratis hay y el tope (la cuenta la hace la base; solo la administración llega acá).
+  const adminClient = createAdminClient();
+  const freeStatus = adminClient ? ((await adminClient.rpc('free_accounts_status')).data as { count: number; max: number | null; open: boolean } | null) : null;
   const ids = (users ?? []).map((u) => u.id);
   const now = new Date().toISOString();
   const [{ data: licenses }, { data: subscriptions }] = ids.length
@@ -33,6 +37,18 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       </header>
       {ok && <div role="status" className={okBox}>{ok}</div>}
       {(error || loadError) && <div role="alert" className={errorBox}>{error ?? loadError!.message}</div>}
+      <section className={cardClass}>
+        <h2 className="font-semibold">Tope de cuentas gratis</h2>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          Hoy hay <strong>{freeStatus?.count ?? '—'}</strong> cuentas gratis{freeStatus?.max != null ? <> de un máximo de <strong>{freeStatus.max}</strong></> : ' (sin tope)'}.
+          {freeStatus?.open === false && <strong className="text-amber-700 dark:text-amber-400"> El registro gratis está cerrado.</strong>}
+          {' '}Cuando se llena, nadie más puede crear una cuenta gratis; quien quiere comprar la Edición Personal o contratar Personal Plus pasa igual. Dejalo vacío para no tener tope.
+        </p>
+        <form action={setMaxFreeAccounts} className="mt-3 flex flex-wrap gap-2">
+          <input name="max" inputMode="numeric" defaultValue={freeStatus?.max ?? ''} placeholder="Sin tope" className={`${inputClass} max-w-[10rem]`} />
+          <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">Guardar</SubmitButton>
+        </form>
+      </section>
       <form method="get" className="flex gap-2"><input name="q" defaultValue={q ?? ''} placeholder="Buscar por email" className={inputClass} /><SubmitButton className="rounded-xl border border-neutral-300 px-4 text-sm dark:border-neutral-700">Buscar</SubmitButton></form>
 
       <section className="grid gap-3">
@@ -42,7 +58,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
               <div>
                 <h2 className="font-medium">{u.full_name || u.email}</h2>
                 <p className="text-sm text-neutral-500">{u.email}{u.role === 'admin' ? ' · administradora' : ''}{u.is_tester ? ' · cuenta de prueba' : ''}</p>
-                <p className="mt-1 text-sm">Licencia: {plan.get(u.id) ?? 'sin licencia'} · Emprendedor: {until.has(u.id) ? `hasta ${dateOnly(until.get(u.id)!)}` : 'no'} · alta {dateOnly(u.created_at)}</p>
+                <p className="mt-1 text-sm">Licencia: {plan.get(u.id) ?? 'sin licencia'} · Personal Plus: {until.has(u.id) ? `hasta ${dateOnly(until.get(u.id)!)}` : 'no'} · alta {dateOnly(u.created_at)}</p>
               </div>
               <span className={`rounded-full px-2.5 py-1 text-xs ${u.account_status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200'}`}>{STATUS[u.account_status] ?? u.account_status}</span>
             </div>

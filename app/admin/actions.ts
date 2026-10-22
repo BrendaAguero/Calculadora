@@ -176,6 +176,11 @@ export async function setResellerMargin(formData: FormData) {
   await rpc('/admin/revendedoras', 'admin_set_reseller_margin', { p_pct: Number(text(formData, 'margin').replace(',', '.')) }, 'Margen mínimo guardado.');
 }
 
+export async function setMaxFreeAccounts(formData: FormData) {
+  const raw = text(formData, 'max').replace(/\./g, '');
+  await rpc('/admin/usuarios', 'admin_set_max_free_accounts', { p_max: raw === '' ? null : Number(raw) }, raw === '' ? 'Listo: la versión gratis queda sin tope.' : 'Tope de cuentas gratis guardado.');
+}
+
 export async function setPlusAnnualPrice(formData: FormData) {
   const n = Number(text(formData, 'annual').replace(/\./g, '').replace(',', '.'));
   await rpc('/admin/precios', 'admin_set_plus_annual_price', { p_price: n }, 'Precio anual de Personal Plus guardado.');

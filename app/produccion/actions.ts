@@ -9,7 +9,7 @@ import { planProduction } from './compute';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 
-// Producción es parte de Emprendedor. Se recalcula todo en el servidor: no se confía en lo que muestra la pantalla.
+// Producción es parte de Personal Plus. Se recalcula todo en el servidor: no se confía en lo que muestra la pantalla.
 export async function registerProduction(formData: FormData) {
   const productId = text(formData, 'product_id');
   const formulaId = text(formData, 'formula_id') || null;

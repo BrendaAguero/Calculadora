@@ -134,7 +134,7 @@ async function sendPersonalKey(admin: NonNullable<ReturnType<typeof createAdminC
 
 // ---------------------------------------------------------------------------------------------
 // Suscripción mensual con renovación automática (Suscripciones de Mercado Pago, «preapproval»).
-// La persona autoriza en Mercado Pago un cobro por mes; cada cobro aprobado suma un mes de Emprendedor.
+// La persona autoriza en Mercado Pago un cobro por mes; cada cobro aprobado suma un mes de Personal Plus.
 
 type Preapproval = { id: string; status: string; external_reference: string | null; init_point?: string };
 type AuthorizedPayment = { id: number; preapproval_id: string; payment?: { id?: number; status?: string } | null };

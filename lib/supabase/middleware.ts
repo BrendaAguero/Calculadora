@@ -32,9 +32,10 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANTE: no agregar lógica entre createServerClient y getUser().
   // Un error ahí puede romper el refresco de sesión de forma difícil de debuggear.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims verifica la sesión (y la renueva si venció) sin consultar al servidor en cada página
+  // cuando la firma se puede comprobar acá; si no, consulta igual. Las páginas vuelven a validar con getUser.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
   const isPublicPath = PUBLIC_PATHS.some((path) =>
     request.nextUrl.pathname.startsWith(path)

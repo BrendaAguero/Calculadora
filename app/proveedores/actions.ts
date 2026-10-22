@@ -7,7 +7,7 @@ import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 
-// Proveedores y compras: módulo «Proveedores básico» o Emprendedor. Se comprueba en cada acción.
+// Proveedores y compras: módulo «Proveedores básico» o Personal Plus. Se comprueba en cada acción.
 async function auth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

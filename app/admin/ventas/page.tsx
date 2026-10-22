@@ -3,7 +3,7 @@ import { one, requireAdmin } from '@/lib/admin';
 import { money } from '@/app/stock/constants';
 import { cardClass, dateTime, errorBox, pageClass } from '@/lib/ui';
 
-const TYPE: Record<string, string> = { license: 'Licencia', license_upgrade: 'Upgrade de licencia', activity: 'Actividad', module: 'Módulo', subscription_initial: 'Emprendedor', subscription_renewal: 'Emprendedor (renovación)' };
+const TYPE: Record<string, string> = { license: 'Licencia', license_upgrade: 'Upgrade de licencia', activity: 'Actividad', module: 'Módulo', subscription_initial: 'Personal Plus', subscription_renewal: 'Personal Plus (renovación)' };
 const PAY: Record<string, string> = { pending: 'Pendiente', approved: 'Aprobado', rejected: 'Rechazado', canceled: 'Cancelado', refunded: 'Reembolsado' };
 
 export default async function AdminSalesPage() {
@@ -26,7 +26,7 @@ export default async function AdminSalesPage() {
       {error && <div role="alert" className={errorBox}>{error.message}</div>}
       <section className="grid grid-cols-2 gap-3">
         <div className={cardClass}><p className="text-xs text-neutral-500">Cobrado este mes</p><p className="mt-1 text-xl font-semibold">{money(thisMonth)}</p></div>
-        <div className={cardClass}><p className="text-xs text-neutral-500">Emprendedor activos</p><p className="mt-1 text-xl font-semibold">{(subscriptions ?? []).filter((s) => s.status === 'active' && new Date(s.expires_at) > now).length}</p></div>
+        <div className={cardClass}><p className="text-xs text-neutral-500">Personal Plus activos</p><p className="mt-1 text-xl font-semibold">{(subscriptions ?? []).filter((s) => s.status === 'active' && new Date(s.expires_at) > now).length}</p></div>
       </section>
 
       <section className={cardClass}>
@@ -48,7 +48,7 @@ export default async function AdminSalesPage() {
       </section>
 
       <section className={cardClass}>
-        <h2 className="font-semibold">Suscripciones Emprendedor (activas y pendientes)</h2>
+        <h2 className="font-semibold">Suscripciones Personal Plus (activas y pendientes)</h2>
         <ul className="mt-2 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">{(subscriptions ?? []).map((s) => (
           <li key={s.id} className="flex flex-wrap justify-between gap-2 py-2">
             <span>{one(s.profiles)?.email} · {s.duration_months === 1 ? 'mensual' : `${s.duration_months} meses`}{s.auto_renew ? ' · renueva' : ''}</span>

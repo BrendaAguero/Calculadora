@@ -142,7 +142,7 @@ export default async function LandingPage() {
               <ul className="mt-4 space-y-1.5 text-sm">
                 {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión', 'Todas las funciones nuevas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
-              <Link href="/registro" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
+              <Link href="/registro?plan=plus" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
               <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.</p>
             </article>
           </div>

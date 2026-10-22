@@ -14,5 +14,5 @@ export async function activateSubscription(formData: FormData) {
   const { data: expiresAt, error } = await supabase.rpc('admin_activate_subscription', { p_subscription_id: subscriptionId });
   if (error) back('error', error.message);
   revalidatePath('/admin/emprendedor');
-  back('ok', `Emprendedor activado hasta el ${new Date(expiresAt as string).toLocaleDateString('es-AR', { dateStyle: 'long', timeZone: 'America/Argentina/Buenos_Aires' })}.`);
+  back('ok', `Personal Plus activado hasta el ${new Date(expiresAt as string).toLocaleDateString('es-AR', { dateStyle: 'long', timeZone: 'America/Argentina/Buenos_Aires' })}.`);
 }

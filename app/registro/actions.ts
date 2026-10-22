@@ -7,6 +7,8 @@ import { DEVICE_LIMIT_MESSAGE, registerCurrentDevice } from '@/lib/devices';
 import { isLeakedPassword, weakPasswordReason } from '@/lib/password';
 import { allowAttempt, TOO_MANY } from '@/lib/rate-limit';
 
+const FREE_FULL = 'Por ahora no hay más lugares en la versión gratis. Podés comprar la Edición Personal o crear tu cuenta para contratar Personal Plus.';
+
 export type SignUpState = { error?: string; email?: string };
 
 // Registro para la versión gratis: email y contraseña, al instante y sin mandar correos.
@@ -26,6 +28,12 @@ export async function signUpFree(_prev: SignUpState, formData: FormData): Promis
 
   const admin = createAdminClient();
   if (!admin) return { error: 'El registro no está disponible en este momento. Probá más tarde.', email };
+  // Tope de cuentas gratis (se cambia en Administración → Usuarios). Quien viene a contratar Personal Plus pasa igual.
+  const forPlus = formData.get('plan') === 'plus';
+  if (!forPlus) {
+    const { data: status } = await admin.rpc('free_accounts_status');
+    if (status && (status as { open?: boolean }).open === false) return { error: FREE_FULL, email };
+  }
   const created = await admin.auth.admin.createUser({
     email, password, email_confirm: true,
     user_metadata: { terms_accepted: 'true', password_set: true, ...(fullName ? { full_name: fullName } : {}) },
@@ -40,5 +48,5 @@ export async function signUpFree(_prev: SignUpState, formData: FormData): Promis
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: 'La cuenta se creó, pero no se pudo abrir la sesión. Entrá con tu email y contraseña.', email };
   if (!(await registerCurrentDevice())) return { error: DEVICE_LIMIT_MESSAGE, email };
-  redirect('/');
+  redirect(forPlus ? '/access#emprendedor' : '/');
 }

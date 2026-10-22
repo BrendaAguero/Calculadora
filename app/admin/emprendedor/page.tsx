@@ -19,8 +19,8 @@ export default async function AdminEntrepreneurPage({ searchParams }: { searchPa
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Link href="/admin" className="text-sm underline">← Administración</Link>
-          <h1 className="mt-3 text-3xl font-semibold">Pedidos de Emprendedor</h1>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Todavía no hay cobro automático. Activá un pedido cuando hayas recibido el pago. Si la persona ya tiene Emprendedor, 6 y 12 meses se suman al final (y su suscripción mensual deja de renovarse). La suscripción mensual no se suma. Las actualizaciones empiezan el día que las activás y el plan anterior termina ese día.</p>
+          <h1 className="mt-3 text-3xl font-semibold">Pedidos de Personal Plus</h1>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Los pagos por Mercado Pago se activan solos. Acá quedan los pedidos pagados por otro medio: activalos cuando hayas recibido el pago. Si la persona ya tiene Personal Plus, el año se suma al final (y su suscripción mensual deja de renovarse). La suscripción mensual no se suma. Las actualizaciones empiezan el día que las activás y el plan anterior termina ese día.</p>
         </div>
 
         {ok && <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{ok}</div>}
