@@ -8,7 +8,7 @@ import { annualSavings } from '../lib/plus-pricing.ts';
 const base: AccessSnapshot = {
   accountStatus: 'active', isAdmin: false, isModerator: false, isTester: false,
   basePlan: null, baseLicenseActive: false, licenseExpiresAt: null, isFree: true,
-  entrepreneurActive: false, entrepreneurExpiresAt: null, activities: [], modules: [], limits: {},
+  entrepreneurActive: false, entrepreneurExpiresAt: null, plusTrialEndsAt: null, activities: [], modules: [], limits: {},
 };
 const free = base;
 const personal: AccessSnapshot = { ...base, basePlan: 'ADVANCED', baseLicenseActive: true, isFree: false };

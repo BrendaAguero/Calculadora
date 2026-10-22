@@ -13,6 +13,7 @@ import { getAccessSnapshot, hasPackAccess } from "@/lib/access/permissions";
 import { UsageTracker } from "@/components/usage-tracker";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { OfflineSync } from "@/components/offline-sync";
+import { WebAnalytics } from "@/components/web-analytics";
 import "./globals.css";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
@@ -45,7 +46,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOCK_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden} pack={pack} staff={staff}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /><Suspense fallback={null}><Announcements /></Suspense></body>
+      <body className="min-h-full"><AppFrame simple={simple} hidden={hidden} pack={pack} staff={staff}>{children}</AppFrame><UsageTracker simple={simple} /><DeviceGuard /><TimerWatcher /><ServiceWorkerRegister /><OfflineSync /><Suspense fallback={null}><Announcements /></Suspense><WebAnalytics /></body>
     </html>
   );
 }

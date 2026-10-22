@@ -4,6 +4,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { PROBLEMS } from '@/lib/problems';
 import { createClient } from '@/lib/supabase/server';
+import { photoUrls } from '@/lib/photos';
 import { dateAR, resultInfo, todayAR } from '@/lib/test-logs';
 import { cardClass, errorBox, okBox, pageClass } from '@/lib/ui';
 import { deleteLog, updateLog } from '../actions';
@@ -20,6 +21,7 @@ export default async function TestLogPage({ params, searchParams }: { params: Pr
     getAccessSnapshot(),
   ]);
   if (!log) notFound();
+  const photoSrc = (await photoUrls([log.photo])).get(log.photo ?? '') ?? null;
   const allowed = Boolean(snapshot && hasFeature(snapshot, 'CUADERNO'));
   const info = resultInfo(log.result);
   const color = (Array.isArray(log.color_recipes) ? log.color_recipes[0] : log.color_recipes) as { id: string; name: string } | null;
@@ -43,9 +45,9 @@ export default async function TestLogPage({ params, searchParams }: { params: Pr
       {error && <div role="alert" className={errorBox}>{error}</div>}
 
       <section className={`${cardClass} grid gap-4 sm:grid-cols-[auto_1fr]`}>
-        {log.photo && (
+        {log.photo && photoSrc && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={log.photo} alt="Foto de la prueba" className="h-48 w-48 rounded-2xl object-cover" />
+          <img src={photoSrc} alt="Foto de la prueba" className="h-48 w-48 rounded-2xl object-cover" />
         )}
         <dl className="grid gap-2 text-sm">
           {rows.filter(([, v]) => v).map(([k, v]) => <div key={k}><dt className="text-xs text-neutral-500">{k}</dt><dd className="font-medium">{v}</dd></div>)}
@@ -65,7 +67,7 @@ export default async function TestLogPage({ params, searchParams }: { params: Pr
       {allowed && (
         <details className={cardClass}>
           <summary className="cursor-pointer font-semibold">Editar</summary>
-          <div className="mt-3"><LogForm action={updateLog} initial={{ ...log, temperature: log.temperature == null ? null : Number(log.temperature), cure_hours: log.cure_hours == null ? null : Number(log.cure_hours) }} colors={colors ?? []} today={todayAR()} submitLabel="Guardar cambios" /></div>
+          <div className="mt-3"><LogForm action={updateLog} initial={{ ...log, temperature: log.temperature == null ? null : Number(log.temperature), cure_hours: log.cure_hours == null ? null : Number(log.cure_hours), photoSrc }} colors={colors ?? []} today={todayAR()} submitLabel="Guardar cambios" /></div>
         </details>
       )}
       <form action={deleteLog} className="flex flex-wrap items-center gap-3 text-sm">

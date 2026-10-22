@@ -4,6 +4,7 @@ import { AppShell } from '@/components/app-shell';
 import { getAccessSnapshot } from '@/lib/access/permissions';
 import { forAudience, kindLabel, type Announcement } from '@/lib/announcements';
 import { createClient } from '@/lib/supabase/server';
+import { publicPhotoUrl } from '@/lib/photo';
 import { dateOnly } from '@/lib/ui';
 
 export const metadata = { title: 'Novedades · Calculadora Emprender' };
@@ -29,7 +30,7 @@ export default async function NewsPage() {
           <article key={a.id} className="overflow-hidden rounded-3xl bg-white dark:bg-neutral-900">
             {a.image && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={a.image} alt="" loading="lazy" className="max-h-56 w-full object-cover" />
+              <img src={publicPhotoUrl(a.image) ?? ''} alt="" loading="lazy" className="max-h-56 w-full object-cover" />
             )}
             <div className="p-5">
               <p className="text-xs font-semibold text-orange-800 dark:text-orange-300">{kindLabel(a.kind)} · {dateOnly(a.starts_at)}</p>

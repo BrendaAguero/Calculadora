@@ -61,7 +61,7 @@ const COMPARE: [string, boolean | string, boolean | string, boolean | string][] 
 export default async function LandingPage() {
   const supabase = await createClient();
   const [{ data: prices }, { data: monthly }, { data: annual }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_regular']),
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_regular', 'plus_trial_days']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).eq('active', true).maybeSingle(),
   ]);
@@ -69,6 +69,7 @@ export default async function LandingPage() {
   const personal = price('personal_price_online', 15000);
   const regular = price('personal_price_regular', 0);
   const plusMonthly = Number(monthly?.price ?? 6900);
+  const trialDays = price('plus_trial_days', 0);
   const plusAnnual = annual ? Number(annual.price) : null;
   const yearly = annualSavings(plusMonthly, plusAnnual);
 
@@ -142,8 +143,8 @@ export default async function LandingPage() {
               <ul className="mt-4 space-y-1.5 text-sm">
                 {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión', 'Todas las funciones nuevas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
-              <Link href="/registro?plan=plus" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
-              <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.</p>
+              <Link href="/registro?plan=plus" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">{trialDays > 0 ? `Probalo ${trialDays} días gratis` : 'Empezar'}</Link>
+              <p className="mt-2 text-center text-xs text-neutral-500">{trialDays > 0 ? `Creás tu cuenta y lo probás ${trialDays} días gratis, sin tarjeta. Después elegís si seguís por mes o por año.` : 'Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.'}</p>
             </article>
           </div>
         </section>

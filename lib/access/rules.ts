@@ -18,6 +18,8 @@ export type AccessSnapshot = {
   isFree: boolean;
   entrepreneurActive: boolean;
   entrepreneurExpiresAt: string | null;
+  // Prueba gratis de Personal Plus en curso (solo si no hay un Plus pago activo): hasta cuándo.
+  plusTrialEndsAt: string | null;
   activities: string[];
   modules: string[];
   limits: Partial<Record<Resource, number>>;

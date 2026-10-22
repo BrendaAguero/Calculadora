@@ -21,7 +21,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
 
   if (!user) return null;
 
-  const [{ data: profile }, { data: licenses }, { data: subscriptions }, { data: activities }, { data: modules }] =
+  const [{ data: profile }, { data: licenses }, { data: subscriptions }, { data: activities }, { data: modules }, { data: trial }] =
     await Promise.all([
       supabase.from("profiles").select("account_status, role, is_tester").eq("id", user.id).maybeSingle(),
       supabase
@@ -44,6 +44,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
         .select("status, modules(code)")
         .eq("user_id", user.id)
         .eq("status", "active"),
+      supabase.from("plus_trials").select("expires_at").eq("user_id", user.id).maybeSingle(),
     ]);
 
   // Si hubiera más de una licencia base, vale la de mayor nivel.
@@ -57,12 +58,15 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
   // Personal Plus vale mientras no venza. Es otra forma de pagar: no hace falta la Edición Personal.
   // Al vencer, la persona vuelve sola a lo que tenga (Edición Personal o versión gratis).
   const now = new Date();
-  const entrepreneurExpiresAt =
+  const paidPlusExpiresAt =
     (subscriptions ?? [])
       .map((subscription) => subscription.expires_at as string)
       .filter((expiresAt) => new Date(expiresAt) > now)
       .sort()
       .at(-1) ?? null;
+  // La prueba gratis de 14 días da lo mismo que Personal Plus mientras dura.
+  const trialExpiresAt = trial?.expires_at && new Date(trial.expires_at as string) > now ? (trial.expires_at as string) : null;
+  const entrepreneurExpiresAt = [paidPlusExpiresAt, trialExpiresAt].filter((d): d is string => Boolean(d)).sort().at(-1) ?? null;
 
   // Sin licencia rigen los límites del plan gratis (FREE).
   const limits: AccessSnapshot["limits"] = {};
@@ -90,6 +94,7 @@ export const getAccessSnapshot = cache(async (): Promise<AccessSnapshot | null> 
     isFree: !activeLicense && entrepreneurExpiresAt === null && !isAdmin && !isTester,
     entrepreneurActive: entrepreneurExpiresAt !== null,
     entrepreneurExpiresAt,
+    plusTrialEndsAt: paidPlusExpiresAt ? null : trialExpiresAt,
     activities: (activities ?? []).flatMap((item) => {
       const activity = one(item.activities);
       return activity?.code ? [activity.code] : [];

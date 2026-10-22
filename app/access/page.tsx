@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { countActive, getAccessSnapshot, getResourceLimit, RESOURCE_LABELS, type Resource } from "@/lib/access/permissions";
-import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade } from "./actions";
+import { cancelEntrepreneurAutoRenew, cancelEntrepreneurRequest, payEntrepreneurRequest, requestEntrepreneur, requestEntrepreneurUpgrade, startPlusTrial } from "./actions";
 import { mercadoPagoReady, syncUserPreapprovals } from "@/lib/mercadopago";
 import { PlanStore } from "./store";
 import { SavingsBadge } from "@/components/plus-prices";
@@ -59,7 +59,9 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const snapshot = await getAccessSnapshot();
   if (!snapshot) redirect("/login");
 
-  const [counts, { data: pending }, { data: monthly }, quotes, upgradeQuotes] = await Promise.all([
+  // Plus pago (no la prueba gratis): de eso dependen las compras, renovaciones y actualizaciones.
+  const paidPlus = snapshot.entrepreneurActive && !snapshot.plusTrialEndsAt;
+  const [counts, { data: pending }, { data: monthly }, quotes, upgradeQuotes, { data: trialStatus }] = await Promise.all([
     Promise.all(RESOURCES.map((resource) => countActive(supabase, user.id, resource))),
     supabase.from("subscriptions").select("id, duration_months, auto_renew, final_price, total_discount_percentage, upgrade_credit, created_at, external_preapproval_id, preapproval_status").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
     // Suscripción mensual vigente (la más nueva), con o sin renovación.
@@ -67,13 +69,15 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
     // Plus es otra forma de pagar: cualquier cuenta puede contratarla (con o sin Edición Personal).
     Promise.all(MONTHS.map(async (months) => (await supabase.rpc("quote_entrepreneur", { p_months: months })).data as Quote | null)),
     // Actualizar a un plan más largo (solo con un único plan activo y pagado; la base lo comprueba).
-    snapshot.entrepreneurActive
+    paidPlus
       ? Promise.all(([12] as const).map(async (months) => (await supabase.rpc("quote_entrepreneur_upgrade", { p_months: months })).data as UpgradeQuote | null))
       : Promise.resolve([]),
+    supabase.rpc("plus_trial_status"),
   ]);
+  const trial = trialStatus as { available?: boolean; days?: number } | null;
   const upgrades = upgradeQuotes.flatMap((quote) => (quote?.ok ? [quote] : []));
   const confirmMonths = Number(confirmar);
-  const confirming = snapshot.entrepreneurActive && !pending && confirmMonths === 12 ? confirmMonths : null;
+  const confirming = paidPlus && !pending && confirmMonths === 12 ? confirmMonths : null;
   const addMonths = (iso: string, months: number) => { const d = new Date(iso); d.setMonth(d.getMonth() + months); return d.toISOString(); };
 
   const monthlyQuote = quotes[0]?.ok ? quotes[0] : null;
@@ -99,7 +103,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
           <h2 className="font-semibold">Tu plan</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-neutral-500">Edición</span><p className="font-medium">{planLabel}</p>{snapshot.licenseExpiresAt && <p className="text-xs text-amber-700 dark:text-amber-300">De regalo hasta el {date(snapshot.licenseExpiresAt)}</p>}</div>
-            <div><span className="text-neutral-500">Personal Plus</span><p className="font-medium">{snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
+            <div><span className="text-neutral-500">Personal Plus</span><p className="font-medium">{snapshot.plusTrialEndsAt ? `Prueba gratis hasta el ${date(snapshot.plusTrialEndsAt)}` : snapshot.entrepreneurActive ? `Activo hasta el ${date(snapshot.entrepreneurExpiresAt!)}` : "No activo"}</p></div>
           </div>
           {snapshot.isTester && <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Cuenta de prueba: sin límites ni restricciones de plan.</p>}
           {snapshot.isAdmin && (
@@ -118,7 +122,17 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             {snapshot.baseLicenseActive && !snapshot.entrepreneurActive && <> Como ya tenés la Edición Personal, no la necesitás: si querés algo puntual (por ejemplo, el Pack Ventas y Stock), lo comprás suelto arriba, de una sola vez.</>}
           </p>
 
-          {!snapshot.entrepreneurActive && quotes.some((q) => q?.ok && Number(q.age_pct) > 0) && (
+          {trial?.available && !snapshot.entrepreneurActive && !pending && (
+            <form action={startPlusTrial} className="mt-3 rounded-xl border-2 border-violet-400 bg-violet-50 p-4 text-sm text-violet-900 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100">
+              <p className="font-semibold">Probá Personal Plus {trial.days} días gratis</p>
+              <p className="mt-1">Sin tarjeta y sin compromiso: tenés todo desbloqueado durante la prueba. Al terminar, tu cuenta vuelve a como estaba y no se borra nada. Es una sola vez por cuenta.</p>
+              <SubmitButton className="mt-3 rounded-xl bg-violet-700 px-4 py-2 font-medium text-white">Empezar la prueba gratis</SubmitButton>
+            </form>
+          )}
+          {snapshot.plusTrialEndsAt && (
+            <p className="mt-3 rounded-xl bg-violet-50 px-3 py-2 text-sm text-violet-900 dark:bg-violet-950/40 dark:text-violet-100">Estás probando Personal Plus gratis hasta el <strong>{date(snapshot.plusTrialEndsAt)}</strong>. Si te gusta, elegí abajo cómo seguir (por mes o por año); si no, tu cuenta vuelve sola a como estaba.</p>
+          )}
+          {!paidPlus && quotes.some((q) => q?.ok && Number(q.age_pct) > 0) && (
             <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">🎁 Por el tiempo que tenés la Edición Personal, te hacemos un <strong>{Math.max(...quotes.map((q) => (q?.ok ? Number(q.age_pct) : 0)))} % de descuento</strong> si te pasás a Personal Plus (en el mensual, todos los meses).</p>
           )}
           {(monthly?.auto_renew || monthly?.auto_renew_canceled_at) && (
@@ -201,20 +215,20 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
             </div>
           ) : confirming ? null : (
             <form action={requestEntrepreneur} className="mt-4 space-y-3">
-              {snapshot.entrepreneurActive && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pagás un año, se suma al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
+              {paidPlus && <p className="text-sm text-neutral-600 dark:text-neutral-400">Si pagás un año, se suma al final del que ya tenés.{hasMonthly ? " Al activarse, la suscripción mensual deja de renovarse sola para que no pagues dos veces." : ""}</p>}
               <div className="grid gap-2 sm:grid-cols-2">
                 {MONTHS.map((months, index) => {
                   const quote = quotes[index];
                   const title = months === 1 ? "Por mes" : months === 12 ? "Por año (12 meses)" : monthsLabel(months);
                   // La suscripción mensual no se suma: se contrata cuando no hay Plus vigente.
-                  const monthlyBlocked = months === 1 && snapshot.entrepreneurActive;
+                  const monthlyBlocked = months === 1 && paidPlus;
                   if (!quote?.ok || monthlyBlocked) return <div key={months} className="rounded-xl border border-neutral-200 p-3 text-sm text-neutral-500 dark:border-neutral-800">{title}: {monthlyBlocked ? (hasMonthly ? "ya la tenés" : `disponible cuando venza tu plan actual (${date(snapshot.entrepreneurExpiresAt!)})`) : quote && !quote.ok ? quote.error : "no disponible"}</div>;
                   // Comparación con pagar mes a mes: los plazos largos salen más baratos.
                   const perMonth = Number(quote.final_price) / months;
                   const savings = monthlyQuote && months > 1 ? Number(monthlyQuote.final_price) * months - Number(quote.final_price) : 0;
                   return (
                     <label key={months} className="flex cursor-pointer flex-col rounded-xl border border-neutral-300 p-3 text-sm has-[:checked]:border-violet-500 has-[:checked]:ring-2 has-[:checked]:ring-violet-500/30 dark:border-neutral-700">
-                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (snapshot.entrepreneurActive ? 12 : 1)} required />{title}</span>
+                      <span className="flex items-center gap-2 font-medium"><input type="radio" name="months" value={months} defaultChecked={months === (paidPlus ? 12 : 1)} required />{title}</span>
                       {Number(quote.discount_pct) > 0 && <span className="mt-1 text-neutral-500 line-through">{money(quote.price)}</span>}
                       <strong className="text-lg">{money(quote.final_price)}</strong>
                       {Number(quote.discount_pct) > 0 && <span className="text-emerald-700 dark:text-emerald-400">{Number(quote.discount_pct)} % de descuento</span>}
@@ -229,7 +243,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
               <label className="grid max-w-xs gap-1 text-xs text-neutral-500 dark:text-neutral-400">Código de afiliada (opcional)
                 <input name="affiliate_code" defaultValue={referral} maxLength={20} autoCapitalize="characters" placeholder="Ej.: LUCIA1234" className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm uppercase text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
               </label>
-              {mercadoPagoReady() && !snapshot.entrepreneurActive && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
+              {mercadoPagoReady() && !paidPlus && <MercadoPagoEmail defaultValue={user.email ?? ""} />}
               <SubmitButton className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900">{mercadoPagoReady() ? 'Continuar al pago' : 'Pedir Plus'}</SubmitButton>
               {mercadoPagoReady() && <p className="text-xs text-neutral-500">Vas a pagar en Mercado Pago. Al aprobarse el pago, Plus se activa solo. La suscripción mensual se cobra sola cada mes hasta que la canceles.</p>}
             </form>

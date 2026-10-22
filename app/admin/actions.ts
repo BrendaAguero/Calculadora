@@ -9,7 +9,7 @@ import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
 import { fromLocalAR } from '@/lib/announcements';
-import { readPhoto } from '@/lib/photo';
+import { removePhoto, uploadPhoto } from '@/lib/photos';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
@@ -181,6 +181,10 @@ export async function setMaxFreeAccounts(formData: FormData) {
   await rpc('/admin/usuarios', 'admin_set_max_free_accounts', { p_max: raw === '' ? null : Number(raw) }, raw === '' ? 'Listo: la versión gratis queda sin tope.' : 'Tope de cuentas gratis guardado.');
 }
 
+export async function setPlusTrialDays(formData: FormData) {
+  await rpc('/admin/precios', 'admin_set_plus_trial_days', { p_days: Number(text(formData, 'days')) }, 'Días de prueba guardados.');
+}
+
 export async function setPlusAnnualPrice(formData: FormData) {
   const n = Number(text(formData, 'annual').replace(/\./g, '').replace(',', '.'));
   await rpc('/admin/precios', 'admin_set_plus_annual_price', { p_price: n }, 'Precio anual de Personal Plus guardado.');
@@ -229,15 +233,23 @@ export async function saveAnnouncement(formData: FormData) {
   const link = text(formData, 'button_link');
   if (link && !/^\/[^/]/.test(link) && !/^https:\/\//.test(link)) back('/admin/avisos', 'error', 'El enlace del botón tiene que ser una pantalla de la app (por ejemplo /access) o empezar con https://');
   if (link && !text(formData, 'button_label')) back('/admin/avisos', 'error', 'Si ponés un enlace, escribí también el texto del botón.');
+  const announcementId = /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+  const keepImage = text(formData, 'image_action') === 'keep';
+  const { data: before } = announcementId ? await supabase.from('announcements').select('image').eq('id', announcementId).maybeSingle() : { data: null };
+  const image = keepImage ? null : await uploadPhoto(formData.get('image'), 'publicas', 'avisos');
   const { data, error } = await supabase.rpc('admin_save_announcement_v2', {
-    p_id: /^[0-9a-f-]{36}$/i.test(id) ? id : null,
+    p_id: announcementId,
     p_kind: text(formData, 'kind'), p_title: text(formData, 'title').slice(0, 100), p_body: text(formData, 'body').slice(0, 1500),
-    p_image: readPhoto(formData.get('image')), p_keep_image: text(formData, 'image_action') === 'keep',
+    p_image: image, p_keep_image: keepImage,
     p_button_label: text(formData, 'button_label').slice(0, 40) || null, p_button_link: link || null,
     p_audience: text(formData, 'audience'), p_starts_at: fromLocalAR(text(formData, 'starts_at')), p_ends_at: fromLocalAR(text(formData, 'ends_at')),
     p_active: formData.get('active') === 'on', p_target_emails: text(formData, 'target_emails').slice(0, 30000),
   });
-  if (error) back('/admin/avisos', 'error', error.message);
+  if (error) {
+    await removePhoto(image);
+    back('/admin/avisos', 'error', error.message);
+  }
+  if (!keepImage) await removePhoto(before?.image);
   const result = data as { targets: number; missing: string[] } | null;
   revalidatePath('/admin/avisos');
   const targeted = text(formData, 'audience') === 'users';

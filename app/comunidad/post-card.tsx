@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BadgeCheck, Pin, Video } from 'lucide-react';
 import { categoryInfo } from '@/lib/community';
+import { publicPhotoUrl } from '@/lib/photo';
 import { dateTime } from '@/lib/ui';
 
 export type FeedPost = {
@@ -30,7 +31,7 @@ export function PostCard({ post, full = false }: { post: FeedPost; full?: boolea
       {cut && <Link href={`/comunidad/${post.id}`} className="mt-1 inline-block text-sm font-semibold text-orange-800 underline dark:text-orange-300">Seguir leyendo</Link>}
       {post.photo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.photo} alt={`Foto de «${post.title}»`} loading="lazy" className="mt-3 max-h-[32rem] w-full rounded-2xl bg-neutral-100 object-contain dark:bg-neutral-800" />
+        <img src={publicPhotoUrl(post.photo) ?? ''} alt={`Foto de «${post.title}»`} loading="lazy" className="mt-3 max-h-[32rem] w-full rounded-2xl bg-neutral-100 object-contain dark:bg-neutral-800" />
       )}
       {post.link && <a href={post.link} target="_blank" rel="noopener noreferrer nofollow" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-neutral-100 px-3 py-2 text-sm font-semibold dark:bg-neutral-800"><Video size={18} aria-hidden="true" />Ver el video</a>}
     </article>
