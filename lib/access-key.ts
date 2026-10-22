@@ -56,11 +56,14 @@ export async function issueKey(client: SupabaseClient, approvedEmailId: string) 
 }
 
 // Manda la clave por correo. Devuelve false si el correo no está configurado o falló.
-export async function sendKeyEmail(to: string, key: string, origin: string) {
+// «extra»: un párrafo más al final (por ejemplo, el aviso para clientas de revendedoras).
+export async function sendKeyEmail(to: string, key: string, origin: string, extra?: string) {
+  const extraText = extra ? `\n\n${extra}` : "";
+  const extraHtml = extra ? `<p style="color:#555">${extra.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]!)}</p>` : "";
   return sendMail({
     to,
     subject: "Tu clave de acceso · Calculadora Emprender",
-    text: `¡Hola! Esta es tu clave para entrar a la Edición Personal de Calculadora Emprender:\n\n${key}\n\nEntrá a ${origin}/login y escribila. La primera vez en cada aparato te la pide; después la app queda abierta.\nGuardá este correo. Si necesitás ayuda: ${CONTACT_EMAIL}`,
-    html: `<p>¡Hola!</p><p>Esta es tu clave para entrar a la <strong>Edición Personal</strong> de Calculadora Emprender:</p><p style="font-size:24px;font-weight:bold;letter-spacing:3px;font-family:monospace">${key}</p><p><a href="${origin}/login">Entrá a la app</a> y escribila. La primera vez en cada aparato te la pide; después la app queda abierta.</p><p>Guardá este correo. Si necesitás ayuda: ${CONTACT_EMAIL}</p>`,
+    text: `¡Hola! Esta es tu clave para entrar a la Edición Personal de Calculadora Emprender:\n\n${key}\n\nEntrá a ${origin}/login y escribila. La primera vez en cada aparato te la pide; después la app queda abierta.\nGuardá este correo. Si necesitás ayuda: ${CONTACT_EMAIL}${extraText}`,
+    html: `<p>¡Hola!</p><p>Esta es tu clave para entrar a la <strong>Edición Personal</strong> de Calculadora Emprender:</p><p style="font-size:24px;font-weight:bold;letter-spacing:3px;font-family:monospace">${key}</p><p><a href="${origin}/login">Entrá a la app</a> y escribila. La primera vez en cada aparato te la pide; después la app queda abierta.</p><p>Guardá este correo. Si necesitás ayuda: ${CONTACT_EMAIL}</p>${extraHtml}`,
   });
 }

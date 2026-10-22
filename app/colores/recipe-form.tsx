@@ -8,7 +8,7 @@ import { COLOR_MATERIALS, PIGMENT_UNITS, type Pigment } from '@/lib/colors';
 import { inputClass, labelClass, primaryButton } from '@/lib/ui';
 
 type Row = { key: number; name: string; amount: string; unit: string };
-type Initial = { id?: string; name?: string; material?: string | null; base_grams?: number; pigments?: Pigment[]; notes?: string | null; photo?: string | null };
+type Initial = { id?: string; name?: string; material?: string | null; base_grams?: number; pigments?: Pigment[]; notes?: string | null; photo?: string | null; photoSrc?: string | null };
 
 let nextKey = 1;
 const row = (p?: Pigment): Row => ({ key: nextKey++, name: p?.name ?? '', amount: p ? String(p.amount).replace('.', ',') : '', unit: p?.unit ?? 'g' });
@@ -45,7 +45,7 @@ export function RecipeForm({ action, initial, submitLabel }: { action: (formData
       </fieldset>
 
       <label className={`${labelClass} sm:col-span-2`}>Notas<textarea name="notes" maxLength={1000} rows={2} defaultValue={initial?.notes ?? ''} placeholder="Marca del pigmento, cómo lo mezclaste, cómo queda al secar…" className={inputClass} /></label>
-      <div className="sm:col-span-2"><PhotoInput defaultValue={initial?.photo} /></div>
+      <div className="sm:col-span-2"><PhotoInput defaultValue={initial?.photo} previewSrc={initial?.photoSrc} /></div>
       <div className="sm:col-span-2"><SubmitButton className={primaryButton} pendingText="Guardando…">{submitLabel}</SubmitButton></div>
     </form>
   );

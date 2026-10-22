@@ -4,6 +4,7 @@ import { FeatureLocked } from '@/components/feature-locked';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { cleanPigments, PIGMENT_UNITS } from '@/lib/colors';
 import { createClient } from '@/lib/supabase/server';
+import { photoUrls } from '@/lib/photos';
 import { cardClass, errorBox, okBox, pageClass } from '@/lib/ui';
 import { createRecipe } from './actions';
 import { RecipeForm } from './recipe-form';
@@ -20,6 +21,7 @@ export default async function ColorsPage({ searchParams }: { searchParams: Promi
   const snapshot = await getAccessSnapshot();
   const allowed = Boolean(snapshot && hasFeature(snapshot, 'COLORES'));
   const { data: recipes, error: loadError } = await supabase.from('color_recipes').select('id,name,material,base_grams,pigments,photo').eq('user_id', user.id).order('created_at', { ascending: false }).limit(300);
+  const photos = await photoUrls((recipes ?? []).map((r) => r.photo));
 
   return (
     <main className={pageClass}>
@@ -39,7 +41,7 @@ export default async function ColorsPage({ searchParams }: { searchParams: Promi
             <Link key={r.id} href={`/colores/${r.id}`} className="flex gap-3 rounded-2xl border border-neutral-200 bg-white p-3 transition hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900">
               {r.photo
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={r.photo} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                ? <img src={photos.get(r.photo) ?? ''} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
                 : <span className="h-16 w-16 shrink-0 rounded-xl bg-gradient-to-br from-orange-100 to-rose-200 dark:from-orange-950 dark:to-rose-900" aria-hidden="true" />}
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{r.name}</span>

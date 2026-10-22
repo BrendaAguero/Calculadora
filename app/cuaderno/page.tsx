@@ -4,6 +4,7 @@ import { FeatureLocked } from '@/components/feature-locked';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { problemLabel } from '@/lib/problems';
 import { createClient } from '@/lib/supabase/server';
+import { photoUrls } from '@/lib/photos';
 import { dateAR, RESULTS, resultInfo, todayAR } from '@/lib/test-logs';
 import { cardClass, errorBox, okBox, pageClass } from '@/lib/ui';
 import { createLog } from './actions';
@@ -25,6 +26,7 @@ export default async function NotebookPage({ searchParams }: { searchParams: Pro
     supabase.from('color_recipes').select('id,name').eq('user_id', user.id).order('name'),
   ]);
   const allowed = Boolean(snapshot && hasFeature(snapshot, 'CUADERNO'));
+  const photos = await photoUrls((logs ?? []).map((l) => l.photo));
 
   return (
     <main className={pageClass}>
@@ -59,7 +61,7 @@ export default async function NotebookPage({ searchParams }: { searchParams: Pro
             <Link key={log.id} href={`/cuaderno/${log.id}`} className="flex gap-3 rounded-2xl border border-neutral-200 bg-white p-3 transition hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900">
               {log.photo
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={log.photo} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                ? <img src={photos.get(log.photo) ?? ''} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
                 : <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-neutral-100 text-2xl dark:bg-neutral-800" aria-hidden="true">{info.emoji}</span>}
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2"><span className="font-semibold">{log.title || log.material || 'Prueba'}</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${info.badge}`}>{info.label}</span></span>

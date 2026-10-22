@@ -2,20 +2,22 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
 import { requireAdmin } from '@/lib/admin';
 import { cardClass, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { adjustPrices, setActivityPrices, setLoyaltyDiscounts, setPackPrices, setPlusAnnualPrice, setPrices, setRegularPrice } from '../actions';
+import { adjustPrices, setActivityPrices, setLoyaltyDiscounts, setPackPrices, setPlusAnnualPrice, setPlusTrialDays, setPrices, setRegularPrice } from '../actions';
 import { adjustDue } from '@/lib/price-adjust';
+import { launchLastDay, launchLastDayInput } from '@/lib/launch';
 
 export default async function AdminPricesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
-  const [{ data: config }, { data: monthly }, { data: device }, { data: pack }, { data: annual }, { data: lastAdjust }, { data: loyalty }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'activity_price_secondary', 'activity_price_extra', 'pack_ventas_with_personal', 'personal_price_regular']),
+  const [{ data: config }, { data: monthly }, { data: device }, { data: pack }, { data: annual }, { data: lastAdjust }, { data: loyalty }, { data: launch }] = await Promise.all([
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'activity_price_secondary', 'activity_price_extra', 'pack_ventas_with_personal', 'personal_price_regular', 'plus_trial_days']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).maybeSingle(),
     supabase.from('modules').select('price').eq('code', 'EXTRA_DEVICE').maybeSingle(),
     supabase.from('modules').select('price').eq('code', 'PACK_VENTAS').maybeSingle(),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).maybeSingle(),
     supabase.from('pricing_config').select('value_numeric,value_text').eq('key', 'last_price_adjust').maybeSingle(),
     supabase.from('discount_rules').select('min_days,percentage').eq('discount_type', 'personal_loyalty').order('min_days'),
+    supabase.from('pricing_config').select('value_text').eq('key', 'launch_ends_at').maybeSingle(),
   ]);
   const due = adjustDue(lastAdjust?.value_text ?? null);
   const tiers = [0, 1, 2].map((i) => ({ days: Number(loyalty?.[i]?.min_days ?? [90, 180, 365][i]), pct: Number(loyalty?.[i]?.percentage ?? [10, 15, 25][i]) }));
@@ -54,8 +56,10 @@ export default async function AdminPricesPage({ searchParams }: { searchParams: 
       </form>
       <form action={setRegularPrice} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
         <h2 className="font-semibold sm:col-span-2">Precio de lanzamiento</h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Si ponés un precio normal mayor al online, en la compra se ve tachado con la etiqueta «Precio de lanzamiento». Poné 0 para no mostrarlo.</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Si ponés un precio normal mayor al online, en la compra se ve tachado con la etiqueta «Precio de lanzamiento». Con fecha de fin, la página muestra «hasta el …» y ese día a la medianoche el precio online y por transferencia pasan solos al precio normal. Poné 0 para no mostrarlo.</p>
         <label className={labelClass}>Precio normal (tachado)<input name="regular" inputMode="numeric" required defaultValue={value('personal_price_regular')} className={inputClass} /></label>
+        <label className={labelClass}>Último día del lanzamiento (opcional)<input name="last_day" type="date" defaultValue={launchLastDayInput(launch?.value_text)} className={inputClass} /></label>
+        {launch?.value_text && <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400 sm:col-span-2">El lanzamiento termina el {launchLastDay(launch.value_text)}. Para quitar la fecha, borrala y guardá.</p>}
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar precio normal</SubmitButton></div>
       </form>
       <form action={setPlusAnnualPrice} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
@@ -63,6 +67,12 @@ export default async function AdminPricesPage({ searchParams }: { searchParams: 
         <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Pago por 12 meses (una sola vez). Conviene que salga como unos 10 meses del precio mensual.</p>
         <label className={labelClass}>Precio por año<input name="annual" inputMode="numeric" required defaultValue={Number(annual?.price ?? 0)} className={inputClass} /></label>
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar precio anual</SubmitButton></div>
+      </form>
+      <form action={setPlusTrialDays} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
+        <h2 className="font-semibold sm:col-span-2">Prueba gratis de Personal Plus</h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Cada cuenta que nunca tuvo Personal Plus la puede probar una sola vez, sin tarjeta, desde «Mi acceso». Al terminar vuelve a como estaba, sin borrar nada. Poné 0 para apagarla.</p>
+        <label className={labelClass}>Días de prueba<input name="days" inputMode="numeric" required defaultValue={value('plus_trial_days')} className={inputClass} /></label>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar días de prueba</SubmitButton></div>
       </form>
       <form action={setPackPrices} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
         <h2 className="font-semibold sm:col-span-2">Pack Ventas y Stock</h2>

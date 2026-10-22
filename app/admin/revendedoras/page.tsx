@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin';
 import { getResellerResources } from '@/lib/reseller';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cardClass, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
-import { saveResellerResources, setResellerMargin, setResellerPrices } from '../actions';
+import { saveResellerResources, setResellerMargin, setResellerMarkup, setResellerPrices } from '../actions';
 
 const pesos = (value: number) => value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -12,7 +12,7 @@ export default async function AdminResellersPage({ searchParams }: { searchParam
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
   const [{ data: config }, resources, { data: accounts }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['reseller_unit_price', 'reseller_discount_5', 'reseller_discount_10', 'reseller_discount_20', 'personal_price_online', 'personal_price_transfer', 'reseller_min_margin_pct']),
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['reseller_unit_price', 'reseller_discount_5', 'reseller_discount_10', 'reseller_discount_20', 'personal_price_online', 'personal_price_transfer', 'reseller_min_margin_pct', 'reseller_max_markup_pct']),
     getResellerResources(supabase),
     supabase.from('reseller_accounts').select('user_id,status,created_at').order('created_at', { ascending: false }).limit(200),
   ]);
@@ -54,6 +54,14 @@ export default async function AdminResellersPage({ searchParams }: { searchParam
         <p className="text-sm sm:col-span-2">Hoy, de a una: paga {pesos(unit)} y el público paga desde {pesos(Math.min(value('personal_price_online'), value('personal_price_transfer') || value('personal_price_online')))} → le quedan {pesos(Math.min(value('personal_price_online'), value('personal_price_transfer') || value('personal_price_online')) - unit)} por licencia.</p>
         <label className={labelClass}>Margen mínimo (%)<input name="margin" inputMode="numeric" required defaultValue={value('reseller_min_margin_pct') || 20} className={inputClass} /></label>
         <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar margen</SubmitButton></div>
+      </form>
+
+      <form action={setResellerMarkup} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
+        <h2 className="font-semibold sm:col-span-2">Precio de venta de las revendedoras</h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Pueden vender desde el precio oficial hasta este porcentaje más (por su atención: ayudar a empezar, efectivo, cuotas). Lo ven en su panel y figura en sus condiciones. A cada clienta le llega por correo el precio oficial y el máximo, así sabe si le cobraron de más. Poné 0 para que solo puedan cobrar el precio oficial.</p>
+        <p className="text-sm sm:col-span-2">Hoy: entre {pesos(value('personal_price_online'))} y {pesos(Math.round((value('personal_price_online') * (1 + (value('reseller_max_markup_pct') || 0) / 100)) / 100) * 100)}.</p>
+        <label className={labelClass}>Máximo por encima del oficial (%)<input name="markup" inputMode="numeric" required defaultValue={value('reseller_max_markup_pct')} className={inputClass} /></label>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar tope</SubmitButton></div>
       </form>
 
       <form action={saveResellerResources} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>

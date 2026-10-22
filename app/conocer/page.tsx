@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Calculator, CalendarHeart, Check, ClipboardList, FileText, Layers, Smartphone, Timer, Users, Wallet, X } from 'lucide-react';
 import { LegalLinks } from '@/components/legal-links';
 import { annualSavings, PlusPrices } from '@/components/plus-prices';
+import { launchLastDay } from '@/lib/launch';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -61,14 +62,16 @@ const COMPARE: [string, boolean | string, boolean | string, boolean | string][] 
 export default async function LandingPage() {
   const supabase = await createClient();
   const [{ data: prices }, { data: monthly }, { data: annual }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_regular']),
+    supabase.from('pricing_config').select('key,value_numeric,value_text').in('key', ['personal_price_online', 'personal_price_regular', 'plus_trial_days', 'launch_ends_at']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).eq('active', true).maybeSingle(),
   ]);
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
   const personal = price('personal_price_online', 15000);
   const regular = price('personal_price_regular', 0);
+  const launchEnd = launchLastDay(prices?.find((p) => p.key === 'launch_ends_at')?.value_text);
   const plusMonthly = Number(monthly?.price ?? 6900);
+  const trialDays = price('plus_trial_days', 0);
   const plusAnnual = annual ? Number(annual.price) : null;
   const yearly = annualSavings(plusMonthly, plusAnnual);
 
@@ -127,7 +130,7 @@ export default async function LandingPage() {
             </article>
             <article className="rounded-3xl bg-orange-800 p-6 text-white ring-4 ring-resina dark:bg-orange-900">
               <h3 className="text-lg font-semibold">Edición Personal</h3>
-              {regular > personal && <p className="mt-1 text-sm"><span className="line-through opacity-70">{money(regular)}</span> <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">Precio de lanzamiento</span></p>}
+              {regular > personal && <p className="mt-1 text-sm"><span className="line-through opacity-70">{money(regular)}</span> <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">Precio de lanzamiento{launchEnd ? ` hasta el ${launchEnd}` : ''}</span></p>}
               <p className="mt-1 text-3xl font-bold">{money(personal)}</p>
               <p className="text-sm text-white/80">pago único</p>
               <ul className="mt-4 space-y-1.5 text-sm">
@@ -142,8 +145,8 @@ export default async function LandingPage() {
               <ul className="mt-4 space-y-1.5 text-sm">
                 {['Todo lo de la Edición Personal', 'Todas las actividades y el Pack Ventas y Stock', 'Sin límites y sin publicidad', 'Modo sin conexión', 'Todas las funciones nuevas'].map((t) => <li key={t} className="flex gap-2"><Check size={18} aria-hidden="true" className="shrink-0 text-emerald-700" />{t}</li>)}
               </ul>
-              <Link href="/registro?plan=plus" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">Empezar</Link>
-              <p className="mt-2 text-center text-xs text-neutral-500">Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.</p>
+              <Link href="/registro?plan=plus" className="mt-5 block rounded-2xl bg-neutral-100 px-4 py-3 text-center font-semibold dark:bg-neutral-800">{trialDays > 0 ? `Probalo ${trialDays} días gratis` : 'Empezar'}</Link>
+              <p className="mt-2 text-center text-xs text-neutral-500">{trialDays > 0 ? `Creás tu cuenta y lo probás ${trialDays} días gratis, sin tarjeta. Después elegís si seguís por mes o por año.` : 'Creás tu cuenta gratis y lo elegís en «Mi acceso». El mensual lo cancelás cuando quieras.'}</p>
             </article>
           </div>
         </section>

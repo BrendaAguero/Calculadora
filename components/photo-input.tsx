@@ -22,7 +22,8 @@ async function shrink(file: File): Promise<string> {
   return url;
 }
 
-export function PhotoInput({ name = 'photo', defaultValue }: { name?: string; defaultValue?: string | null }) {
+// defaultValue es lo que guarda la base (puede ser una referencia al almacenamiento); previewSrc, la dirección para verla.
+export function PhotoInput({ name = 'photo', defaultValue, previewSrc }: { name?: string; defaultValue?: string | null; previewSrc?: string | null }) {
   const [value, setValue] = useState(defaultValue ?? '');
   const [error, setError] = useState('');
   return (
@@ -31,7 +32,7 @@ export function PhotoInput({ name = 'photo', defaultValue }: { name?: string; de
       {value ? (
         <div className="relative w-fit">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="Foto elegida" className="h-32 w-32 rounded-2xl object-cover" />
+          <img src={value === defaultValue && previewSrc ? previewSrc : value} alt="Foto elegida" className="h-32 w-32 rounded-2xl object-cover" />
           <button type="button" onClick={() => setValue('')} aria-label="Quitar la foto" className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-neutral-900 text-white"><X size={14} aria-hidden="true" /></button>
         </div>
       ) : (

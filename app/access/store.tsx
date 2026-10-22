@@ -32,8 +32,10 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   ]);
   const nameOf = (purchase: { product_type: string; product_id: string }) => modules?.find((m) => m.id === purchase.product_id)?.name ?? activities?.find((a) => a.id === purchase.product_id)?.name ?? PURCHASE_LABELS[purchase.product_type] ?? '';
   const online = mercadoPagoReady();
+  // Durante la prueba gratis la tienda se muestra como para cualquier cuenta: lo que compre le queda al terminar.
+  const paidPlus = snapshot.entrepreneurActive && !snapshot.plusTrialEndsAt;
   // Comparación para la Edición Personal: todos los extras sueltos frente a un año de Personal Plus.
-  const plusQuote = snapshot.baseLicenseActive && !snapshot.entrepreneurActive
+  const plusQuote = snapshot.baseLicenseActive && !paidPlus
     ? ((await supabase.rpc('quote_entrepreneur', { p_months: 12 })).data as { ok: boolean; final_price: number; discount_pct: number } | null)
     : null;
   const plusAnnual = plusQuote?.ok ? plusQuote : null;
@@ -41,7 +43,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
   const extrasTotal = (modules ?? []).filter((m) => m.code !== 'EXTRA_DEVICE' && SELLABLE_MODULES.has(m.code) && !snapshot.modules.includes(m.code)).reduce((acc, m) => acc + Number(m.price), 0)
     + missingActivities * Number(activityPrice ?? 0);
 
-  if (!snapshot.baseLicenseActive && !snapshot.entrepreneurActive && !snapshot.isAdmin && !snapshot.isTester) {
+  if (!snapshot.baseLicenseActive && !paidPlus && !snapshot.isAdmin && !snapshot.isTester) {
     return (
       <section id="planes" className={cardClass}>
         <h2 className="font-semibold">Elegí cómo pagar</h2>
@@ -66,7 +68,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
     <>
       <section id="planes" className={cardClass}>
         <h2 className="font-semibold">Tienda (pago único)</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{paidPlus ? 'Con Personal Plus ya tenés todo incluido; solo podés sumar aparatos.' : 'Extras opcionales para tu Edición Personal: comprá solo lo que necesites, una sola vez.'}</p>
 
         {(pending ?? []).length > 0 && (
           <div className="mt-4 space-y-2">
@@ -84,7 +86,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
 
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(modules ?? []).map((module) => {
-            const owned = module.code !== 'EXTRA_DEVICE' && (snapshot.modules.includes(module.code) || snapshot.entrepreneurActive);
+            const owned = module.code !== 'EXTRA_DEVICE' && (snapshot.modules.includes(module.code) || paidPlus);
             const sellable = SELLABLE_MODULES.has(module.code);
             return (
               <li key={module.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
@@ -112,7 +114,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
 
       <section id="actividades" className={cardClass}>
         <h2 className="font-semibold">Actividades</h2>
-        <p className="mt-1 text-xs text-neutral-500">{snapshot.entrepreneurActive ? 'Con Personal Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
+        <p className="mt-1 text-xs text-neutral-500">{paidPlus ? 'Con Personal Plus tenés todas las actividades.' : 'Tu actividad principal viene incluida. La segunda sale siempre a mitad de precio; las siguientes, precio normal. Se compran una vez y quedan para siempre.'}</p>
         <ul className="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
           {(activities ?? []).map((activity) => {
             const mine = owned?.find((o) => o.activity_id === activity.id);
@@ -120,7 +122,7 @@ export async function PlanStore({ snapshot, userId }: { snapshot: AccessSnapshot
               <li key={activity.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <span><strong>{activity.name}</strong>{mine?.is_primary && <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-800 dark:bg-orange-950 dark:text-orange-300">Principal</span>}</span>
                 {mine ? <span className="text-emerald-700 dark:text-emerald-400">✓ La tenés</span>
-                  : snapshot.entrepreneurActive ? <span className="text-xs text-neutral-500">Incluida con Plus</span>
+                  : paidPlus ? <span className="text-xs text-neutral-500">Incluida con Plus</span>
                   : !owned?.length ? <Link href="/bienvenida" className="text-xs font-semibold underline">Elegí tu actividad principal</Link>
                   : (
                     <form action={buyActivity} className="flex items-center gap-3">

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { COLOR_MATERIALS } from '@/lib/colors';
 import { parseAR } from '@/lib/num';
-import { readPhoto } from '@/lib/photo';
+import { removePhoto, savePhoto } from '@/lib/photos';
 import { PROBLEMS } from '@/lib/problems';
 import { RESULTS } from '@/lib/test-logs';
 
@@ -43,7 +43,6 @@ function readLog(formData: FormData) {
     result,
     problems: formData.getAll('problems').map(String).filter((p) => PROBLEMS.some((x) => x.id === p)).slice(0, 12),
     notes: text(formData, 'notes').slice(0, 2000) || null,
-    photo: readPhoto(formData.get('photo')),
   };
   const error = !RESULTS.some((r) => r.value === result) ? 'Contanos cómo salió (perfecta, buena, regular o mal).' : null;
   return { values, error };
@@ -53,7 +52,8 @@ export async function createLog(formData: FormData) {
   const { values, error } = readLog(formData);
   if (error) redirect(`/cuaderno?error=${encodeURIComponent(error)}`);
   const { supabase, userId } = await auth();
-  const { error: saveError } = await supabase.from('test_logs').insert({ ...values, user_id: userId });
+  const photo = await savePhoto(formData.get('photo'), { bucket: 'privadas', folder: userId });
+  const { error: saveError } = await supabase.from('test_logs').insert({ ...values, photo, user_id: userId });
   if (saveError) redirect(`/cuaderno?error=${encodeURIComponent('No se pudo guardar la prueba. Probá de nuevo.')}`);
   revalidatePath('/cuaderno');
   redirect(`/cuaderno?ok=${encodeURIComponent('Prueba guardada en tu cuaderno.')}`);
@@ -65,7 +65,10 @@ export async function updateLog(formData: FormData) {
   const { values, error } = readLog(formData);
   if (error) back('error', error);
   const { supabase, userId } = await auth();
-  const { data, error: saveError } = await supabase.from('test_logs').update(values).eq('id', id).eq('user_id', userId).select('id');
+  // La foto que ya tenía sale de la base (no del formulario): si llega la misma, se conserva.
+  const { data: current } = await supabase.from('test_logs').select('photo').eq('id', id).eq('user_id', userId).maybeSingle();
+  const photo = await savePhoto(formData.get('photo'), { bucket: 'privadas', folder: userId, current: current?.photo });
+  const { data, error: saveError } = await supabase.from('test_logs').update({ ...values, photo }).eq('id', id).eq('user_id', userId).select('id');
   if (saveError || !data?.length) back('error', 'No se pudieron guardar los cambios.');
   revalidatePath('/cuaderno');
   back('ok', 'Cambios guardados.');
@@ -76,8 +79,9 @@ export async function deleteLog(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { error } = await supabase.from('test_logs').delete().eq('id', id).eq('user_id', user.id);
+  const { data: removed, error } = await supabase.from('test_logs').delete().eq('id', id).eq('user_id', user.id).select('photo');
   if (error) redirect(`/cuaderno/${id}?error=${encodeURIComponent('No se pudo borrar.')}`);
+  await removePhoto(removed?.[0]?.photo);
   revalidatePath('/cuaderno');
   redirect(`/cuaderno?ok=${encodeURIComponent('Prueba borrada.')}`);
 }

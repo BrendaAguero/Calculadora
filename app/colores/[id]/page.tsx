@@ -4,6 +4,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { cleanPigments } from '@/lib/colors';
 import { createClient } from '@/lib/supabase/server';
+import { photoUrls } from '@/lib/photos';
 import { cardClass, errorBox, okBox, pageClass } from '@/lib/ui';
 import { deleteRecipe, updateRecipe } from '../actions';
 import { RecipeForm } from '../recipe-form';
@@ -19,6 +20,7 @@ export default async function ColorRecipePage({ params, searchParams }: { params
     getAccessSnapshot(),
   ]);
   if (!recipe) notFound();
+  const photoSrc = (await photoUrls([recipe.photo])).get(recipe.photo ?? '') ?? null;
   const allowed = Boolean(snapshot && hasFeature(snapshot, 'COLORES'));
   const pigments = cleanPigments(recipe.pigments);
   const baseGrams = Number(recipe.base_grams);
@@ -34,9 +36,9 @@ export default async function ColorRecipePage({ params, searchParams }: { params
       {error && <div role="alert" className={errorBox}>{error}</div>}
 
       <section className={`${cardClass} grid gap-4 sm:grid-cols-[auto_1fr]`}>
-        {recipe.photo && (
+        {recipe.photo && photoSrc && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={recipe.photo} alt={`Foto del color ${recipe.name}`} className="h-40 w-40 rounded-2xl object-cover" />
+          <img src={photoSrc} alt={`Foto del color ${recipe.name}`} className="h-40 w-40 rounded-2xl object-cover" />
         )}
         <ColorScaler pigments={pigments} baseGrams={baseGrams} />
         {recipe.notes && <p className="whitespace-pre-line text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">{recipe.notes}</p>}
@@ -45,7 +47,7 @@ export default async function ColorRecipePage({ params, searchParams }: { params
       {allowed && (
         <details className={cardClass}>
           <summary className="cursor-pointer font-semibold">Editar la receta</summary>
-          <div className="mt-3"><RecipeForm action={updateRecipe} initial={{ ...recipe, base_grams: baseGrams, pigments }} submitLabel="Guardar cambios" /></div>
+          <div className="mt-3"><RecipeForm action={updateRecipe} initial={{ ...recipe, base_grams: baseGrams, pigments, photoSrc }} submitLabel="Guardar cambios" /></div>
         </details>
       )}
       <form action={deleteRecipe} className="flex flex-wrap items-center gap-3 text-sm">

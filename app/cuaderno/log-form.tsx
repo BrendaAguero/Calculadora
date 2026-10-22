@@ -5,7 +5,7 @@ import { PROBLEMS } from '@/lib/problems';
 import { RESULTS } from '@/lib/test-logs';
 import { inputClass, labelClass, primaryButton } from '@/lib/ui';
 
-type Initial = { id?: string; made_on?: string; title?: string | null; material?: string | null; mix?: string | null; color_recipe_id?: string | null; temperature?: number | null; cure_hours?: number | null; result?: string; problems?: string[]; notes?: string | null; photo?: string | null };
+type Initial = { id?: string; made_on?: string; title?: string | null; material?: string | null; mix?: string | null; color_recipe_id?: string | null; temperature?: number | null; cure_hours?: number | null; result?: string; problems?: string[]; notes?: string | null; photo?: string | null; photoSrc?: string | null };
 const num = (n: number | null | undefined) => (n == null ? '' : String(n).replace('.', ','));
 
 export function LogForm({ action, initial, colors, today, submitLabel }: { action: (formData: FormData) => Promise<void>; initial?: Initial; colors: { id: string; name: string }[]; today: string; submitLabel: string }) {
@@ -53,7 +53,7 @@ export function LogForm({ action, initial, colors, today, submitLabel }: { actio
         </div>
       </fieldset>
       <label className={`${labelClass} sm:col-span-2`}>Notas<textarea name="notes" maxLength={2000} rows={3} defaultValue={initial?.notes ?? ''} placeholder="Qué cambiarías la próxima vez, marca del material, cómo mezclaste…" className={inputClass} /></label>
-      <div className="sm:col-span-2"><PhotoInput defaultValue={initial?.photo} /></div>
+      <div className="sm:col-span-2"><PhotoInput defaultValue={initial?.photo} previewSrc={initial?.photoSrc} /></div>
       <div className="sm:col-span-2"><SubmitButton className={primaryButton} pendingText="Guardando…">{submitLabel}</SubmitButton></div>
     </form>
   );

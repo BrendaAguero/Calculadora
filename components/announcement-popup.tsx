@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Megaphone, RefreshCw, Sparkles, Tag, X } from 'lucide-react';
 import { markAnnouncementRead } from '@/app/novedades/actions';
 import { kindLabel, type Announcement } from '@/lib/announcements';
+import { publicPhotoUrl } from '@/lib/photo';
 import { NO_NAV_PATHS } from '@/lib/nav';
 
 const ICONS = { novedad: Sparkles, cambio: RefreshCw, promocion: Tag, aviso: Megaphone } as const;
@@ -39,7 +40,7 @@ export function AnnouncementPopup({ announcement }: { announcement: Announcement
       className="m-auto w-[min(92vw,26rem)] overflow-hidden rounded-3xl bg-white p-0 text-neutral-900 shadow-2xl backdrop:bg-black/50 dark:bg-neutral-900 dark:text-white">
       {announcement.image && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={announcement.image} alt="" className="max-h-56 w-full object-cover" />
+        <img src={publicPhotoUrl(announcement.image) ?? ''} alt="" className="max-h-56 w-full object-cover" />
       )}
       <div className="p-6">
         <div className="flex items-start justify-between gap-3">

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { cardClass, errorBox, inputClass, labelClass } from '@/lib/ui';
 import { buyPersonal } from './actions';
 import { PlusPrices } from '@/components/plus-prices';
+import { launchLastDay } from '@/lib/launch';
 
 export const metadata = { title: 'Comprar · Calculadora Emprender' };
 
@@ -16,13 +17,14 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const [{ data: prices }, { data: monthly }, { data: pack }, { data: offers }, { data: annual }] = await Promise.all([
-    supabase.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'included_devices', 'personal_price_regular']),
+    supabase.from('pricing_config').select('key,value_numeric,value_text').in('key', ['personal_price_online', 'personal_price_transfer', 'personal_price_mercadolibre', 'included_devices', 'personal_price_regular', 'launch_ends_at']),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 1).eq('active', true).maybeSingle(),
     supabase.from('modules').select('price').eq('code', 'PACK_VENTAS').eq('active', true).maybeSingle(),
     user ? supabase.rpc('my_offer') : Promise.resolve({ data: null }),
     supabase.from('subscription_plans_catalog').select('price').eq('duration_months', 12).eq('active', true).maybeSingle(),
   ]);
   const price = (key: string, fallback: number) => Number(prices?.find((p) => p.key === key)?.value_numeric ?? fallback);
+  const launchEnd = launchLastDay(prices?.find((p) => p.key === 'launch_ends_at')?.value_text);
   const devices = price('included_devices', 2);
   const packPrice = Number(pack?.price ?? 10000);
   // Descuento personal (de un aviso automático): se aplica solo al comprar con el email de esta cuenta.
@@ -42,7 +44,7 @@ export default async function BuyPage({ searchParams }: { searchParams: Promise<
         )}
         {offer && <p className="text-sm text-neutral-500 line-through">{money(listPrice)}</p>}
         {!offer && price('personal_price_regular', 0) > price('personal_price_online', 15000) && (
-          <p className="text-sm"><span className="text-neutral-500 line-through">{money(price('personal_price_regular', 0))}</span> <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Precio de lanzamiento</span></p>
+          <p className="text-sm"><span className="text-neutral-500 line-through">{money(price('personal_price_regular', 0))}</span> <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Precio de lanzamiento{launchEnd ? ` hasta el ${launchEnd}` : ''}</span></p>
         )}
         <p className="text-3xl font-bold">{money(finalPrice)}</p>
         <p className="text-xs text-neutral-500">pago único con Mercado Pago</p>

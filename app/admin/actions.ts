@@ -8,8 +8,10 @@ import { requireAdmin } from '@/lib/admin';
 import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
+import { resellerSaleRange } from '@/lib/reseller';
+import { CONTACT_EMAIL } from '@/lib/legal';
 import { fromLocalAR } from '@/lib/announcements';
-import { readPhoto } from '@/lib/photo';
+import { removePhoto, uploadPhoto } from '@/lib/photos';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 const back = (path: string, key: 'ok' | 'error', message: string): never => redirect(`${path}${path.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(message.slice(0, 300))}`);
@@ -102,7 +104,13 @@ export async function decideResellerClient(formData: FormData) {
     const admin = createAdminClient();
     const { data: row } = admin ? await admin.from('approved_emails').select('email,key_cipher').eq('id', id as string).maybeSingle() : { data: null };
     const key = decryptKey(row?.key_cipher) ?? await issueKey(supabase, id as string);
-    if (row?.email) sent = await sendKeyEmail(row.email, key, await siteOrigin());
+    // Aviso para la clienta: compró a una revendedora autorizada y hasta cuánto le podían cobrar.
+    const { data: cfg } = admin ? await admin.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'reseller_max_markup_pct']) : { data: null };
+    const num = (k: string) => Number(cfg?.find((c) => c.key === k)?.value_numeric ?? 0);
+    const range = resellerSaleRange(num('personal_price_online'), num('reseller_max_markup_pct'));
+    const peso = (n: number) => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+    const note = range.min > 0 ? `Compraste a través de una revendedora autorizada. El precio oficial es ${peso(range.min)}${range.pct > 0 ? ` y las revendedoras pueden cobrar hasta ${peso(range.max)} por su atención (por ejemplo, ayudarte a empezar o aceptar otros medios de pago)` : ''}. Si te cobraron más, escribinos a ${CONTACT_EMAIL}.` : undefined;
+    if (row?.email) sent = await sendKeyEmail(row.email, key, await siteOrigin(), note);
   } catch (e) {
     back('/admin/emails', 'error', `Aprobada, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
   }
@@ -172,6 +180,10 @@ export async function setLoyaltyDiscounts(formData: FormData) {
   }, 'Descuentos por antigüedad guardados.');
 }
 
+export async function setResellerMarkup(formData: FormData) {
+  await rpc('/admin/revendedoras', 'admin_set_reseller_markup', { p_pct: Number(text(formData, 'markup').replace(',', '.')) }, 'Tope de precio de venta guardado.');
+}
+
 export async function setResellerMargin(formData: FormData) {
   await rpc('/admin/revendedoras', 'admin_set_reseller_margin', { p_pct: Number(text(formData, 'margin').replace(',', '.')) }, 'Margen mínimo guardado.');
 }
@@ -179,6 +191,10 @@ export async function setResellerMargin(formData: FormData) {
 export async function setMaxFreeAccounts(formData: FormData) {
   const raw = text(formData, 'max').replace(/\./g, '');
   await rpc('/admin/usuarios', 'admin_set_max_free_accounts', { p_max: raw === '' ? null : Number(raw) }, raw === '' ? 'Listo: la versión gratis queda sin tope.' : 'Tope de cuentas gratis guardado.');
+}
+
+export async function setPlusTrialDays(formData: FormData) {
+  await rpc('/admin/precios', 'admin_set_plus_trial_days', { p_days: Number(text(formData, 'days')) }, 'Días de prueba guardados.');
 }
 
 export async function setPlusAnnualPrice(formData: FormData) {
@@ -208,7 +224,10 @@ export async function givePack(formData: FormData) {
 
 export async function setRegularPrice(formData: FormData) {
   const n = Number(text(formData, 'regular').replace(/\./g, '').replace(',', '.') || 0);
-  await rpc('/admin/precios', 'admin_set_regular_price', { p_price: n }, n > 0 ? 'Precio normal guardado: se muestra tachado en la compra.' : 'Precio tachado quitado.');
+  const lastDay = text(formData, 'last_day');
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(lastDay) && n > 0 ? lastDay : null;
+  await rpc('/admin/precios', 'admin_set_launch', { p_regular: n, p_last_day: day },
+    n > 0 ? (day ? 'Listo: el lanzamiento termina solo en la fecha elegida y el precio pasa al normal.' : 'Precio normal guardado: se muestra tachado en la compra.') : 'Precio tachado quitado.');
 }
 
 export async function setActivityPrices(formData: FormData) {
@@ -229,15 +248,23 @@ export async function saveAnnouncement(formData: FormData) {
   const link = text(formData, 'button_link');
   if (link && !/^\/[^/]/.test(link) && !/^https:\/\//.test(link)) back('/admin/avisos', 'error', 'El enlace del botón tiene que ser una pantalla de la app (por ejemplo /access) o empezar con https://');
   if (link && !text(formData, 'button_label')) back('/admin/avisos', 'error', 'Si ponés un enlace, escribí también el texto del botón.');
+  const announcementId = /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+  const keepImage = text(formData, 'image_action') === 'keep';
+  const { data: before } = announcementId ? await supabase.from('announcements').select('image').eq('id', announcementId).maybeSingle() : { data: null };
+  const image = keepImage ? null : await uploadPhoto(formData.get('image'), 'publicas', 'avisos');
   const { data, error } = await supabase.rpc('admin_save_announcement_v2', {
-    p_id: /^[0-9a-f-]{36}$/i.test(id) ? id : null,
+    p_id: announcementId,
     p_kind: text(formData, 'kind'), p_title: text(formData, 'title').slice(0, 100), p_body: text(formData, 'body').slice(0, 1500),
-    p_image: readPhoto(formData.get('image')), p_keep_image: text(formData, 'image_action') === 'keep',
+    p_image: image, p_keep_image: keepImage,
     p_button_label: text(formData, 'button_label').slice(0, 40) || null, p_button_link: link || null,
     p_audience: text(formData, 'audience'), p_starts_at: fromLocalAR(text(formData, 'starts_at')), p_ends_at: fromLocalAR(text(formData, 'ends_at')),
     p_active: formData.get('active') === 'on', p_target_emails: text(formData, 'target_emails').slice(0, 30000),
   });
-  if (error) back('/admin/avisos', 'error', error.message);
+  if (error) {
+    await removePhoto(image);
+    back('/admin/avisos', 'error', error.message);
+  }
+  if (!keepImage) await removePhoto(before?.image);
   const result = data as { targets: number; missing: string[] } | null;
   revalidatePath('/admin/avisos');
   const targeted = text(formData, 'audience') === 'users';

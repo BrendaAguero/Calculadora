@@ -246,3 +246,14 @@ export async function releaseDevice(formData: FormData) {
   revalidatePath('/access');
   redirect(`/access?ok=${encodeURIComponent('Aparato liberado.')}#aparatos`);
 }
+
+// Prueba gratis de Personal Plus: una sola vez por cuenta (la base lo controla).
+export async function startPlusTrial() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data, error } = await supabase.rpc('start_plus_trial');
+  if (error || !data) back('error', error?.message ?? 'No se pudo empezar la prueba.');
+  revalidatePath('/', 'layout');
+  back('ok', `¡Listo! Tenés Personal Plus gratis hasta el ${new Date(data as string).toLocaleDateString('es-AR', { dateStyle: 'long', timeZone: 'America/Argentina/Buenos_Aires' })}. Ya podés usar todo.`);
+}

@@ -8,7 +8,7 @@ import { annualSavings } from '../lib/plus-pricing.ts';
 const base: AccessSnapshot = {
   accountStatus: 'active', isAdmin: false, isModerator: false, isTester: false,
   basePlan: null, baseLicenseActive: false, licenseExpiresAt: null, isFree: true,
-  entrepreneurActive: false, entrepreneurExpiresAt: null, activities: [], modules: [], limits: {},
+  entrepreneurActive: false, entrepreneurExpiresAt: null, plusTrialEndsAt: null, activities: [], modules: [], limits: {},
 };
 const free = base;
 const personal: AccessSnapshot = { ...base, basePlan: 'ADVANCED', baseLicenseActive: true, isFree: false };
@@ -66,4 +66,20 @@ test('Ahorro del pago anual de Personal Plus', () => {
   assert.deepEqual(annualSavings(6900, 69000), { savings: 13800, freeMonths: 2 });
   assert.deepEqual(annualSavings(6900, null), { savings: 0, freeMonths: 0 });
   assert.deepEqual(annualSavings(6900, 90000), { savings: 0, freeMonths: 0 });
+});
+
+test('Fin del lanzamiento: muestra el último día (hora de Argentina)', async () => {
+  const { launchLastDay, launchLastDayInput } = await import('../lib/launch.ts');
+  // Termina el 1/12 a las 00:00 de Argentina (03:00 UTC): el último día es el 30 de noviembre.
+  assert.equal(launchLastDayInput('2026-12-01T03:00:00Z'), '2026-11-30');
+  assert.match(launchLastDay('2026-12-01T03:00:00Z') ?? '', /30 de noviembre/);
+  assert.equal(launchLastDay(null), null);
+  assert.equal(launchLastDayInput('no es fecha'), '');
+});
+
+test('Precio de venta de revendedoras: del oficial al oficial + X %', async () => {
+  const { resellerSaleRange } = await import('../lib/reseller-range.ts');
+  assert.deepEqual(resellerSaleRange(30000, 10), { min: 30000, max: 33000, pct: 10 });
+  assert.deepEqual(resellerSaleRange(15000, 0), { min: 15000, max: 15000, pct: 0 });
+  assert.equal(resellerSaleRange(15000, 999).pct, 50);
 });

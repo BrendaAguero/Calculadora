@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAccessSnapshot, hasFeature } from '@/lib/access/permissions';
 import { cleanPigments, COLOR_MATERIALS } from '@/lib/colors';
 import { parseAR } from '@/lib/num';
-import { readPhoto } from '@/lib/photo';
+import { removePhoto, savePhoto } from '@/lib/photos';
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? '').trim();
 
@@ -32,7 +32,6 @@ function readRecipe(formData: FormData) {
     base_grams: parseAR(formData.get('base_grams')),
     pigments,
     notes: text(formData, 'notes').slice(0, 1000) || null,
-    photo: readPhoto(formData.get('photo')),
   };
   const error = !values.name ? 'Ponele un nombre al color (por ejemplo, «Rosa empolvado»).'
     : !(values.base_grams > 0) ? 'Escribí para cuántos gramos de mezcla es la receta.'
@@ -45,7 +44,8 @@ export async function createRecipe(formData: FormData) {
   const { values, error } = readRecipe(formData);
   if (error) redirect(`/colores?error=${encodeURIComponent(error)}`);
   const { supabase, userId } = await auth();
-  const { data, error: saveError } = await supabase.from('color_recipes').insert({ ...values, user_id: userId }).select('id').single();
+  const photo = await savePhoto(formData.get('photo'), { bucket: 'privadas', folder: userId });
+  const { data, error: saveError } = await supabase.from('color_recipes').insert({ ...values, photo, user_id: userId }).select('id').single();
   if (saveError || !data) redirect(`/colores?error=${encodeURIComponent('No se pudo guardar la receta. Probá de nuevo.')}`);
   revalidatePath('/colores');
   redirect(`/colores/${data!.id}?ok=${encodeURIComponent('Receta guardada.')}`);
@@ -57,7 +57,10 @@ export async function updateRecipe(formData: FormData) {
   const { values, error } = readRecipe(formData);
   if (error) back('error', error);
   const { supabase, userId } = await auth();
-  const { data, error: saveError } = await supabase.from('color_recipes').update({ ...values, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', userId).select('id');
+  // La foto que ya tenía sale de la base (no del formulario): si llega la misma, se conserva.
+  const { data: current } = await supabase.from('color_recipes').select('photo').eq('id', id).eq('user_id', userId).maybeSingle();
+  const photo = await savePhoto(formData.get('photo'), { bucket: 'privadas', folder: userId, current: current?.photo });
+  const { data, error: saveError } = await supabase.from('color_recipes').update({ ...values, photo, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', userId).select('id');
   if (saveError || !data?.length) back('error', 'No se pudieron guardar los cambios.');
   revalidatePath('/colores');
   back('ok', 'Cambios guardados.');
@@ -69,8 +72,9 @@ export async function deleteRecipe(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { error } = await supabase.from('color_recipes').delete().eq('id', id).eq('user_id', user.id);
+  const { data: removed, error } = await supabase.from('color_recipes').delete().eq('id', id).eq('user_id', user.id).select('photo');
   if (error) redirect(`/colores/${id}?error=${encodeURIComponent('No se pudo borrar.')}`);
+  await removePhoto(removed?.[0]?.photo);
   revalidatePath('/colores');
   redirect(`/colores?ok=${encodeURIComponent('Receta borrada.')}`);
 }

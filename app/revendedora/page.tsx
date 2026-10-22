@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { BookOpen, Download, Lightbulb, MessageCircle, Store, UserPlus, Users } from 'lucide-react';
 import { CopyButton } from '@/components/copy-button';
 import { CONTACT_EMAIL } from '@/lib/legal';
-import { getResellerResources, parseMaterials, whatsappLink } from '@/lib/reseller';
+import { getResellerResources, parseMaterials, resellerSaleRange, whatsappLink } from '@/lib/reseller';
 import { AppShell } from '@/components/app-shell';
 import { SubmitButton } from '@/components/submit-button';
 import { createClient } from '@/lib/supabase/server';
@@ -20,13 +20,16 @@ export default async function ResellerPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const [{ data: account }, { data: price }, { data: retail }] = await Promise.all([
+  const [{ data: account }, { data: price }, { data: retail }, { data: markup }] = await Promise.all([
     supabase.from('reseller_accounts').select('status').eq('user_id', user.id).maybeSingle(),
     supabase.from('pricing_config').select('value_numeric').eq('key', 'reseller_unit_price').maybeSingle(),
     supabase.from('pricing_config').select('value_numeric').eq('key', 'personal_price_online').maybeSingle(),
+    supabase.from('pricing_config').select('value_numeric').eq('key', 'reseller_max_markup_pct').maybeSingle(),
   ]);
   const unit = Number(price?.value_numeric ?? 0);
   const retailPrice = Number(retail?.value_numeric ?? 0);
+  const range = resellerSaleRange(retailPrice, Number(markup?.value_numeric ?? 0));
+  const rangeText = range.pct > 0 ? `entre ${pesos(range.min)} (precio oficial) y ${pesos(range.max)}` : `al precio oficial, ${pesos(range.min)}`;
   const messages = <>{ok && <div role="status" className={`mt-4 ${okBox}`}>{ok}</div>}{error && <div role="alert" className={`mt-4 ${errorBox}`}>{error}</div>}</>;
 
   if (!account) {
@@ -39,7 +42,7 @@ export default async function ResellerPage({ searchParams }: { searchParams: Pro
         <ol className="mt-5 space-y-3">
           {[
             `Comprás licencias de a una (${pesos(unit)} c/u; al público valen ${pesos(retailPrice)}) o en paquetes de 5, 10 o 20 con más descuento.`,
-            'Cobrás a tus clientas como quieras y asignás cada licencia con el correo de tu clienta.',
+            `Le cobrás a tu clienta ${rangeText} y asignás cada licencia con su correo.`,
             'La administración aprueba y tu clienta recibe su clave de acceso por correo. Tenés recursos de venta, consejos y material gráfico.',
             'Activarlo es gratis. Si comprás un paquete de 5 licencias o más, te regalamos tu propia Edición Personal para que conozcas lo que vendés.',
           ].map((text, i) => <li key={i} className={`${card} flex gap-3`}><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange-100 text-sm font-bold text-orange-800 dark:bg-orange-950 dark:text-orange-300">{i + 1}</span>{text}</li>)}
@@ -114,6 +117,18 @@ export default async function ResellerPage({ searchParams }: { searchParams: Pro
           <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Desde 5 licencias se aplica el descuento del paquete.</p>
         </section>
       </div>
+
+      <section className={`mt-4 ${card}`}>
+        <h2 className="text-lg">Tu precio de venta</h2>
+        <p className="mt-1 text-sm">Cobrale a tu clienta <strong>{rangeText}</strong>.</p>
+        <ul className="mt-2 space-y-1 text-sm text-neutral-600 dark:text-neutral-300">
+          <li>• No la vendas más barata que el precio oficial: así no compite con la página y todas ganan.</li>
+          {range.pct > 0 && <li>• Si cobrás más que el oficial, contale qué incluye: ayuda para empezar, cargar sus primeros materiales, efectivo o cuotas.</li>}
+          <li>• Tu clienta recibe por correo el precio oficial{range.pct > 0 ? ' y el máximo permitido' : ''}, junto con su clave. Si le cobraron más, nos lo puede avisar.</li>
+          <li>• Si no se cumplen estas reglas, podemos suspender el modo revendedora.</li>
+        </ul>
+        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Si el precio oficial cambia (por ejemplo, al terminar el lanzamiento o por inflación), este rango se actualiza solo.</p>
+      </section>
 
       <section className={`mt-4 ${card}`}>
         <h2 className="flex items-center gap-2 text-lg"><UserPlus size={20} aria-hidden="true" />Asignar a una clienta</h2>
