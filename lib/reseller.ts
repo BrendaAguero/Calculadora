@@ -38,3 +38,5 @@ export function parseMaterials(text: string) {
 }
 
 export const whatsappLink = (number: string, text: string) => `https://wa.me/${number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(text)}`;
+
+export { resellerSaleRange } from './reseller-range';

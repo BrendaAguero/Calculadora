@@ -76,3 +76,10 @@ test('Fin del lanzamiento: muestra el último día (hora de Argentina)', async (
   assert.equal(launchLastDay(null), null);
   assert.equal(launchLastDayInput('no es fecha'), '');
 });
+
+test('Precio de venta de revendedoras: del oficial al oficial + X %', async () => {
+  const { resellerSaleRange } = await import('../lib/reseller-range.ts');
+  assert.deepEqual(resellerSaleRange(30000, 10), { min: 30000, max: 33000, pct: 10 });
+  assert.deepEqual(resellerSaleRange(15000, 0), { min: 15000, max: 15000, pct: 0 });
+  assert.equal(resellerSaleRange(15000, 999).pct, 50);
+});

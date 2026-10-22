@@ -8,6 +8,8 @@ import { requireAdmin } from '@/lib/admin';
 import { STAFF_LOGIN_PATH, hasStaffSession } from '@/lib/staff';
 import { decryptKey, issueKey, sendKeyEmail } from '@/lib/access-key';
 import { siteOrigin } from '@/lib/origin';
+import { resellerSaleRange } from '@/lib/reseller';
+import { CONTACT_EMAIL } from '@/lib/legal';
 import { fromLocalAR } from '@/lib/announcements';
 import { removePhoto, uploadPhoto } from '@/lib/photos';
 
@@ -102,7 +104,13 @@ export async function decideResellerClient(formData: FormData) {
     const admin = createAdminClient();
     const { data: row } = admin ? await admin.from('approved_emails').select('email,key_cipher').eq('id', id as string).maybeSingle() : { data: null };
     const key = decryptKey(row?.key_cipher) ?? await issueKey(supabase, id as string);
-    if (row?.email) sent = await sendKeyEmail(row.email, key, await siteOrigin());
+    // Aviso para la clienta: compró a una revendedora autorizada y hasta cuánto le podían cobrar.
+    const { data: cfg } = admin ? await admin.from('pricing_config').select('key,value_numeric').in('key', ['personal_price_online', 'reseller_max_markup_pct']) : { data: null };
+    const num = (k: string) => Number(cfg?.find((c) => c.key === k)?.value_numeric ?? 0);
+    const range = resellerSaleRange(num('personal_price_online'), num('reseller_max_markup_pct'));
+    const peso = (n: number) => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+    const note = range.min > 0 ? `Compraste a través de una revendedora autorizada. El precio oficial es ${peso(range.min)}${range.pct > 0 ? ` y las revendedoras pueden cobrar hasta ${peso(range.max)} por su atención (por ejemplo, ayudarte a empezar o aceptar otros medios de pago)` : ''}. Si te cobraron más, escribinos a ${CONTACT_EMAIL}.` : undefined;
+    if (row?.email) sent = await sendKeyEmail(row.email, key, await siteOrigin(), note);
   } catch (e) {
     back('/admin/emails', 'error', `Aprobada, pero no se pudo crear la clave: ${e instanceof Error ? e.message : e}`);
   }
@@ -170,6 +178,10 @@ export async function setLoyaltyDiscounts(formData: FormData) {
   await rpc('/admin/precios', 'admin_set_loyalty_discounts', {
     p_d1: n('d1'), p_p1: n('p1'), p_d2: n('d2'), p_p2: n('p2'), p_d3: n('d3'), p_p3: n('p3'),
   }, 'Descuentos por antigüedad guardados.');
+}
+
+export async function setResellerMarkup(formData: FormData) {
+  await rpc('/admin/revendedoras', 'admin_set_reseller_markup', { p_pct: Number(text(formData, 'markup').replace(',', '.')) }, 'Tope de precio de venta guardado.');
 }
 
 export async function setResellerMargin(formData: FormData) {
