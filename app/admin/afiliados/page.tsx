@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/submit-button';
 import { one, requireAdmin } from '@/lib/admin';
 import { money } from '@/app/stock/constants';
-import { cardClass, dateOnly, errorBox, okBox, pageClass } from '@/lib/ui';
-import { reviewAffiliate, setAffiliateStatus, updateWithdrawal } from '../actions';
+import { cardClass, dateOnly, errorBox, inputClass, labelClass, okBox, pageClass, primaryButton } from '@/lib/ui';
+import { cancelAffiliateCommissions, reviewAffiliate, setAffiliatePercentage, setAffiliateStatus, setAffiliateWithdrawalMin, updateWithdrawal } from '../actions';
 
 const AFF: Record<string, string> = { pending: 'Pendiente', approved: 'Activa', suspended: 'Suspendida', rejected: 'Rechazada' };
 const WD: Record<string, string> = { requested: 'Pedido', reviewing: 'En revisión', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
@@ -12,11 +12,18 @@ const btn = 'rounded-lg border border-neutral-300 px-3 py-1.5 text-sm dark:borde
 export default async function AdminAffiliatesPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
   const { supabase } = await requireAdmin();
-  const [{ data: affiliates }, { data: withdrawals }, { data: commissions }] = await Promise.all([
+  const since = new Date(new Date().getTime() - 30 * 86400000).toISOString().slice(0, 10);
+  const [{ data: affiliates }, { data: withdrawals }, { data: commissions }, { data: visits }, { data: mins }] = await Promise.all([
     supabase.from('affiliates').select('id,status,commission_percentage,is_pro,valid_sales_count,application_note,created_at,profiles(email,full_name),affiliate_codes(code,active)').order('created_at', { ascending: false }),
     supabase.from('withdrawals').select('id,amount,status,payout_method,payout_reference,requested_at,paid_at,affiliates(profiles(email))').order('requested_at', { ascending: false }).limit(100),
     supabase.from('commissions').select('affiliate_id,commission_amount,status'),
+    supabase.from('affiliate_link_visits').select('affiliate_id,visits').gte('day', since),
+    supabase.from('pricing_config').select('key,value_numeric').in('key', ['affiliate_min_withdrawal', 'affiliate_min_withdrawal_pro']),
   ]);
+  const visits30 = new Map<string, number>();
+  for (const v of visits ?? []) visits30.set(v.affiliate_id, (visits30.get(v.affiliate_id) ?? 0) + Number(v.visits));
+  const min = (k: string, d: number) => Number(mins?.find((m) => m.key === k)?.value_numeric ?? d);
+  const paidWithdrawals = (withdrawals ?? []).filter((w) => w.status === 'paid' || w.status === 'rejected').slice(0, 20);
   const totals = new Map<string, { held: number; available: number; paid: number }>();
   for (const c of commissions ?? []) {
     const t = totals.get(c.affiliate_id) ?? { held: 0, available: 0, paid: 0 };
@@ -74,6 +81,23 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
         ))}
       </section>
 
+      {paidWithdrawals.length > 0 && (
+        <section className={cardClass}>
+          <h2 className="font-semibold">Últimos retiros cerrados</h2>
+          <ul className="mt-2 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">{paidWithdrawals.map((w) => (
+            <li key={w.id} className="flex flex-wrap justify-between gap-2 py-2"><span>{one(one(w.affiliates)?.profiles)?.email} · {w.payout_method}</span><span>{money(w.amount)} · {WD[w.status]}{w.paid_at ? ` el ${dateOnly(w.paid_at)}` : ''}</span></li>
+          ))}</ul>
+        </section>
+      )}
+
+      <form action={setAffiliateWithdrawalMin} className={`${cardClass} grid gap-3 sm:grid-cols-2`}>
+        <h2 className="font-semibold sm:col-span-2">Mínimo para retirar</h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-2">Las afiliadas pueden pedir el retiro cuando juntan este monto disponible. Así evitás muchas transferencias chicas.</p>
+        <label className={labelClass}>Afiliadas<input name="min" inputMode="numeric" required defaultValue={min('affiliate_min_withdrawal', 20000)} className={inputClass} /></label>
+        <label className={labelClass}>Afiliadas PRO<input name="min_pro" inputMode="numeric" required defaultValue={min('affiliate_min_withdrawal_pro', 10000)} className={inputClass} /></label>
+        <div className="sm:col-span-2"><SubmitButton className={primaryButton}>Guardar mínimos</SubmitButton></div>
+      </form>
+
       <section className={cardClass}>
         <h2 className="font-semibold">Afiliadas</h2>
         {!others.length ? <p className="mt-2 text-sm text-neutral-500">Todavía no hay afiliadas.</p> : (
@@ -82,9 +106,24 @@ export default async function AdminAffiliatesPage({ searchParams }: { searchPara
             const code = (a.affiliate_codes ?? []).find((c) => c.active)?.code ?? (a.affiliate_codes ?? [])[0]?.code;
             return (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span><strong>{code ?? '—'}</strong> · {one(a.profiles)?.email} · {Number(a.commission_percentage)} %{a.is_pro ? ' · PRO' : ''} · {a.valid_sales_count} ventas · {AFF[a.status]}<br /><span className="text-xs text-neutral-500">retenido {money(t.held)} · disponible {money(t.available)} · pagado {money(t.paid)}</span></span>
+                <span><strong>{code ?? '—'}</strong> · {one(a.profiles)?.email} · {Number(a.commission_percentage)} %{a.is_pro ? ' · PRO' : ''} · {a.valid_sales_count} ventas · {visits30.get(a.id) ?? 0} visitas (30 días) · {AFF[a.status]}<br /><span className="text-xs text-neutral-500">retenido {money(t.held)} · disponible {money(t.available)} · pagado {money(t.paid)}</span></span>
                 {(a.status === 'approved' || a.status === 'suspended') && (
-                  <form action={setAffiliateStatus}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="status" value={a.status === 'approved' ? 'suspended' : 'approved'} /><SubmitButton className={btn}>{a.status === 'approved' ? 'Suspender' : 'Reactivar'}</SubmitButton></form>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <form action={setAffiliatePercentage} className="flex items-center gap-1">
+                      <input type="hidden" name="affiliate_id" value={a.id} />
+                      <input name="pct" inputMode="decimal" defaultValue={Number(a.commission_percentage)} aria-label="Comisión (%)" className="w-16 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950" />
+                      <SubmitButton className={btn}>Cambiar %</SubmitButton>
+                    </form>
+                    <form action={setAffiliateStatus}><input type="hidden" name="affiliate_id" value={a.id} /><input type="hidden" name="status" value={a.status === 'approved' ? 'suspended' : 'approved'} /><SubmitButton className={btn}>{a.status === 'approved' ? 'Suspender' : 'Reactivar'}</SubmitButton></form>
+                  </div>
+                )}
+                {a.status === 'suspended' && (t.held > 0 || t.available > 0) && (
+                  <form action={cancelAffiliateCommissions} className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-red-50 p-2 text-xs dark:bg-red-950/30">
+                    <input type="hidden" name="affiliate_id" value={a.id} />
+                    <input name="reason" required minLength={5} placeholder="Motivo (por ejemplo, ventas falsas)" className="flex-1 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 dark:border-neutral-700 dark:bg-neutral-950" />
+                    <label className="flex items-center gap-1"><input type="checkbox" name="confirm" />Anular sus comisiones pendientes</label>
+                    <SubmitButton className={btn}>Anular</SubmitButton>
+                  </form>
                 )}
               </li>
             );

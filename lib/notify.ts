@@ -28,3 +28,10 @@ export async function sendRequestReceipt(to: string, kind: keyof typeof KINDS, c
   ];
   return sendMail({ to, subject: `${title} · código ${code}`, text: lines.join("\n\n"), html: paragraphs(lines) });
 }
+
+// Aviso a una afiliada (aprobación, retiros). No incluye datos de quien compró.
+export async function notifyAffiliate(to: string | null | undefined, subject: string, lines: string[]) {
+  if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return false;
+  const all = ["¡Hola!", ...lines, "Lo ves todo en «Programa de afiliadas», dentro de la app. Si tenés dudas, escribinos a " + CONTACT_EMAIL + "."];
+  return sendMail({ to, subject: `${subject} · Calculadora Emprender`, text: all.join("\n\n"), html: paragraphs(all) });
+}

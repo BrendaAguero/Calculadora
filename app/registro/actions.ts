@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -43,6 +44,10 @@ export async function signUpFree(_prev: SignUpState, formData: FormData): Promis
     console.error('[registro] no se pudo crear la cuenta', created.error.message);
     return { error: 'No se pudo crear la cuenta. Probá de nuevo en un rato.', email };
   }
+
+  // Si llegó con el enlace de una afiliada, la cuenta queda asociada a ella 90 días (la base valida el código).
+  const ref = (await cookies()).get('ref')?.value;
+  if (ref && created.data.user) await admin.rpc('set_signup_referral', { p_user_id: created.data.user.id, p_code: ref });
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });

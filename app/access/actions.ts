@@ -20,7 +20,11 @@ async function affiliateCode(formData: FormData, supabase: Awaited<ReturnType<ty
     if (data !== 'ok') back('error', 'Ese código de afiliada no existe o no está activo. Revisalo o dejalo vacío.');
     return typed;
   }
-  return (await cookies()).get('ref')?.value ?? null;
+  // Si no escribió código: el del enlace con el que llegó, o el de la afiliada que la refirió al crear la cuenta (90 días).
+  const cookie = (await cookies()).get('ref')?.value;
+  if (cookie) return cookie;
+  const { data: referral } = await supabase.rpc('my_referral_code');
+  return (referral as string | null) ?? null;
 }
 
 // Asocia la compra del pedido a la afiliada (la base valida todo; si no corresponde, no hace nada).

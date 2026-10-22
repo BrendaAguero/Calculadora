@@ -125,13 +125,13 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
         <p>Cualquier persona con cuenta puede pedir sumarse desde <Link href="/afiliados">Programa de afiliadas</Link>. La administración revisa cada solicitud y puede aprobarla o rechazarla. Al aprobarla recibís un código y un enlace personal.</p>
         <h2>2. Comisiones</h2>
         <ul>
-          <li>Ganás un porcentaje (15 % o 20 %, según se te asigne) de cada compra pagada que llegue con tu código o enlace. El enlace guarda tu código por 30 días en el navegador de quien lo abre.</li>
-          <li><strong>PRO:</strong> si lográs 10 ventas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 %.</li>
+          <li>Ganás un porcentaje (15 % o 20 %, según se te asigne) de cada compra pagada que llegue con tu código o enlace. El enlace guarda tu código por 30 días en el navegador de quien lo abre; si la persona abre los enlaces de varias afiliadas, vale el último. Si crea su cuenta llegando por tu enlace, queda asociada a vos por 90 días y las compras que haga en ese plazo te generan comisión.</li>
+          <li><strong>PRO:</strong> si lográs 10 ventas nuevas válidas por mes durante 3 meses seguidos, tu comisión pasa al 25 % (las renovaciones mensuales no cuentan para PRO, aunque sí te generan comisión).</li>
           <li>La comisión se calcula sobre el monto efectivamente pagado. Vale para la Edición Personal (también si se compra desde la página, sin cuenta), los extras y Personal Plus. En Personal Plus mensual cobrás también las renovaciones del primer año (el primer pago y los 11 siguientes, mientras la clienta siga pagando); en el anual, sobre el pago del año.</li>
           <li>Cada comisión queda <strong>retenida 11 días</strong> (el plazo de arrepentimiento más un margen). Si la compra se devuelve o anula, la comisión se anula. Después pasa a disponible.</li>
         </ul>
         <h2>3. Retiros</h2>
-        <p>Podés pedir el retiro cuando tengas al menos $20.000 disponibles ($10.000 si sos PRO). Se paga por transferencia a los datos que indiques; la administración puede pedirte datos para verificar tu identidad y emitir los comprobantes que correspondan. Sos responsable de tus obligaciones impositivas por lo que cobres.</p>
+        <p>Podés pedir el retiro cuando tengas disponible al menos el mínimo que se muestra en tu panel (más bajo si sos PRO). Se paga por transferencia o Mercado Pago a los datos que indiques; la administración puede pedirte datos para verificar tu identidad y emitir los comprobantes que correspondan. Sos responsable de tus obligaciones impositivas por lo que cobres.</p>
         <h2>4. Qué no está permitido</h2>
         <ul>
           <li>Usar tu propio código o crear cuentas falsas.</li>
